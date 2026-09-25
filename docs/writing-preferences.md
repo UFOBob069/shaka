@@ -1,30 +1,30 @@
 # Writing preferences
 
-Shaka's installed skill provides default writing guidance
-for PR descriptions, code walkthroughs, and review replies. Installing Shaka does
-not create or edit `AGENTS.md`, and these defaults work without that file.
+Shaka provides writing defaults without requiring `AGENTS.md` or a style file.
 
-For a task, tell the agent how you want it to write:
+Tell the agent how you want it to write:
 
 ```text
-Keep PR descriptions short. Lead with what changed for the user,
-use before/after examples, and put implementation details in the walkthrough.
+Keep this PR description to three bullets. Explain what changed for the user
+and put implementation details in the walkthrough.
 ```
 
-For persistent repository preferences, you may create or edit `AGENTS.md` yourself.
-You may link to a separate file when the guidance is long or has a distinct
-audience. For example:
+To reuse preferences across tasks, add `.agents/writing-style.md` to your repository:
 
-```text
-When writing this repository's product guides, read docs/editorial-style.md.
+```markdown
+# Writing style
+
+- Write documentation for someone new to the project.
+- Keep PR descriptions short and lead with what changed for the user.
+- Use before-and-after examples when they clarify behavior.
 ```
 
-When trusted `AGENTS.md` exists, the Shaka workflow instructs the agent to follow
-its writing preferences and any style file it explicitly links. Shaka's Ruby
-helpers do not automatically load a linked file or verify editorial style.
+Once the file is merged into your default branch, Shaka loads it automatically.
+You can override these defaults in a task. Existing writing instructions in
+`AGENTS.md` and your personal agent instructions also take precedence.
 
-Shaka also checks each description and walkthrough before publishing it. Text
-that reads as a wall is not published; the agent shortens it and tries again, and
-the description's collapsed review history notes each retry. The
-[`prose_limits`](settings.md#prose_limits) setting explains the checks and how to
-change them.
+If Shaka reports a problem with the file, ask the agent to fix it. You can keep
+working and give writing instructions in chat.
+
+Shaka also checks descriptions and walkthroughs before publishing. You can adjust
+those checks through [prose limits](settings.md#prose_limits).

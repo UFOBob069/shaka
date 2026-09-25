@@ -67,6 +67,17 @@ Ask the agent to stop the preview to return to ordinary settings.
 A local branch can prepare an experiment; the PR makes its choices visible before
 team adoption. Ask to keep that settings PR open if you want to continue experimenting.
 
+Repository writing defaults live in the optional conventional file
+`.agents/writing-style.md`, not in this YAML mapping. `seam check` returns its
+contents as `writing_style.guide` only when `--ref` reads it from the trusted
+commit. Local and implicit candidate checks validate the file but do not return
+its prose; an invalid candidate file fails that check. Under `--ref`, an invalid
+file produces a warning and is omitted without withholding the repository's
+trusted workflow policy. The warning is present on stderr and as
+`writing_style_warning` in the JSON output.
+See [writing preferences](writing-preferences.md).
+
+
 ## `merge.preference`
 
 **Required.** Values: `ask` or `auto`. Setup defaults to `ask`.

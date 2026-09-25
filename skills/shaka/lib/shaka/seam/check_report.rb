@@ -16,8 +16,8 @@ module Shaka
         new(config:, mode: LOCAL_MODE)
       end
 
-      def self.trusted(config, ref:)
-        new(config:, mode: TRUSTED_MODE, ref:)
+      def self.trusted(config, ref:, writing_style: nil, warning: nil)
+        new(config:, mode: TRUSTED_MODE, ref:, writing_style:, warning:)
       end
 
       def self.from_ref(root:, ref:)
@@ -41,14 +41,19 @@ module Shaka
         0
       end
 
-      def initialize(config:, mode:, ref: nil)
+      def initialize(config:, mode:, ref: nil, writing_style: nil, warning: nil)
         @config = config
         @mode = mode
         @ref = ref
+        @writing_style = writing_style
+        @warning = warning
       end
 
       def to_h
-        @config.to_h.merge('validation' => validation)
+        payload = @config.to_h
+        payload = payload.merge('writing_style' => @writing_style) if @writing_style
+        payload = payload.merge('writing_style_warning' => @warning) if @warning
+        payload.merge('validation' => validation)
       end
 
       private

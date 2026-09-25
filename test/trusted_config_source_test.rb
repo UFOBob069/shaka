@@ -4,6 +4,7 @@ require_relative 'test_helper'
 require_relative 'repository_fixture'
 require 'rbconfig'
 require 'shaka/trusted_config_source'
+require 'shaka/writing_style'
 
 class TrustedConfigSourceTest < Minitest::Test
   include RepositoryConfigTestHelpers
@@ -38,6 +39,152 @@ module TrustedConfigSourceRepositoryHelpers
     system('git', '-C', root, 'add', '.', exception: true)
     system('git', '-C', root, '-c', 'user.name=Test', '-c', 'user.email=test@example.com',
            'commit', '--quiet', '-m', 'trusted', exception: true)
+  end
+end
+
+class TrustedConfigSourceWritingStyleTest < Minitest::Test
+  include RepositoryConfigTestHelpers
+  include TrustedConfigSourceRepositoryHelpers
+
+  def test_loads_writing_style_from_the_trusted_commit_not_the_candidate_checkout
+    with_repository do |root|
+      path = File.join(root, '.agents/writing-style.md')
+      File.write(path, "Trusted repository style.\n")
+      commit_repository(root)
+      File.binwrite(path, "Untrusted candidate style.\n\xFF".b)
+
+      config = Shaka::TrustedConfigSource.new(root:).load('HEAD')
+      writing_style = Shaka::WritingStyle.load(root:, sha: config.sha)
+
+      assert_equal 'Trusted repository style.', writing_style.fetch('guide')
+    end
+  end
+
+  def test_ignores_a_writing_style_added_only_in_the_candidate_checkout
+    with_repository do |root|
+      commit_repository(root)
+      File.write(File.join(root, '.agents/writing-style.md'), "Candidate style.\n")
+
+      config = Shaka::TrustedConfigSource.new(root:).load('HEAD')
+      writing_style = Shaka::WritingStyle.load(root:, sha: config.sha)
+
+      assert_nil writing_style
+    end
+  end
+
+  def test_rejects_a_symlinked_writing_style_in_the_trusted_commit
+    with_repository do |root|
+      File.write(File.join(root, 'style.md'), "Lead with the result.\n")
+      File.symlink('../style.md', File.join(root, '.agents/writing-style.md'))
+      commit_repository(root)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, '.agents/writing-style.md at'
+      assert_includes error.message, 'must be a regular file, not a symlink'
+    end
+  end
+
+  def test_rejects_an_empty_writing_style_in_the_trusted_commit
+    with_repository do |root|
+      File.write(File.join(root, '.agents/writing-style.md'), " \n")
+      commit_repository(root)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, '.agents/writing-style.md at'
+      assert_includes error.message, 'must not be empty'
+    end
+  end
+
+  def test_rejects_a_directory_at_the_trusted_writing_style_path
+    with_repository do |root|
+      path = File.join(root, '.agents/writing-style.md')
+      FileUtils.mkdir_p(path)
+      File.write(File.join(path, 'guide.md'), "Lead with the result.\n")
+      commit_repository(root)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, '.agents/writing-style.md at'
+      assert_includes error.message, 'must be a regular file'
+      refute_includes error.message, 'symlink'
+    end
+  end
+
+  def test_rejects_a_gitlink_at_the_trusted_writing_style_path
+    with_repository do |root|
+      commit_repository(root)
+      sha = Open3.capture2('git', '-C', root, 'rev-parse', 'HEAD').first.strip
+      system('git', '-C', root, 'update-index', '--add', '--cacheinfo',
+             "160000,#{sha},.agents/writing-style.md", exception: true)
+      system('git', '-C', root, '-c', 'user.name=Test', '-c', 'user.email=test@example.com',
+             'commit', '--quiet', '-m', 'gitlink style', exception: true)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, 'must be a regular file'
+    end
+  end
+
+  def test_rejects_an_oversized_writing_style_in_the_trusted_commit
+    with_repository do |root|
+      File.write(File.join(root, '.agents/writing-style.md'), 'x' * (Shaka::WritingStyle::MAX_BYTES + 1))
+      commit_repository(root)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, '.agents/writing-style.md at'
+      assert_includes error.message, "must not exceed #{Shaka::WritingStyle::MAX_BYTES} bytes"
+    end
+  end
+
+  def test_rejects_non_utf8_writing_style_in_the_trusted_commit
+    with_repository do |root|
+      File.binwrite(File.join(root, '.agents/writing-style.md'), "Valid\n\xFF".b)
+      commit_repository(root)
+
+      error = assert_raises(Shaka::Error) { load_trusted_style(root) }
+
+      assert_includes error.message, 'must contain valid UTF-8'
+    end
+  end
+
+  private
+
+  def load_trusted_style(root)
+    config = Shaka::TrustedConfigSource.new(root:).load('HEAD')
+    Shaka::WritingStyle.load(root:, sha: config.sha)
+  end
+end
+
+class WritingStyleReadOrderTest < Minitest::Test
+  include RepositoryConfigTestHelpers
+  include TrustedConfigSourceRepositoryHelpers
+
+  def test_rejects_an_oversized_style_before_reading_the_blob
+    with_repository do |root|
+      File.write(File.join(root, '.agents/writing-style.md'), 'x' * (Shaka::WritingStyle::MAX_BYTES + 1))
+      commit_repository(root)
+      without_blob_reads do
+        config = Shaka::TrustedConfigSource.new(root:).load('HEAD')
+        assert_raises(Shaka::Error) { Shaka::WritingStyle.load(root:, sha: config.sha) }
+      end
+    end
+  end
+
+  private
+
+  def without_blob_reads
+    original = Open3.method(:capture3)
+    Open3.define_singleton_method(:capture3) do |*arguments, **options|
+      raise 'oversized blob was read' if arguments.include?('-p')
+
+      original.call(*arguments, **options)
+    end
+    yield
+  ensure
+    Open3.define_singleton_method(:capture3, original) if original
   end
 end
 

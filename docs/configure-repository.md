@@ -87,3 +87,6 @@ installs development dependencies; `bin/install` installs the skill.
 
 Shaka's own [configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml)
 and [scripts](https://github.com/shakacode/shaka/tree/main/.agents/shaka/bin) provide working examples.
+
+To choose how the agent writes documentation and PRs, see
+[writing preferences](writing-preferences.md).

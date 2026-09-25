@@ -13,6 +13,7 @@ require_relative 'seam/policy_options'
 require_relative 'seam/private_command'
 require_relative 'seam/preview_command'
 require_relative 'configuration'
+require_relative 'writing_style'
 
 module Shaka
   # Validates the machine-readable repository boundary.
@@ -83,6 +84,7 @@ module Shaka
     def check_report
       return CheckReport.from_ref(root:, ref: @options[:ref]) if @options.key?(:ref)
 
+      WritingStyle.validate_candidate(root:)
       CheckReport.local(Configuration.worktree(root:))
     end
 
