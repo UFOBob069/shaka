@@ -117,6 +117,49 @@ class SeamCheckModeTest < Minitest::Test
   end
 end
 
+class SeamCheckWritingStyleLayoutTest < Minitest::Test
+  include SeamCheckHelpers
+
+  def test_trusted_style_with_new_configuration_layout
+    with_style_repository do |root|
+      payload, error, status = capture_check(root, '--ref', 'HEAD')
+
+      assert_predicate status, :success?, error
+      assert_equal 'Trusted style.', payload.dig('writing_style', 'guide')
+      assert_equal '.agents/shaka/bin/validate', payload.dig('commands', 'validate')
+    end
+  end
+
+  def test_local_style_with_new_configuration_layout
+    with_style_repository do |root|
+      payload, error, status = capture_check(root, '--local')
+
+      assert_predicate status, :success?, error
+      assert_equal '.agents/shaka/config.yml', payload.dig('paths', 'candidate_configuration')
+      refute payload.key?('writing_style')
+    end
+  end
+
+  private
+
+  def with_style_repository
+    with_repository do |root|
+      move_configuration(root)
+      path = File.join(root, '.agents/writing-style.md')
+      File.write(path, "Trusted style.\n")
+      commit_repository(root)
+      File.write(path, "Candidate style.\n")
+      yield root
+    end
+  end
+
+  def move_configuration(root)
+    FileUtils.mkdir_p(File.join(root, '.agents/shaka'))
+    FileUtils.mv(File.join(root, '.agents/agent-workflow.yml'), File.join(root, '.agents/shaka/config.yml'))
+    FileUtils.mv(File.join(root, '.agents/bin'), File.join(root, '.agents/shaka/bin'))
+  end
+end
+
 class SeamCheckWritingStyleTest < Minitest::Test
   include SeamCheckHelpers
 
