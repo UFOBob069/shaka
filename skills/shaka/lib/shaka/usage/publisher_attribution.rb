@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../error'
+require_relative 'claude_publisher_settings'
 require_relative 'codex_publisher_settings'
 
 module Shaka
@@ -8,23 +9,27 @@ module Shaka
   module PublisherAttribution
     HOST_VARIABLES = %w[CODEX_THREAD_ID CLAUDE_CODE_SESSION_ID CURSOR_CONVERSATION_ID
                         OPENCODE_SESSION_ID PI_CODING_AGENT].freeze
+    READERS = { 'CODEX_THREAD_ID' => CodexPublisherSettings,
+                'CLAUDE_CODE_SESSION_ID' => ClaudePublisherSettings }.freeze
 
     def self.prepare(content, environment: ENV)
       hosts = HOST_VARIABLES.select { |variable| present?(environment, variable) }
-      unless hosts == ['CODEX_THREAD_ID']
+      reader = READERS[hosts.first] if hosts.one?
+      unless reader
         return content.merge('publisher_note' => 'Native publisher settings unavailable for this host; ' \
                                                  'supplied attribution is unverified.')
       end
 
-      apply(content, CodexPublisherSettings.read(environment))
+      apply(content, reader, reader.read(environment))
     end
 
     def self.present?(environment, variable)
       variable == 'PI_CODING_AGENT' ? environment[variable] == 'true' : !environment[variable].to_s.empty?
     end
 
-    def self.apply(content, observed)
-      result = content.merge('identity' => identity(content['identity'], observed), 'publisher_note' => note(observed))
+    def self.apply(content, reader, observed)
+      result = content.merge('identity' => identity(content['identity'], reader, observed),
+                             'publisher_note' => note(reader, observed))
       return result unless content['provenance'].is_a?(Hash)
 
       provenance = content['provenance'].merge(%w[model effort].to_h do |field|
@@ -34,16 +39,15 @@ module Shaka
       result.merge('provenance' => provenance)
     end
 
-    def self.identity(supplied, observed)
+    def self.identity(supplied, reader, observed)
       supplied ||= {}
       raise Error, 'Native publisher attribution requires an identity object.' unless supplied.is_a?(Hash)
 
-      resolved = %w[agent provider model effort].to_h do |field|
+      resolved = supplied.slice('provider').merge((['agent'] + reader::FIELDS).to_h do |field|
         [field, resolve(supplied[field], observed[field], field)]
-      end
-      resolved['agent'] = 'Codex'
-      resolved['model'] += ' (configured)' unless resolved['model'] == 'UNKNOWN'
-      resolved
+      end)
+      resolved['model'] += reader::MODEL_SUFFIX unless resolved['model'] == 'UNKNOWN'
+      resolved.merge('agent' => reader::AGENT)
     end
 
     def self.resolve(supplied, actual, field)
@@ -58,10 +62,11 @@ module Shaka
       raise Error, "Publication #{field} conflicts with native publisher settings."
     end
 
-    def self.note(observed)
-      missing = %w[provider model effort].reject { |field| observed[field] }
-      gap = missing.empty? ? '' : " UNKNOWN #{missing.join(', ')}: #{observed.fetch('reason')}."
-      "Publisher model is configured; served model is UNKNOWN.#{gap}"
+    def self.note(reader, observed)
+      missing = reader::FIELDS.reject { |field| observed[field] }
+      gap = "UNKNOWN #{missing.join(', ')}: #{observed.fetch('reason')}." unless missing.empty?
+      note = [reader::NOTE, gap].compact.join(' ')
+      note unless note.empty?
     end
 
     private_class_method :present?, :apply, :identity, :resolve, :check, :note

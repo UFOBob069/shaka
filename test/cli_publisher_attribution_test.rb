@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require_relative 'publisher_attribution_test'
+require_relative 'claude_publisher_attribution_test'
 require_relative 'cli_opening_check_fakes'
 
 class CliPublisherAttributionTest < Minitest::Test
   include PublisherAttributionFixture
+  include ClaudePublisherAttributionFixture
   include CliOpeningCheckFakes
 
   COMMAND = File.expand_path('../skills/shaka/scripts/shaka', __dir__)
@@ -29,6 +31,18 @@ class CliPublisherAttributionTest < Minitest::Test
         body = File.read(File.join(dir, 'published.md'))
         assert_includes body, 'Codex · OpenAI · gpt-6.1-sol (configured) · medium'
         assert_includes body, '| Active model / effort | gpt-6.1-sol / medium |'
+      end
+    end
+  end
+
+  def test_claude_code_description_publishes_session_settings_without_a_note
+    with_claude_session(prompt, response) do |environment, _file|
+      @identity = claude_content.fetch('identity')
+      run_publication(environment) do |dir, output, error, status|
+        assert_predicate status, :success?, "#{output}\n#{error}"
+        body = File.read(File.join(dir, 'published.md'))
+        assert_includes body, "🤖 Claude Code · Anthropic · claude-opus-5-5 · medium\n\n#{SUMMARY}"
+        assert_includes body, '| Active model / effort | claude-opus-5-5 / medium |'
       end
     end
   end
@@ -58,7 +72,10 @@ class CliPublisherAttributionTest < Minitest::Test
   private
 
   def description_content
-    super.tap { |supplied| supplied['identity']['model'] = 'other-model' if @conflict }
+    super.tap do |supplied|
+      supplied['identity'] = @identity if @identity
+      supplied['identity']['model'] = 'other-model' if @conflict
+    end
   end
 
   def run_publication(environment, command: 'description')
@@ -84,8 +101,7 @@ class CliPublisherAttributionTest < Minitest::Test
   end
 
   def command_environment(environment, dir)
-    environment.merge('PATH' => "#{dir}:#{ENV.fetch('PATH')}", 'HOME' => dir,
-                      'CLAUDE_CODE_SESSION_ID' => nil, 'CURSOR_CONVERSATION_ID' => nil,
-                      'OPENCODE_SESSION_ID' => nil, 'PI_CODING_AGENT' => nil)
+    hosts = Shaka::PublisherAttribution::HOST_VARIABLES.to_h { |variable| [variable, nil] }
+    hosts.merge(environment, 'PATH' => "#{dir}:#{ENV.fetch('PATH')}", 'HOME' => dir)
   end
 end

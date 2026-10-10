@@ -123,7 +123,7 @@ class PublisherAttributionTest < Minitest::Test
   end
 
   def test_other_hosts_preserve_supplied_attribution_with_explicit_evidence_gap
-    result = Shaka::PublisherAttribution.prepare(content, environment: { 'CLAUDE_CODE_SESSION_ID' => 'session' })
+    result = Shaka::PublisherAttribution.prepare(content, environment: { 'CURSOR_CONVERSATION_ID' => 'session' })
     assert_equal content['identity'], result['identity']
     assert_includes result['publisher_note'], 'Native publisher settings unavailable'
   end
