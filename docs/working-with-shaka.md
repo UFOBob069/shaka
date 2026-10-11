@@ -251,30 +251,28 @@ engineering principles and parallel workers.
 ### Hand over a spec and tickets
 
 ```text
-$shaka Deliver the spec at https://github.com/OWNER/REPO/issues/SPEC in OWNER/REPO.
-Its tickets are the sub-issues; follow their blocked-by links for order. Each
-ticket's acceptance criteria are in its body. You may comment on the spec with
-your plan; do not close or edit tickets. Keep merge policy ask. Go.
+$shaka Deliver the spec in https://github.com/OWNER/REPO/issues/N.
+Keep merge policy ask. Go.
 ```
 
 Here is what happens next:
 
-1. The agent reads the spec and every ticket, and takes the order of work from
-   the blocked-by links.
-2. It decides how many PRs the spec needs. When that is more than one, it posts
-   the plan as a comment on the spec.
+1. The agent reads the spec and its sub-issues, and takes the order of work
+   from their blocked-by links.
+2. It decides how many PRs the spec needs. When that is more than one, it asks
+   where to keep its plan, such as a comment on the spec.
 3. It delivers each PR the usual way: tests, your checks, independent review,
    a description, and a code walkthrough.
 4. Under Ask, each PR comes back to you to merge. A PR that depends on another
    waits until that one merges.
 5. Tickets stay open. Each PR links its ticket without a closing keyword such
-   as `Fixes`, because the prompt did not allow closing tickets.
+   as `Fixes`, because reading a tracker gives no permission to change it.
 
-Change the prompt to change that behavior. Allow closing tickets if you want
-merges to close them. If you allow no tracker writes at all, the agent asks
-where to keep its plan before it starts. On a public repository, it also checks
-with you before adopting criteria from a ticket that someone without write
-access wrote or edited.
+Add a sentence to the prompt to change that. "You may comment on the spec with
+your plan" skips the question in step 2. "Close each ticket when its PR merges"
+lets merges close them. On a public repository, the agent also checks with you
+before adopting criteria from a ticket that someone without write access wrote
+or edited.
 
 ### Use a technique skill during delivery
 
