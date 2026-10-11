@@ -613,10 +613,10 @@ phases:
         in the host is not a user request in the task. `null` renders as “Not specified”; use
         `UNKNOWN` when the request evidence is unavailable, including an unrecoverable prior
         intake. Keep existing `UNKNOWN` history unchanged rather than inferring an absence.
-        The renderer adds the public machine alias from
-        `SHAKA_MACHINE_ALIAS` and the workflow version, which names the commit the helper runs
+        The renderer adds the workflow version, which names the commit the helper runs
         from and links it when that commit came from `shakacode/shaka`, and keeps the native
-        usage table as the only observed route and token record.
+        usage table as the only observed route and token record. The public machine alias
+        from `SHAKA_MACHINE_ALIAS` belongs in the WIP Details Owner field, not in provenance.
     done_when: >-
       The PR description, walkthrough, and usage describe the current head; a UI change has
       that head's captures or a recorded blocked reason published on the PR; and a

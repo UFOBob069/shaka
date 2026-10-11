@@ -15,21 +15,24 @@ class ExecutionProvenanceTest < Minitest::Test
     ['UNKNOWN', 'UNKNOWN', 'UNKNOWN / UNKNOWN']
   ].freeze
 
-  def test_renders_public_machine_alias_without_redundant_prompt_or_observed_route_rows
-    body = Shaka::ExecutionProvenance.new(
-      PUBLIC_PROVENANCE, environment: { 'SHAKA_MACHINE_ALIAS' => 'm5' }
-    ).detail.fetch('body')
+  # The alias says who holds unfinished work, so only WIP Details Owner carries it.
+  def test_leaves_the_machine_alias_and_redundant_prompt_or_observed_route_rows_out
+    saved = ENV.fetch('SHAKA_MACHINE_ALIAS', nil)
+    ENV['SHAKA_MACHINE_ALIAS'] = 'm5-alias'
+    body = Shaka::ExecutionProvenance.new(PUBLIC_PROVENANCE).detail.fetch('body')
 
-    assert_includes body, '| Machine alias | m5 |'
+    refute_includes body, 'Machine alias'
+    refute_includes body, 'm5-alias'
     refute_includes body, '| Initial prompt |'
     refute_includes body, '| Observed route |'
+  ensure
+    ENV['SHAKA_MACHINE_ALIAS'] = saved
   end
 
   def test_the_helper_supplies_the_workflow_version
     version = Shaka::WorkflowVersion::Result.new(version: '0.1.0.pre.1', commit: 'a' * 40, modified: false,
                                                  upstream: true)
-    body = Shaka::ExecutionProvenance.new(PUBLIC_PROVENANCE, environment: {}, workflow_version: version)
-                                     .detail.fetch('body')
+    body = Shaka::ExecutionProvenance.new(PUBLIC_PROVENANCE, workflow_version: version).detail.fetch('body')
 
     assert_includes body, "| Workflow version | [`aaaaaaa`](https://github.com/shakacode/shaka/commit/#{'a' * 40}) |"
   end
@@ -40,12 +43,6 @@ class ExecutionProvenanceTest < Minitest::Test
     end
 
     assert_includes error.message, 'allowlist'
-  end
-
-  def test_uses_unknown_when_machine_alias_is_unavailable
-    body = Shaka::ExecutionProvenance.new(PUBLIC_PROVENANCE, environment: {}).detail.fetch('body')
-
-    assert_includes body, '| Machine alias | UNKNOWN |'
   end
 
   def test_hides_known_absence_of_a_user_request_but_retains_it_in_metadata
@@ -78,36 +75,6 @@ class ExecutionProvenanceTest < Minitest::Test
       end
       assert_raises(Shaka::Error) { Shaka::ExecutionProvenance.new(PUBLIC_PROVENANCE.except(field)).detail }
     end
-  end
-
-  def test_ignores_the_retired_coordination_machine_variable
-    body = Shaka::ExecutionProvenance.new(
-      PUBLIC_PROVENANCE, environment: { 'AGENT_COORD_MACHINE_ID' => 'm5' }
-    ).detail.fetch('body')
-
-    assert_includes body, '| Machine alias | UNKNOWN |'
-  end
-
-  def test_never_falls_back_to_a_host_name
-    body = Shaka::ExecutionProvenance.new(
-      PUBLIC_PROVENANCE,
-      environment: { 'HOST' => 'developer-laptop-m5-max', 'HOSTNAME' => 'developer-laptop-m5-max' }
-    ).detail.fetch('body')
-
-    assert_includes body, '| Machine alias | UNKNOWN |'
-    refute_includes body, 'developer-laptop-m5-max'
-  end
-
-  def test_refuses_an_unsafe_machine_alias_without_echoing_it
-    private_alias = 'customer machine'
-    error = assert_raises(Shaka::Error) do
-      Shaka::ExecutionProvenance.new(
-        PUBLIC_PROVENANCE, environment: { 'SHAKA_MACHINE_ALIAS' => private_alias }
-      ).detail
-    end
-
-    assert_includes error.message, 'machine alias'
-    refute_includes error.message, private_alias
   end
 
   def test_refuses_raw_prompt_content_without_echoing_it

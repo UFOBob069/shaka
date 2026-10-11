@@ -347,7 +347,7 @@ class PublicationProvenanceRequirementTest < Minitest::Test
     rendered = Shaka::Publication.description(content)
 
     assert_includes rendered, '<summary>Execution provenance</summary>'
-    assert_includes rendered, '| Machine alias |'
+    refute_includes rendered, '| Machine alias |'
     assert_includes rendered, '| User-requested model / effort | gpt-5.6-terra / medium |'
     refute_includes rendered, '| Initial prompt |'
     refute_includes rendered, '| Observed route |'

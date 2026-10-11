@@ -14,9 +14,8 @@ module Shaka
     NOT_SPECIFIED = 'Not specified'
     SAFE_VALUE = /\A(?:UNKNOWN|[A-Za-z0-9][A-Za-z0-9._:-]{0,79})\z/
 
-    def initialize(spec, environment: ENV, workflow_version: nil)
+    def initialize(spec, workflow_version: nil)
       @spec = spec
-      @environment = environment
       @workflow_version = workflow_version || WorkflowVersion.current
     end
 
@@ -40,7 +39,6 @@ module Shaka
     def rows
       values = validated
       [
-        ['Machine alias', machine_alias],
         ['Task source', values.fetch('task_source')],
         ['Workflow version', @workflow_version.markdown],
         (['User-requested model / effort', route(values, 'requested')] unless
@@ -48,13 +46,6 @@ module Shaka
         ['Recommended model / effort', route(values, 'recommended')],
         ['Active model / effort', route(values, 'active')]
       ].compact
-    end
-
-    def machine_alias
-      value = @environment.fetch('SHAKA_MACHINE_ALIAS', 'UNKNOWN')
-      raise Error, 'Publication provenance machine alias is invalid.' unless valid?(value)
-
-      value
     end
 
     def validated

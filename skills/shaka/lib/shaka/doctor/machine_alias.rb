@@ -8,9 +8,9 @@ module Shaka
   class Doctor
     # Reports whether this machine has an alias fit to publish.
     #
-    # Publication accepts any value matching its safe-value pattern, and a real host name
-    # matches it. So this check, not the renderer, is what stands between the machine's own
-    # name and every public pull request it would appear in.
+    # The agent copies the alias into the WIP Details Owner field, which accepts any single
+    # line of text. So this check, not the renderer, is what stands between an unsafe value
+    # or the machine's own name and every public pull request it would appear in.
     class MachineAlias
       include Check
 
@@ -38,17 +38,17 @@ module Shaka
         return host_name if host_name?(value)
         return unverified_alias if candidates.empty?
 
-        check('Machine alias', 'healthy', "provenance will publish #{value}")
+        check('Machine alias', 'healthy', "WIP Owner can publish #{value}")
       end
 
       private
 
       def unset
-        check('Machine alias', 'degraded', "#{VARIABLE} is unset; provenance will read UNKNOWN", guidance: guidance)
+        check('Machine alias', 'degraded', "#{VARIABLE} is unset; WIP Owner will read UNKNOWN", guidance: guidance)
       end
 
       def unpublishable
-        check('Machine alias', 'failed', "#{VARIABLE} is set to a value publication refuses", guidance: guidance)
+        check('Machine alias', 'failed', "#{VARIABLE} is not a short public-safe token", guidance: guidance)
       end
 
       # A machine may well be called `m5`, and suggesting its own name is the one thing this

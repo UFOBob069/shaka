@@ -38,7 +38,7 @@ class DoctorTest < Minitest::Test
     refute_includes report, host
   end
 
-  # A value the publication renderer would reject blocks now instead of failing mid-publication.
+  # Nothing at publication checks the alias, so a value unfit for a public pull request blocks here.
   def test_an_unpublishable_alias_blocks
     report, blocked = doctor(environment: { 'SHAKA_MACHINE_ALIAS' => 'customer machine' })
     assert_includes report, 'FAILED'
@@ -46,7 +46,7 @@ class DoctorTest < Minitest::Test
     refute_includes report, 'customer machine'
   end
 
-  # Publication accepts a host name, so doctor is the only thing standing between the
+  # WIP Details Owner accepts a host name, so doctor is the only thing standing between the
   # machine's own name and every public pull request it would appear in.
   def test_an_alias_set_to_the_machine_name_is_flagged_without_republishing_it
     name = 'developer-laptop-m5-max'

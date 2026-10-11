@@ -342,9 +342,9 @@ Carry those values from intake; recommendations and host settings do not establi
 a user request. Unrecoverable prior intake stays `UNKNOWN`, and old history is not
 reclassified. Recommended and active fields accept allowlisted strings or `UNKNOWN`,
 never `null`. Ruby validates the shapes; the agent establishes whether an absence is
-known. The initial prompt is excluded. The renderer
-adds the public alias from `SHAKA_MACHINE_ALIAS`, or `UNKNOWN`; it never falls back
-to a hostname.
+known. The initial prompt is excluded. Provenance
+carries no machine alias; put the public alias from `SHAKA_MACHINE_ALIAS`, or `UNKNOWN`,
+in the [WIP Details Owner field](delivery.md#recover-an-unfinished-pr), never a hostname.
 
 The renderer also fills the workflow version with the commit the helper runs from,
 because every commit between releases shares one version number. When the helper came
