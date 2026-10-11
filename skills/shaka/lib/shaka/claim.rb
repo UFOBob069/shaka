@@ -53,6 +53,11 @@ module Shaka
     end
 
     def self.branch_name_for(root)
+      if File.exist?(File.join(root, '.git')) && Configuration::SettingsPreview.ref(root:)
+        ref = Configuration.resolve_commit(root:, ref: Configuration.default_ref(root:), label: 'branch naming ref')
+        return Configuration.trusted(root:, ref:, candidate_commands: false).to_h.dig('branches', 'name') if
+          Configuration::Layout.commit(root:, sha: ref, allow_missing: true)
+      end
       return unless Configuration.contract_entry?(root)
 
       Configuration.worktree(root: root).to_h.dig('branches', 'name')

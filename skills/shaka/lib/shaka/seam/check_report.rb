@@ -20,6 +20,12 @@ module Shaka
         new(config:, mode: TRUSTED_MODE, ref:)
       end
 
+      def self.from_ref(root:, ref:)
+        config = TrustedConfigSource.from_ref(root:, ref:)
+        mode = Configuration::SettingsPreview.ref(root:) ? 'preview/local' : TRUSTED_MODE
+        new(config:, mode:, ref:)
+      end
+
       def self.private_settings(root:, ref:)
         raise Error, '--ref is required for private check' unless ref
 
@@ -50,18 +56,16 @@ module Shaka
       def validation
         payload = {
           'mode' => @mode,
-          'grants_policy' => trusted?,
+          'grants_policy' => policy?,
           'grants_merge_authority' => false
         }
         return payload.merge('ref' => @ref, 'trusted_source' => 'absent') if @mode == 'private/local'
-        return payload unless trusted?
+        return payload unless policy?
 
         payload.merge('ref' => @ref, 'sha' => @config.sha)
       end
 
-      def trusted?
-        @mode == TRUSTED_MODE
-      end
+      def policy? = [TRUSTED_MODE, 'preview/local'].include?(@mode)
     end
   end
 end

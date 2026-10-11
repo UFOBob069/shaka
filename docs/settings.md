@@ -7,31 +7,50 @@ prompts you can give your agent. This reference covers each option and its limit
 
 Settings live in `.agents/shaka/config.yml`. Ask your agent to
 [configure the repository](configure-repository.md), or edit the file in a PR.
+Shared settings on the default branch apply unless you explicitly choose a settings
+PR for a task. Editing settings in a PR does not select them automatically.
 
 Browse [this repository’s configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml) for a
 commented example with explicit defaults and repository-specific review choices.
 Optional choices without fixed defaults, such as the base branch and local reviewer models, stay commented.
 
-## Which settings apply?
+<a id="which-settings-apply"></a>
 
-Shaka uses one configuration source for the task. It does not combine individual
-settings with shared team settings.
+## Preview settings before adopting them
 
-| Repository setup | Settings used |
-| --- | --- |
-| Shared Shaka settings exist on the default branch | The default-branch configuration, including when reviewing a PR that changes it. |
-| No shared settings; an individual trial is configured | Your local `.agents/shaka/config.yml`, kept out of Git. |
+Keep proposed settings in an open PR and try them on real work before making them
+your team's defaults. Teammates can choose the same settings PR for their tasks.
 
-Omitted optional values use Shaka's defaults. An explicit task choice takes
-precedence where an option supports it, such as choosing Ask for one task.
-Each option below describes any such override. A trial's local settings govern
-delivery preferences, such as AI reviewers and writing limits; they cannot
-disable required merge gates or authorize merging.
+When starting a task, include the work you want done:
 
-A settings PR takes effect after it merges into the default branch. Shaka does
-not yet offer a mode that applies an unmerged settings PR to another task, or
-temporarily replaces team settings while you experiment. You can edit local
-settings and opening prompts during an individual trial before team adoption.
+```text
+$shaka Fix search when the query contains an apostrophe.
+Use the settings from PR #123 for this task. Keep that settings PR open.
+```
+
+To change settings during a task that is already running:
+
+```text
+$shaka Switch this task to the settings from PR #123.
+Keep that settings PR open and use merge policy ask.
+```
+
+The selected PR supplies the complete Shaka configuration, including reviewer
+choices and merge preferences. Your prompt can override a choice, as the second
+example does for merge policy. GitHub's required checks and approvals still apply.
+Use GitHub rulesets or branch protection for requirements your team wants GitHub
+to enforce.
+
+The agent records the settings PR and selected commit in the task's PR. The choice
+survives a fresh chat, stays with that task's branch and worktree, and does not
+change another task. Updates to the settings PR take effect when you ask the agent
+to select its newer commit. Changed settings require fresh affected checks and
+reviews.
+
+Without a selected settings PR, shared repository settings apply. Individual
+settings are a fallback for repositories without shared setup; they do not
+override a team's configuration. Ask the agent to stop the preview to return to
+those ordinary defaults. Preview uses the existing configuration format.
 
 ## `merge.preference`
 
@@ -547,7 +566,8 @@ root. Both the separate AI session and the coding agent use those instructions.
 Leave the setting out to use Shaka's default.
 
 The [configuration source](#which-settings-apply) determines which `prompt_file`
-setting applies. Shaka then reads the file as follows:
+setting applies. A settings preview reads the prompt at its selected commit.
+Without a preview, Shaka reads the file as follows:
 
 - **Shared team settings:** commit the prompt with the settings PR. Shaka uses
   the version on the default branch, so a PR cannot rewrite its own review rules.

@@ -45,8 +45,10 @@ module Shaka
       result.merge('setup_notices' => Doctor::CliInventory.setup_notices(inventory))
     end
 
-    # A task's --count wins; otherwise the trusted seam's standing count, or one reviewer.
-    def count(review) = review.fetch(RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT, 1)
+    # A task's --count wins; otherwise use the selected configuration's count.
+    def count(review)
+      review.fetch(RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT, 1)
+    end
 
     def identities(key, required: false)
       values = @options.fetch(key, [])
@@ -56,7 +58,7 @@ module Shaka
     end
 
     def config
-      return Configuration.trusted(root:, ref: nil) unless @options[:ref]
+      return Configuration.worktree(root:) unless @options[:ref]
 
       Configuration.resolve_source(root:, ref: @options[:ref]).first
     end

@@ -11,6 +11,7 @@ require_relative 'seam/upgrader'
 require_relative 'seam/pointer'
 require_relative 'seam/policy_options'
 require_relative 'seam/private_command'
+require_relative 'seam/preview_command'
 require_relative 'configuration'
 
 module Shaka
@@ -33,7 +34,7 @@ module Shaka
     def run
       return Migrator.run(@arguments) if @arguments.first == 'migrate'
       return Upgrader.run(@arguments) if @arguments.first == 'upgrade'
-      return PrivateCommand.run(@arguments.drop(1)) if @arguments.first == 'private'
+      return run_local_mode if %w[private preview].include?(@arguments.first)
 
       parser = option_parser
       parser.parse!(@arguments)
@@ -45,6 +46,10 @@ module Shaka
     end
 
     private
+
+    def run_local_mode
+      { 'private' => PrivateCommand, 'preview' => PreviewCommand }.fetch(@arguments.shift).run(@arguments)
+    end
 
     def validate_operation(operation, parser)
       raise OptionParser::InvalidArgument, parser.to_s unless known_operation?(operation)
@@ -76,10 +81,9 @@ module Shaka
     end
 
     def check_report
-      config = Configuration.trusted(root:, ref: @options[:ref])
-      return CheckReport.trusted(config, ref: @options[:ref]) if @options.key?(:ref)
+      return CheckReport.from_ref(root:, ref: @options[:ref]) if @options.key?(:ref)
 
-      CheckReport.local(config)
+      CheckReport.local(Configuration.worktree(root:))
     end
 
     def local? = @options[:local] == true

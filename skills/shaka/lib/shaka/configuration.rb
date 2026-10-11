@@ -7,6 +7,7 @@ require_relative 'trusted_config_source'
 require_relative 'configuration/sources'
 require_relative 'configuration/private_source'
 require_relative 'configuration/generated_files'
+require_relative 'configuration/settings_preview'
 
 module Shaka
   # Supported access to repository configuration. Worktree and trusted-commit reads
@@ -28,10 +29,25 @@ module Shaka
       TrustedConfigSource.load(root:, ref:, candidate_commands:)
     end
 
-    # Operation settings can be private; this selection grants no trusted policy or merge authority.
+    # Explicit task selections replace the complete configuration; private fallback
+    # settings apply only when the repository has no shared setup.
     def resolve_source(root:, ref:, candidate_commands: true)
       sha = resolve_commit(root:, ref:, label: 'settings ref')
-      source = private_source(root:, ref: sha)
+      preview = SettingsPreview.ref(root:)
+      return preview_source(root:, ref: sha, preview:, candidate_commands:) if preview
+
+      standard_source(root:, ref: sha, candidate_commands:)
+    end
+
+    def preview_source(root:, ref:, preview:, candidate_commands:)
+      trusted(root:, ref:, candidate_commands: false) if Layout.commit(root:, sha: ref, allow_missing: true)
+      config = trusted(root:, ref: preview, candidate_commands:)
+      [config, { trusted_ref: ref, preview_ref: preview }, 'preview/local']
+    end
+    private_class_method :preview_source
+
+    def standard_source(root:, ref:, candidate_commands:)
+      source = private_source(root:, ref:)
       if source.status == 'partial' && source.trusted_source == 'absent'
         raise Error, "Individual settings are incomplete: #{source.blockers.join('; ')}"
       end
@@ -39,9 +55,11 @@ module Shaka
       if source.status == 'complete'
         [source.candidate_config, { private_source: source }, 'private/local']
       else
-        [trusted(root:, ref: sha, candidate_commands:), { trusted_ref: sha }, 'trusted/team']
+        [trusted(root:, ref:, candidate_commands:), { trusted_ref: ref }, 'trusted/team']
       end
     end
+
+    private_class_method :standard_source
 
     def opening_prompt(root:, config:, ref:)
       path = config.opening_check.fetch('prompt_file')

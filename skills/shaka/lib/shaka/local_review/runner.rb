@@ -126,7 +126,7 @@ module Shaka
       return unless @options[:ledger]
 
       @ledger = LocalReviewLedger.new(@options[:ledger], root:)
-      @max_rounds = RepositoryConfig::ReviewLimit.from(trusted_review || {})
+      @max_rounds = RepositoryConfig::ReviewLimit.from(effective_review || {})
       @ledger.start!(base: @options[:base], head:, reviewer: @options[:reviewer], max_rounds: @max_rounds)
       @started = true
       check_history! if @ledger.last_head

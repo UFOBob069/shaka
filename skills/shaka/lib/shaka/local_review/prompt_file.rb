@@ -48,7 +48,8 @@ module Shaka
     end
 
     def execution_review
-      return trusted_review if trusted_review || !@options[:criteria_ref]
+      review = effective_review
+      return review if review || !@options[:criteria_ref]
 
       ref = @options[:criteria_ref]
       return unless Configuration.private_source(root:, ref:).status == 'complete'
@@ -64,10 +65,10 @@ module Shaka
     end
 
     def trusted_prompt_text
-      review = trusted_review
+      review = effective_review
       return unless review
 
-      ref = @options[:criteria_ref]
+      ref = settings_ref
       path = configured_prompt_path(review)
       access = { executable: git_executable, capture: method(:capture), resolver: method(:bounded_git) }
       path && Configuration.prompt_at_commit(root:, ref:, path:, git_access: access)
@@ -78,6 +79,20 @@ module Shaka
 
       ref = @options[:criteria_ref]
       @trusted_review = (trusted_review_settings(ref) if ref && trusted_seam?(ref))
+    end
+
+    # Repository instructions stay trusted; explicit selection replaces configuration.
+    def settings_ref
+      return unless @options[:criteria_ref]
+
+      Configuration::SettingsPreview.ref(root:) || @options[:criteria_ref]
+    end
+
+    def effective_review
+      ref = settings_ref
+      return trusted_review if ref == @options[:criteria_ref]
+
+      trusted_review_settings(ref)
     end
 
     # Reads only the review section, so the rest of the seam need not be valid for a review to run;
@@ -121,6 +136,10 @@ module Shaka
     end
 
     # Names the instructions the reviewer received, for the published review summary.
-    def prompt_source = @prompt_source || 'Shaka default'
+    def prompt_source
+      return 'Local settings preview (private source)' if @prompt_source && settings_ref != @options[:criteria_ref]
+
+      @prompt_source || 'Shaka default'
+    end
   end
 end

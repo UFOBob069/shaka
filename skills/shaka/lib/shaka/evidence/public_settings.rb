@@ -9,7 +9,7 @@ module Shaka
     # No paths, arbitrary strings, private content, or component hashes enter it.
     module PublicSettings
       ENUMS = {
-        'source' => %w[private/local trusted/team],
+        'source' => %w[private/local preview/local trusted/team],
         'source.layout' => %w[legacy new],
         'installation.source' => %w[revision development uninstalled],
         'merge.preference' => %w[ask auto],
@@ -81,7 +81,7 @@ module Shaka
         **NUMBERS.to_h { |field| [field, ->(value) { value.is_a?(Integer) && value.between?(0, 1_000_000) }] },
         'source.revision' => ->(value) { value.to_s.match?(/\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/) },
         'installation.revision' => ->(value) { value.to_s.match?(/\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/) },
-        'source.configuration' => ->(value) { %w[ABSENT private/local trusted/team].include?(value) },
+        'source.configuration' => ->(value) { %w[ABSENT private/local preview/local trusted/team].include?(value) },
         'installation.version' => lambda do |value|
           value.to_s.match?(/\A\d+\.\d+\.\d+(?:[.-](?:pre|rc|beta|alpha)[.-]?\d+)*\z/)
         end

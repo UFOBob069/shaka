@@ -23,7 +23,8 @@ for the remaining real-use verification gaps.
 
 Use [shared repository setup](configure-repository.md) when the team wants the
 same configuration. The agent opens a settings PR for you to review. Those
-choices take effect after that PR merges into the default branch.
+choices become the team’s defaults after that PR merges into the default branch.
+[Try them on one task first](settings.md#preview-settings-before-adopting-them).
 
 ## Choose a merge policy
 

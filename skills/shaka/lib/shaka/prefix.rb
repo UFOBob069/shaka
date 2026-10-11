@@ -58,8 +58,9 @@ module Shaka
     def call
       ref = @ref || Configuration.default_ref(root: @root)
       sha = Configuration.resolve_commit(root: @root, ref:, label: 'prefix ref')
-      config = Configuration.trusted(root: @root, ref: sha, candidate_commands: false).to_h if
-        Configuration::Layout.commit(root: @root, sha:, allow_missing: true)
+      preview = Configuration::SettingsPreview.ref(root: @root)
+      config = Configuration.resolve_source(root: @root, ref: sha, candidate_commands: false).first.to_h if
+        preview || Configuration::Layout.commit(root: @root, sha:, allow_missing: true)
       RepoPrefix.display(configured: config&.[]('repo_prefix'), repository_name: GitOrigin.repository_name(root: @root))
     end
   end

@@ -129,6 +129,9 @@ phases:
         `--ref` command stops, so review, wait for, and hand off the setup PR through the packaged
         [first setup PR path](<{{package_root}}/skills/shaka/references/repository-setup.md#review-and-merge-the-first-setup-pr>)
         in place of every step that reads policy with `--ref`.
+      - For an explicit request to try unmerged repository settings, or a resumed task
+        whose `seam check` reports `preview/local`, follow
+        [settings preview](<{{package_root}}/skills/shaka/references/settings-preview.md>).
       - Resolve this task's base branch, which is the branch the work starts from and the branch
         its pull request targets. It is not where policy comes from: `seam check --ref` keeps
         reading the contract from the default branch whatever the base is, so a base a task names

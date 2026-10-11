@@ -7,6 +7,7 @@ require_relative 'trusted_path_resolver'
 require_relative 'configuration/layout'
 require_relative 'configuration/sources'
 require_relative 'configuration/private_source'
+require_relative 'configuration/settings_preview'
 
 module Shaka
   # Reads repository policy from an immutable commit resolved from a trusted ref.
@@ -14,18 +15,19 @@ module Shaka
     include Configuration::Sources
 
     def self.load(root:, ref: nil, candidate_commands: true)
-      return RepositoryConfig.load(root:) unless ref
-
-      new(root:, candidate_commands:).load(ref)
+      ref ? new(root:, candidate_commands:).load(ref) : RepositoryConfig.load(root:)
     end
 
-    # PR commands read policy only from a trusted ref; without one they keep GitHub's native gates
-    # instead of falling back to the candidate file.
+    # An explicit task selection replaces repository settings. Private fallback settings
+    # still grant no policy, and a candidate file cannot select itself.
     def self.from_ref(root:, ref:, private_trial: false)
-      return nil if private_trial && ref && !Configuration::Layout.commit(root:, sha: ref, allow_missing: true) &&
-                    Configuration::PrivateSource.new(root:, ref:).resolve.status == 'complete'
+      return unless ref
 
-      load(root:, ref:) if ref
+      require_relative 'configuration'
+      config, _, kind = Configuration.resolve_source(root:, ref:)
+      return config unless kind == 'private/local'
+
+      load(root:, ref:) unless private_trial
     end
 
     def initialize(root:, candidate_commands: true)
@@ -50,14 +52,6 @@ module Shaka
       read_prompt(path, ref, 'opening_check.prompt_file')
     end
 
-    private
-
-    # A prompt file the review runner would reject would stop every local review, including the one
-    # for the PR that fixes it.
-    def validate_prompt_files(review, opening, sha)
-      RepositoryConfig.prompt_files(review:, opening:).each { |label, path| read_prompt(path, sha, label) }
-    end
-
     def read_prompt(path, sha, label)
       resolved, entry = TrustedPathResolver.new(root: @root, sha:).resolve(path)
       is_blob = entry && entry.last == 'blob' && entry.first != TrustedPathResolver::SYMLINK.first
@@ -69,7 +63,14 @@ module Shaka
 
       text.force_encoding(Encoding::UTF_8)
     end
-    public :read_prompt
+
+    private
+
+    # A prompt file the review runner would reject would stop every local review, including the one
+    # for the PR that fixes it.
+    def validate_prompt_files(review, opening, sha)
+      RepositoryConfig.prompt_files(review:, opening:).each { |label, path| read_prompt(path, sha, label) }
+    end
 
     # `-s` prints the blob size and `-p` its contents.
     def git_output(sha, path, option)

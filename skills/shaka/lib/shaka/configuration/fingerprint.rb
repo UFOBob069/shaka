@@ -18,7 +18,7 @@ module Shaka
       end
 
       def self.build(root:, effective_settings:, repository:, installation:, **source)
-        unknown = source.keys - %i[private_source trusted_ref]
+        unknown = source.keys - %i[private_source trusted_ref preview_ref]
         raise Error, "Unknown fingerprint source: #{unknown.join(', ')}" if unknown.any?
 
         new(root:, effective_settings:, repository:, installation:, source:).build
@@ -33,6 +33,8 @@ module Shaka
         @installation = FingerprintCanonical.normalize(installation)
         @private_source = source[:private_source]
         @trusted_ref = source[:trusted_ref]
+        @preview_ref = source[:preview_ref]
+        @settings_ref = @preview_ref || @trusted_ref
         @files = FingerprintFiles.new(@root)
       end
 
@@ -95,7 +97,9 @@ module Shaka
 
         verify_trusted_ref!
 
-        common.merge('kind' => 'trusted/team', 'configuration_blob' => config_blob(path))
+        common['preview_commit'] = @preview_ref if @preview_ref
+        common.merge('kind' => @preview_ref ? 'preview/local' : 'trusted/team',
+                     'configuration_blob' => config_blob(path))
       end
 
       def config_path
@@ -105,13 +109,13 @@ module Shaka
       end
 
       def config_blob(path)
-        entry = TrustedPathResolver.new(root: @root, sha: @trusted_ref).entry(path)
+        entry = TrustedPathResolver.new(root: @root, sha: @settings_ref).entry(path)
         unless entry && entry.last == 'blob' && entry.first != TrustedPathResolver::SYMLINK.first
           raise Error, 'Trusted configuration must be a regular file'
         end
 
         out, err, status = Open3.capture3('git', '-C', @root, 'rev-parse', '--verify', '--end-of-options',
-                                          "#{@trusted_ref}:#{path}")
+                                          "#{@settings_ref}:#{path}")
         raise Error, "Cannot identify trusted configuration blob: #{err.strip}" unless status.success?
 
         blob = out.strip
@@ -133,7 +137,7 @@ module Shaka
 
       def file_hashes
         FingerprintInputs.new(root: @root, settings: @settings, files: @files,
-                              private_source: @private_source, trusted_ref: @trusted_ref).hashes
+                              private_source: @private_source, trusted_ref: @settings_ref).hashes
       end
     end
   end

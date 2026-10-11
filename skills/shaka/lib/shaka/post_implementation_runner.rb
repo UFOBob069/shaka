@@ -23,7 +23,7 @@ module Shaka
     def validate_reviewer!
       raise Error, '--ref must be a full trusted default-branch commit SHA' unless @options[:criteria_ref]
 
-      settings = (trusted_review || {}).fetch('post_implementation', {})
+      settings = (effective_review || {}).fetch('post_implementation', {})
       RepositoryConfig::PostImplementationSchema.new(settings).validate
       @disabled = settings['enabled'] == false
       choices = execution_choices(settings)
@@ -62,7 +62,7 @@ module Shaka
     def run_report(prompt)
       if @disabled || @options[:opt_out]
         return { 'status' => 'opted_out', 'head' => head, 'ready' => false,
-                 'reason' => @options[:opt_out] || 'Trusted review.post_implementation.enabled is false' }
+                 'reason' => @options[:opt_out] || 'Selected review.post_implementation.enabled is false' }
       end
 
       super
@@ -113,9 +113,9 @@ module Shaka
     def checkpoint_instructions
       return File.read(DEFAULT_PROMPT, encoding: 'UTF-8') unless @prompt_path
 
-      @prompt_source = "#{@options[:criteria_ref]}:#{@prompt_path}"
+      @prompt_source = "#{settings_ref}:#{@prompt_path}"
       access = { executable: git_executable, capture: method(:capture), resolver: method(:bounded_git) }
-      Configuration.prompt_at_commit(root:, ref: @options[:criteria_ref], path: @prompt_path, git_access: access)
+      Configuration.prompt_at_commit(root:, ref: settings_ref, path: @prompt_path, git_access: access)
     end
 
     def validate_report(path)

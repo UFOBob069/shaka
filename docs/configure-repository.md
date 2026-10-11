@@ -48,10 +48,10 @@ Use merge policy ask.
 ```
 
 The agent inspects your project, reads existing instructions, and prepares a
-separate setup PR using your commands. You review the choices and **merge this
-first setup PR yourself on GitHub** before starting feature work. Until it merges,
-Shaka cannot use those proposed settings to choose a reviewer or merge for you.
-The agent reviews the setup PR and names the commit for you to merge.
+separate setup PR using your commands. Review the choices and **merge this first
+setup PR yourself on GitHub** to make them the team's defaults. The agent reviews
+it and names the commit for you to merge. To try the choices on a task first,
+[select that settings PR](settings.md#preview-settings-before-adopting-them).
 
 To change a choice later, ask:
 

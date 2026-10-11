@@ -386,7 +386,8 @@ begin
              github.resolve_thread(options.fetch(:thread))
            when 'walkthrough'
              github.walkthrough(head: options.fetch(:head), body: walkthrough_body(options, github),
-                                seam_required_checks:, prose: Shaka::ProseLimits.new(seam&.prose_limits || {}))
+                                seam_required_checks:,
+                                prose: Shaka::ProseLimits.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref]))
            when 'merge'
              head = options.fetch(:head)
              review = { required: seam&.review&.fetch('required'), waiver: options[:review_waiver],
