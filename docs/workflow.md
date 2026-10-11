@@ -23,6 +23,8 @@ supporting procedures as needed.
 
 ## Trust model
 
+![A maintainer controls a glass-enclosed workspace while outside material waits on a separate inspection tray.](img/trust-workspace.webp)
+
 Shaka exists to make the people who maintain a project faster. It trusts them:
 anyone with write access, plus the users, bots, and teams you list. Their settings
 and instructions on the default branch are the project's decisions, and a

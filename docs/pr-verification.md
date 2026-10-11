@@ -1,5 +1,7 @@
 # PR verification
 
+![Two independently supported inspection lenses examine the same component on a workbench.](img/independent-review.webp)
+
 Use a Shaka PR to understand the change, assess its evidence, and decide what
 needs closer review. The same record helps you revisit decisions after merging.
 

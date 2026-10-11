@@ -1,5 +1,7 @@
 # Control towers
 
+![A central coordination tower connects three smaller towers, each with its own platform and work units.](img/coordinated-towers.webp)
+
 Control towers are optional tools for tracking work across repositories. Try Shaka
 on a few tasks first.
 

@@ -4,6 +4,8 @@ Understand what your coding agent changed, why it chose the approach, and how
 the result was checked. Shaka presents the context you need to approve a change,
 request revisions, or resolve an open question. You choose who merges it.
 
+![Two people set the work in motion and inspect its result, with automated workshop stations between them.](img/delivery-workshop.webp)
+
 ![You set the outcome and make the merge call. Shaka plans, implements, verifies, explains, and handles review in between, pausing only when a decision needs you.](img/attention.svg)
 
 ## Start here

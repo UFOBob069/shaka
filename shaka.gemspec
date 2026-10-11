@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
                    'skills/rct-claude/SKILL.md',
                    'skills/shaka/SKILL.md', 'skills/shaka/references/*.md',
                    'skills/shaka/config/*.yml', 'skills/shaka/config/*.md', 'skills/shaka/lib/**/*.rb',
-                   'skills/shaka/scripts/*', 'bin/install', 'exe/*', 'docs/**/*.md', 'docs/img/*.svg',
+                   'skills/shaka/scripts/*', 'bin/install', 'exe/*', 'docs/**/*.md', 'docs/img/*.{svg,webp}',
                    'contributing/**/*.md',
                    'README.md', 'CONTRIBUTING.md', 'LICENSE']
   spec.bindir = 'exe'
