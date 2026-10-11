@@ -78,7 +78,7 @@ module Shaka
       raise OptionParser::InvalidArgument, parser.to_s unless @arguments.length == 2 && @options[:content_file]
 
       github = @github || GitHub.new(*@arguments)
-      result = LocalReviewPublisher.new(content, github, @arguments.first).publish
+      result = LocalReviewPublisher.new(published_content, github, @arguments.first).publish
       puts JSON.pretty_generate(result)
       result.fetch('cleanup').fetch('unavailable').empty? ? 0 : 1
     end
@@ -103,6 +103,11 @@ module Shaka
     end
 
     def content = JSON.parse(File.read(@options[:content_file], encoding: 'UTF-8'))
+
+    # Finds each kept report, including beside a ledger that has moved, or names the one that is gone.
+    def published_content
+      LocalReviewBundle.resolve(content, File.dirname(File.expand_path(@options[:content_file])))
+    end
 
     def publish_parser
       OptionParser.new do |flags|

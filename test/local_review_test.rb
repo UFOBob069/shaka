@@ -1334,6 +1334,17 @@ class LocalReviewLoopTest < Minitest::Test
     end
   end
 
+  def test_a_ledger_round_reports_its_kept_report_and_warns_about_a_temporary_ledger
+    in_loop do |head|
+      result = loop_round(head, findings: 0)
+      kept = JSON.parse(File.read(@ledger)).fetch('rounds').first.fetch('report')
+
+      assert_equal File.join(File.realpath(File.dirname(@ledger)), 'reports'), File.dirname(kept)
+      assert_equal kept, result.fetch('report')
+      assert_includes result.fetch('ledger_warning'), 'temporary directory'
+    end
+  end
+
   # Break caught: a head from another branch lacks the fixes the ledger says were made.
   def test_refuses_a_head_that_does_not_build_on_the_last_round
     in_loop do |head|

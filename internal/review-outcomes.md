@@ -1,7 +1,7 @@
 # Preserve review decisions and later outcomes
 
 Design proposal for the remaining work on [issue #395](https://github.com/shakacode/shaka/issues/395).
-Nothing proposed here is shipped. [Requirements](requirements.md) owns pilot scope;
+Retention has shipped; assessments and export have not. [Requirements](requirements.md) owns pilot scope;
 issue #395 owns this extension's acceptance checklist.
 
 A maintainer should be able to ask, months after a merge, "which reviewer
@@ -18,6 +18,13 @@ reports, and run metadata sit under one "Review evidence and history" disclosure
 A finding's disposition is now `open`, `decision_needed`, `fixed`, `dismissed`,
 `accepted`, or the legacy `documented`, which renders as Unassessed and stays
 visible for a defect or risk.
+
+The retention step below, section 1 of the proposal, has also shipped: `review run`
+keeps a copy of each report beside the ledger, warns about a ledger in a temporary
+directory, and `review publish` names a report that is missing or changed. One
+detail differs from the proposal. A round records its copy by full path and hash,
+not by relative path, because every reader of a ledger expects a path it can open;
+the hash finds the copy again beside a ledger that has moved.
 
 The issue's presentation checklist has not been rechecked against real review
 records since those PRs merged. That check belongs to the real-use evaluation below.

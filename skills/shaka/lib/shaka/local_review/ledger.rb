@@ -2,6 +2,7 @@
 
 require 'json'
 require_relative '../error'
+require_relative 'bundle'
 require_relative 'evidence'
 require_relative 'finding'
 require_relative 'ledger_batch'
@@ -77,7 +78,9 @@ module Shaka
         raise Error, 'The ledger changed while this round ran; run the review again.' if
           snapshot && snapshot(round['head']) != snapshot
 
-        write(data.merge('base' => base, 'local_max_rounds' => max_rounds, 'rounds' => rounds + [round]))
+        kept = round.merge(LocalReviewBundle.store(@path, round.fetch('report')))
+        write(data.merge('version' => LocalReviewBundle::VERSION, 'base' => base, 'local_max_rounds' => max_rounds,
+                         'rounds' => rounds + [kept]))
         clear_running
       end
     end
@@ -112,11 +115,7 @@ module Shaka
 
     def data
       @data ||= if File.exist?(@path)
-                  parsed = JSON.parse(File.read(@path, encoding: 'UTF-8'))
-                  raise Error, "#{@path} is not a review ledger." unless
-                    parsed.is_a?(Hash) && parsed['rounds'].is_a?(Array)
-
-                  parsed
+                  LocalReviewBundle.ledger!(JSON.parse(File.read(@path, encoding: 'UTF-8')), @path)
                 else
                   { 'rounds' => [] }
                 end

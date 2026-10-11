@@ -173,7 +173,13 @@ module Shaka
       round = round.merge('effort' => effort, 'requested_model' => @options[:model]).compact
       @ledger.append!(base: @options[:base], round:, snapshot: @snapshot, max_rounds: @max_rounds)
       @appended = true
-      result.merge('ledger' => @ledger.path, 'round' => @ledger.rounds.size)
+      result.merge(kept_round)
+    end
+
+    # The result names the kept copy, which outlives the reviewer's own temporary file.
+    def kept_round
+      { 'report' => @ledger.rounds.last.fetch('report'), 'ledger' => @ledger.path, 'round' => @ledger.rounds.size,
+        'ledger_warning' => LocalReviewBundle.warning(@ledger.path) }.compact
     end
 
     # Earlier rounds reach the reviewer as data: each finding's class and disposition, never the
