@@ -14,6 +14,7 @@
       "collapsed": true,
       "items": [
         "configure-repository",
+        "settings-guide",
         "coding-agents",
         "migration"
       ]
@@ -30,7 +31,11 @@
           "id": "expected-experience",
           "label": "What to expect from Shaka"
         },
-        "settings",
+        {
+          "type": "doc",
+          "id": "settings",
+          "label": "Settings reference"
+        },
         "writing-preferences",
         "workflow"
       ]

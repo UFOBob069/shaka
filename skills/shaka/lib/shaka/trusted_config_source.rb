@@ -43,12 +43,11 @@ module Shaka
       config
     end
 
-    def opening_prompt(config)
+    def opening_prompt(config, ref: config.sha)
       path = config.opening_check['prompt_file']
       return unless path
 
-      resolved, = TrustedPathResolver.new(root: @root, sha: config.sha).resolve(path)
-      git_output(config.sha, resolved, '-p')
+      read_prompt(path, ref, 'opening_check.prompt_file')
     end
 
     private
@@ -56,16 +55,21 @@ module Shaka
     # A prompt file the review runner would reject would stop every local review, including the one
     # for the PR that fixes it.
     def validate_prompt_files(review, opening, sha)
-      resolver = TrustedPathResolver.new(root: @root, sha:)
-      RepositoryConfig.prompt_files(review:, opening:).each do |label, path|
-        resolved, entry = resolver.resolve(path)
-        is_blob = entry && entry.last == 'blob' && entry.first != TrustedPathResolver::SYMLINK.first
-        raise Error, "#{label} does not name a file at #{sha}: #{path}" unless is_blob
-
-        error = ReviewPrompt.file_error(git_output(sha, resolved, '-s').to_i) { git_output(sha, resolved, '-p') }
-        raise Error, "#{label} #{path} at #{sha} #{error}" if error
-      end
+      RepositoryConfig.prompt_files(review:, opening:).each { |label, path| read_prompt(path, sha, label) }
     end
+
+    def read_prompt(path, sha, label)
+      resolved, entry = TrustedPathResolver.new(root: @root, sha:).resolve(path)
+      is_blob = entry && entry.last == 'blob' && entry.first != TrustedPathResolver::SYMLINK.first
+      raise Error, "#{label} does not name a file at #{sha}: #{path}" unless is_blob
+
+      text = nil
+      error = ReviewPrompt.file_error(git_output(sha, resolved, '-s').to_i) { text = git_output(sha, resolved, '-p') }
+      raise Error, "#{label} #{path} at #{sha} #{error}" if error
+
+      text.force_encoding(Encoding::UTF_8)
+    end
+    public :read_prompt
 
     # `-s` prints the blob size and `-p` its contents.
     def git_output(sha, path, option)
@@ -116,9 +120,7 @@ module Shaka
     end
 
     def command_entries(resolver, layout)
-      layout.optional.values.to_h do |path|
-        [path, resolver.entry(path)]
-      end.compact
+      layout.optional.values.to_h { |path| [path, resolver.entry(path)] }.compact
     end
 
     def validate_legacy_command_entries(resolver, entries, sha, layout)

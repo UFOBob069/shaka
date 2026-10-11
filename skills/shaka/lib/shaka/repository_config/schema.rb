@@ -27,11 +27,13 @@ module Shaka
 
       def initialize(root:, data:, available_commands: nil, candidate_commands: true,
                      selection: Configuration::Layout::Selection.new(policy: Configuration::Layout::LEGACY,
-                                                                     candidate: Configuration::Layout::LEGACY))
+                                                                     candidate: Configuration::Layout::LEGACY),
+                     &prompt_validator)
         @root = root
         @data = data
         @available_commands = available_commands
         @candidate_commands = candidate_commands
+        @prompt_validator = prompt_validator
         @layout = selection.policy
         @candidate_layout = selection.candidate
         @config_path = @layout.contract
@@ -94,6 +96,8 @@ module Shaka
       # A trusted load checks the files in the commit's tree instead; see TrustedConfigSource.
       def local_prompt_files!(review)
         RepositoryConfig.prompt_files(review:, opening: @data.fetch('opening_check', {})).each do |label, path|
+          next if @prompt_validator&.call(label, path)
+
           file = file!(path, label)
           error = ReviewPrompt.file_error(File.size(file)) { File.binread(file) }
           raise Error, "#{label} #{path} #{error}" if error

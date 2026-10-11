@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-# Loads trusted opening-check settings after publication and selects a reviewer.
+# Loads effective opening-check settings after publication and selects a reviewer.
 
 require_relative 'opening_check'
 require_relative 'reviewer_selection'
-require_relative 'trusted_config_source'
+require_relative 'configuration'
 require 'tmpdir'
 
 module Shaka
-  # Loads the trusted parser choice after a PR description is published.
+  # Loads the private or trusted team parser choice after a PR description is published.
   class OpeningPublication
     def self.with_safe_path(root:, select_gh: true)
       original = ENV.fetch('PATH', nil)
@@ -65,7 +65,7 @@ module Shaka
         @ref.match?(/\A[0-9a-f]{40}\z/i)
 
       self.class.with_safe_path(root: @root, select_gh: false) do |candidate_root|
-        check_with_trusted_settings(summary, candidate_root)
+        check_with_settings(summary, candidate_root)
       end
     rescue StandardError => e
       fallback(summary, e, @prompt)
@@ -73,10 +73,11 @@ module Shaka
 
     private
 
-    def check_with_trusted_settings(summary, candidate_root)
-      source = TrustedConfigSource.new(root: @root)
-      config = TrustedConfigSource.from_ref(root: @root, ref: @ref)
-      @prompt = source.opening_prompt(config) if config&.opening_check&.key?('prompt_file')
+    def check_with_settings(summary, candidate_root)
+      config = Configuration.resolve_source(root: @root, ref: @ref, candidate_commands: false).first
+      if config.opening_check.key?('prompt_file')
+        @prompt = Configuration.opening_prompt(root: @root, config:, ref: @ref)
+      end
       validate_reviewer!(config) if @reviewer
       OpeningCheck.new(summary:, candidate_root:, reviewer: @reviewer, model: @model, prompt: @prompt).call
     end

@@ -31,9 +31,9 @@ module Shaka
       end
     end
 
-    # The reviewer's trusted model and effort apply where the task named none.
+    # Effective model and effort apply where the task named none; instructions remain trusted.
     def apply_trusted_settings!
-      agent = reviewer_settings(trusted_review || {})
+      agent = reviewer_settings(execution_review || {})
       return unless agent
 
       schema = RepositoryConfig::ReviewSchema
@@ -45,6 +45,15 @@ module Shaka
           schema.public_send(check, agent[key], "review.local_review_agents #{key}")
           @options[option] = agent[key]
         end
+    end
+
+    def execution_review
+      return trusted_review if trusted_review || !@options[:criteria_ref]
+
+      ref = @options[:criteria_ref]
+      return unless Configuration.private_source(root:, ref:).status == 'complete'
+
+      Configuration.resolve_source(root:, ref:, candidate_commands: false).first.review
     end
 
     def apply_reviewer_settings!

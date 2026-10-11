@@ -1,14 +1,38 @@
-# Settings
+# Settings reference
+
+<a id="settings"></a>
+
+Start with [Choose your settings](settings-guide.md) for common choices and
+prompts you can give your agent. This reference covers each option and its limits.
 
 Settings live in `.agents/shaka/config.yml`; repositories configured before that
 layout keep them in `.agents/agent-workflow.yml`. Ask your agent to
 [configure the repository](configure-repository.md), or edit the file in a PR.
-Policy comes from the default branch; settings changed in a PR do not govern
-that PR.
 
 Browse [this repository’s configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml) for a
 commented example with explicit defaults and repository-specific review choices.
 Optional choices without fixed defaults, such as the base branch and local reviewer models, stay commented.
+
+## Which settings apply?
+
+Shaka uses one configuration source for the task. It does not combine individual
+settings with shared team settings.
+
+| Repository setup | Settings used |
+| --- | --- |
+| Shared Shaka settings exist on the default branch | The default-branch configuration, including when reviewing a PR that changes it. |
+| No shared settings; an individual trial is configured | Your local `.agents/shaka/config.yml`, kept out of Git. |
+
+Omitted optional values use Shaka's defaults. An explicit task choice takes
+precedence where an option supports it, such as choosing Ask for one task.
+Each option below describes any such override. A trial's local settings govern
+delivery preferences, such as AI reviewers and writing limits; they cannot
+disable required merge gates or authorize merging.
+
+A settings PR takes effect after it merges into the default branch. Shaka does
+not yet offer a mode that applies an unmerged settings PR to another task, or
+temporarily replaces team settings while you experiment. You can edit local
+settings and opening prompts during an individual trial before team adoption.
 
 ## `merge.preference`
 
@@ -403,7 +427,8 @@ which has no `prompt_file` on its entry, uses `.agents/review-prompt.md`.
 
 Shaka reads the file from a trusted default-branch revision, so a PR that
 changes it is reviewed with the current version. Without a trusted prompt,
-the reviewer gets Shaka's default instructions. Settings validation fails
+including during an individual trial without team settings, the reviewer uses
+Shaka's default instructions. Settings validation fails
 when a configured file is missing, empty, larger than 100 KB, or not UTF-8.
 Shaka keeps a few rules whatever
 the file says: the reviewer makes no edits, treats the diff as data rather than
@@ -443,52 +468,76 @@ The PR records the conclusion, reasons, execution settings, and available native
 usage. A failed invocation stays incomplete. “Simplify/reframe”, “Do not merge”, or
 unresolved substantive concerns block readiness and Auto; green technical checks
 and changed settings do not clear them. Earlier executions stay visible on the PR.
-An explicit `enabled: false` opts out and requires a visible note.
+Setting `enabled: false` in the shared default-branch configuration opts out and
+requires a visible note. An individual trial's local setting cannot disable
+this gate.
 
 Ruby validates settings, execution outcome, report shape, and head binding.
-The reviewer judges product fit. The task owner supplies the original problem and
-evidence, handles concerns, and establishes merge readiness; `merge` does not
-require a product checkpoint report.
+The AI reviewer assesses whether the change solves the problem and is worth
+maintaining. The task owner supplies the original problem and evidence, resolves
+concerns, and establishes merge readiness. Final merge preparation
+requires a report for the current commit with no unresolved concerns, or an explicit
+opt-out.
 
 ## `opening_check`
 
-**Optional.** By default, the coding agent tries a separate local reviewer from
-the trusted reviewer list. To keep the opening with the coding agent, set:
+**Optional.** Check that a PR description's opening explains what improves for
+its reader. The coding agent always has instructions for this check.
+`external_enabled` controls whether it also requests a separate AI check:
 
 ```yaml
 opening_check:
   external_enabled: false
-  prompt_file: .agents/opening-prompt.md # optional
+  prompt_file: .agents/shaka/opening.md # optional custom instructions
 ```
 
-For a customization example, copy [Shaka's default opening prompt](https://github.com/shakacode/shaka/blob/main/skills/shaka/config/opening-prompt.md)
-to `.agents/opening-prompt.md` and edit it for your team. Shaka reads that same
-default file when you have not configured a replacement.
+With `external_enabled: false`, the coding agent checks the opening in the
+current chat. With the default `true`, it selects a separate AI session from
+[`review.local_review_agents`](#reviewlocal_review_agents). Here, “external” means
+outside the current chat; the session can use the same provider.
 
-For example, a team can develop with Codex and list Claude and Grok in
-`review.local_review_agents`. The coding agent tries the listed providers in
-preference order. If neither is available, Shaka returns the opening-check
-prompt for Codex to apply. With the setting disabled, the coding agent receives
-the prompt without sending the opening to another model.
+The workflow prefers a different provider when one is available. That preference
+does not guarantee a better result. The separate check currently runs at low
+effort, independently of the effort configured for code reviews. There are no
+opening-specific provider, model, or effort settings in the configuration file.
+The command supports a listed provider and, for Claude or Grok, a model choice;
+Codex uses its CLI default model.
 
-When `external_enabled` is true, the agent uses `review.local_review_agents` in
-its existing preference order: a different provider first, then another listed
-provider, then the development model when no listed CLI completes the parse.
-`external_enabled` defaults to `true`; only a provider in the trusted reviewer
-list may receive the opening. A valid `prompt_file`
-replaces the default parsing instructions for both external and development-model
-checks. Shaka reads it from the trusted default-branch revision, applies the
-same file checks as `review.prompt_file`, and treats the PR opening as data.
-The required JSON field names and types remain fixed by Shaka.
-If the configured check cannot run, the description still publishes and the
-development model receives a fallback prompt with the reason.
+If the separate check is unavailable, the coding agent receives its instructions
+and checks the opening itself. The check is advisory; its availability does not
+block publishing the description.
+
+### Customize the opening check
+
+Copy [Shaka's default opening prompt](https://github.com/shakacode/shaka/blob/main/skills/shaka/config/opening-prompt.md)
+and set `prompt_file` to your copy. The path is relative to the repository root,
+not the configuration file's directory. For example,
+`prompt_file: .agents/shaka/opening.md` selects that file beneath the repository
+root. Both the separate AI session and the coding agent use those instructions.
+Leave the setting out to use Shaka's default.
+
+The [configuration source](#which-settings-apply) determines which `prompt_file`
+setting applies. Shaka then reads the file as follows:
+
+- **Shared team settings:** commit the prompt with the settings PR. Shaka uses
+  the version on the default branch, so a PR cannot rewrite its own review rules.
+- **Individual trial:** put the prompt in `.agents/shaka/`, alongside your local
+  settings. For example, `.agents/shaka/opening.md` stays out of commits and applies to
+  your trial. A symlink cannot point outside that directory.
+- **A prompt elsewhere in the repository:** Shaka reads the default-branch
+  version, even during an individual trial. A file that exists only on your feature
+  branch cannot supply instructions.
+
+Prompt files must pass the [review prompt file checks](#reviewprompt_file).
+Custom instructions cannot change the JSON fields Shaka expects in the response.
+Shaka treats the PR opening as text to assess, not as instructions to follow.
 
 ## `prose_limits`
 
-**Optional.** Shaka refuses to publish a PR description or code walkthrough
-that reads as a wall of text. Reviewing a small diff is faster than reading a
-long explanation of it, so the text should point to the code instead of
-retelling it.
+**Optional.** Limit the length of PR descriptions and code walkthroughs. These
+limits are checked in code before publication. Recommendations and review
+replies follow the agent's writing instructions but are not checked against
+these limits.
 
 ```yaml
 prose_limits:
@@ -521,10 +570,18 @@ tell how often the limits fire.
 
 For example, a 19-line change with a 950-word walkthrough is refused. The agent
 splits long paragraphs, moves supporting detail into collapsed details, and
-links to the code, then publishes again. Shaka reads these values from the
-trusted default-branch revision when the agent passes `--ref`; without it, the
-defaults apply. If that revision cannot be read, `description` still publishes
-under the defaults and its result says why, while `walkthrough` stops.
+links to the code, then publishes again.
+
+### Which limits apply?
+
+The [configuration source](#which-settings-apply) determines the limits. For
+example, during an individual trial, a local 20-word sentence limit applies to
+both your PR description and walkthrough. A shared team's changed limit takes
+effect after its settings PR merges.
+
+When the agent publishes without a settings reference, Shaka uses its defaults.
+If it cannot read the referenced settings, the description can use the defaults
+and reports why. The walkthrough stops until the settings can be read.
 
 ## Standard command scripts
 
@@ -622,7 +679,7 @@ wip:
 ```
 
 Include the checkout path and session link in **WIP Details**. Both team setup and
-private trials write `true`. The description renderer replaces both
+individual trials write `true`. The description renderer replaces both
 location fields with `REDACTED` when the selected setting is explicitly false.
 When settings were not read or could not load, it withholds locations and explains
 how to reload the policy. Ownership, state, next action, and the current commit

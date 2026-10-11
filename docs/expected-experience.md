@@ -10,15 +10,17 @@ see [Start here](getting-started.md) and [Working with Shaka](working-with-shaka
 ## Choose how to start
 
 Use [shared repository setup](configure-repository.md) for team settings, or start
-a task if the repository is already configured. The private-trial option below
-avoids a team setup PR but still has delivery limitations. Private setup grants
+a task if the repository is already configured. The individual-trial option below
+avoids a team setup PR but still has delivery limitations. Individual setup grants
 neither team policy nor permission to merge.
 
-### Private trials: available tools, incomplete guided experience
+<a id="private-trials-available-tools-incomplete-guided-experience"></a>
+
+### Individual trials: available tools, incomplete guided experience
 
 ```text
 $shaka Implement this small feature using this repository's existing commands.
-Try Shaka privately in this clone. Do not create a team setup PR or include
+Try Shaka just for me in this clone. Do not create a team setup PR or include
 Shaka configuration in the feature diff. Keep merge policy ask.
 ```
 
@@ -27,9 +29,9 @@ new-user path. The [first-task acceptance report](https://github.com/shakacode/s
 identifies the evaluated installation and records a verified maintainer-led
 feature PR with interventions. Its entry workflow still selected team setup, and reviewer selection,
 walkthrough, and handoff operations failed when reading an absent team seam.
-An agent also edited private settings to suppress local locations in public WIP Details.
+An agent also edited individual settings to suppress local locations in public WIP Details.
 
-The [private setup procedure](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/repository-setup.md#try-shaka-privately-in-one-clone)
+The [individual setup procedure](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/repository-setup.md#try-shaka-privately-in-one-clone)
 exists, including recovery copies and exclusions. Its availability does not mean
 every delivery operation supports that source. Expect an unsupported operation
 to be reported with its failure and any manual fallback disclosed. A guided run
@@ -78,14 +80,14 @@ consumer trial.
 | --- | --- |
 | Resume the same task with a PR | The workflow directs the agent to refresh PR state and evidence. Open WIP Details and return to the owner, or give a new chat the PR URL after the previous owner stops. Fresh-chat acceptance remains untested. |
 | Resume before a PR exists | Supply the task and checkout. The intended path is local inspection; there is no PR record from which to recover missing choices. Fresh-chat acceptance remains untested. |
-| Use a linked worktree with private setup | Each worktree has its own local settings identity and recovery copy in the common Git directory. Host permissions must allow the required writes. |
-| An outside pull adds team settings | Inspect adoption and compare saved private settings. Default-branch team policy governs; do not overwrite it with the private copy. |
-| Clean or delete a private worktree | Previously captured settings may be restored outside a checkout for comparison. Uncaptured edits and deletion of the common Git directory cannot be recovered from those copies. |
-| Upgrade an older configuration layout | Use the reviewed migration procedure. A private destination collision stops migration for comparison rather than overwriting it. |
+| Use a linked worktree with individual settings | Each worktree has its own local settings identity and recovery copy in the common Git directory. Host permissions must allow the required writes. |
+| An outside pull adds team settings | Inspect adoption and compare saved individual settings. Default-branch team policy governs; do not overwrite it with the local copy. |
+| Clean or delete a worktree with individual settings | Previously captured settings may be restored outside a checkout for comparison. Uncaptured edits and deletion of the common Git directory cannot be recovered from those copies. |
+| Upgrade an older configuration layout | Use the reviewed migration procedure. Existing individual settings at the destination stop migration for comparison rather than being overwritten. |
 
 Use the [resume guide](working-with-shaka.md#resume-unfinished-work) and
-[migration guide](migration.md). Private recovery protects captured configuration;
-it is not a backup of feature changes or the agent conversation.
+[migration guide](migration.md). Recovery copies protect captured configuration.
+These copies exclude feature changes and the agent conversation.
 
 ## When the coding agent denies access
 
@@ -94,7 +96,7 @@ Use the host's supported permission mechanism for the necessary operation, then
 retry and verify it. Shaka does not create a sandbox or grant filesystem access.
 
 Codex workspace permissions can allow ordinary project edits while denying the
-protected Git writes needed by private setup. That denial was observed in normal
+protected Git writes needed by individual setup. That denial was observed in normal
 and linked worktrees; successful approval/retry remains untested. Claude Code
 also needs permission for setup; supplemental checks completed with explicit Bash
 allowances. An unrestricted session proves no sandbox outcome.

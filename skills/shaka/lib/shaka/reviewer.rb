@@ -56,7 +56,9 @@ module Shaka
     end
 
     def config
-      Configuration.trusted(root:, ref: @options[:ref])
+      return Configuration.trusted(root:, ref: nil) unless @options[:ref]
+
+      Configuration.resolve_source(root:, ref: @options[:ref]).first
     end
 
     def option_parser

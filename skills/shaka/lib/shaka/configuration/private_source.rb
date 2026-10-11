@@ -83,8 +83,8 @@ module Shaka
       end
 
       def verify_worktree!
-        top = File.realpath(git('rev-parse', '--show-toplevel').strip)
-        raise Error, "#{@root} is not the Git worktree root" unless top == @root
+        raise Error, "#{@root} is not the Git worktree root" unless
+          File.realpath(git('rev-parse', '--show-toplevel').strip) == @root
       end
 
       def common_git_dir = File.realpath(File.expand_path(git('rev-parse', '--git-common-dir').strip, @root))
@@ -114,12 +114,9 @@ module Shaka
       end
 
       def load_candidate(inventory, committed)
-        return if inventory.unsafe || @conflict
+        return if inventory.unsafe || @conflict || inventory.entries.empty?
 
-        entries = inventory.entries
-        return if entries.empty?
-
-        unless entries.any? { |entry| entry[:path] == Paths::NEW_CONTRACT && entry[:type] == 'regular' }
+        unless inventory.entries.any? { |entry| entry[:path] == Paths::NEW_CONTRACT && entry[:type] == 'regular' }
           @blockers << "Missing #{Paths::NEW_CONTRACT}"
           return
         end
@@ -128,7 +125,7 @@ module Shaka
       end
 
       def validate_candidate(committed)
-        config = RepositoryConfig.load(root: @root)
+        config = RepositoryConfig.load(root: @root) { |label, path| validate_trusted_opening(label, path) }
         inspect_optional_pair(config)
         inspect_prompt_dependencies(config, committed)
         config
@@ -145,16 +142,22 @@ module Shaka
 
       def inspect_prompt_dependencies(config, committed)
         RepositoryConfig.prompt_files(review: config.review, opening: config.opening_check).each do |label, path|
-          @blockers << "#{label} #{path} lacks a candidate HEAD commit" unless
-            committed_prompt?(path, committed)
+          next if label == 'opening_check.prompt_file' || committed_prompt?(path, committed)
+
+          @blockers << "#{label} #{path} lacks a candidate HEAD commit"
         end
       end
 
-      def committed_prompt?(path, committed)
-        private_root = File.join(@root, PrivateInventory::DIRECTORY)
-        return true if File.expand_path(path, @root).start_with?("#{private_root}/")
+      def validate_trusted_opening(label, path)
+        return false unless label == 'opening_check.prompt_file' && !PrivateInventory.private_path?(root: @root, path:)
 
-        PrivatePathHops.committed_path?(root: @root, path:, committed:)
+        require_relative '../trusted_config_source'
+        TrustedConfigSource.new(root: @root).read_prompt(path, @ref, label)
+      end
+
+      def committed_prompt?(path, committed)
+        File.expand_path(path, @root).start_with?("#{@root}/#{PrivateInventory::DIRECTORY}/") ||
+          PrivatePathHops.committed_path?(root: @root, path:, committed:)
       end
     end
   end

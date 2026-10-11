@@ -42,23 +42,25 @@ is configured. Finding a CLI does not verify sign-in, quota, or a working review
 An extra provider can supply independent review; installing every CLI is optional.
 The diagnostic changes no settings. Give the agent a task when you are ready.
 
-## 2. Choose private trial or team setup
+<a id="2-choose-private-trial-or-team-setup"></a>
 
-For a private first task, open a chat in your project and ask:
+## 2. Choose individual trial or team setup
+
+To try Shaka individually, open a chat in your project and ask:
 
 ```text
 $shaka Fix search when the query contains an apostrophe.
-Try Shaka privately in this clone using the project's existing checks.
+Try Shaka just for me in this clone using the project's existing checks.
 Keep merge policy ask. Go.
 ```
 
 Shaka instructs the agent to infer commands from project instructions, scripts,
 and CI, prepare local settings, and continue into the feature task. No team setup PR, manual
-YAML edit, or PATH edit is needed. Private settings remain excluded from the
+YAML edit, or PATH edit is needed. Individual settings remain excluded from the
 feature diff. Host permissions may require approval for protected Git writes.
 These are workflow instructions; complete delivery support is tracked separately
 in [#277](https://github.com/shakacode/shaka/issues/277). Genuine new-user acceptance
-remains unproven. The [earlier trial report](expected-experience.md#private-trials-available-tools-incomplete-guided-experience)
+remains unproven. The [earlier trial report](expected-experience.md#individual-trials-available-tools-incomplete-guided-experience)
 records the maintainer interventions that prompted these changes.
 
 For shared team settings, ask:

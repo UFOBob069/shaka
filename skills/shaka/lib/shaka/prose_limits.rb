@@ -28,12 +28,12 @@ module Shaka
       end
     end
 
-    # Reads only the trusted commit, so a candidate checkout's layout cannot change the limits.
+    # Uses established private settings or trusted team settings, never a tracked candidate fallback.
     def self.from_ref(root:, ref:)
       return new unless ref
 
       require_relative 'configuration'
-      new(Configuration.trusted(root:, ref:, candidate_commands: false).prose_limits)
+      new(Configuration.resolve_source(root:, ref:, candidate_commands: false).first.prose_limits)
     end
 
     # GitHub may omit the size; the proportional budget is then skipped.

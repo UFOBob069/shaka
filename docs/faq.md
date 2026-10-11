@@ -14,8 +14,8 @@ See [repository setup](configure-repository.md).
 
 ## Can I try it without changing team configuration?
 
-Private setup tools exist, but a seamless new-user delivery remains unproven.
-Read the [private-trial limitations](expected-experience.md#private-trials-available-tools-incomplete-guided-experience)
+Individual setup tools exist, but a seamless new-user delivery remains unproven.
+Read the [individual-trial limitations](expected-experience.md#individual-trials-available-tools-incomplete-guided-experience)
 before choosing that path. Trying an unmerged version of Shaka is a separate option:
 see [try a Shaka PR](trying-pr-versions.md).
 

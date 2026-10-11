@@ -21,12 +21,7 @@ module Shaka
       end
 
       def self.resolve_source(root, ref)
-        source = Configuration.private_source(root:, ref:)
-        if source.status == 'complete'
-          [source.candidate_config, { private_source: source }, 'private/local']
-        else
-          [Configuration.trusted(root:, ref:), { trusted_ref: ref }, 'trusted/team']
-        end
+        Configuration.resolve_source(root:, ref:)
       end
     end
   end

@@ -169,7 +169,7 @@ def require_merge_ref!(options)
   raise Shaka::Error, 'merge requires --ref so policy comes from a trusted commit'
 end
 
-# Reads trusted limits through the opening check's guarded Git; an unreadable trusted commit is reported.
+# Reads effective limits through the opening check's guarded Git; unavailable settings are reported.
 def description_prose_limits(root, ref)
   return [Shaka::ProseLimits.new, {}] unless ref
 
@@ -310,16 +310,17 @@ begin
   native_wake = Shaka::CodexWake.check(options, repository, number) if command == 'handoff'
 
   github = Shaka::GitHub.new(repository, number)
-  if %w[pr walkthrough merge handoff squash-message].include?(command)
-    seam = Shaka::TrustedConfigSource.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref],
-                                               private_trial: command != 'merge')
+  if %w[pr walkthrough handoff squash-message].include?(command) && options[:ref]
+    seam = Shaka::Configuration.resolve_source(root: options[:root] || Dir.pwd, ref: options[:ref]).first
+  elsif command == 'merge'
+    seam = Shaka::TrustedConfigSource.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref])
   end
-  seam_required_checks = seam&.merge&.fetch('required_checks', nil)
+  seam_required_checks = seam.merge['required_checks'] if seam&.sha
   if command == 'merge' && !options[:squash_message]
     raise Shaka::Error, 'merge requires --squash-message with the commit title and body.'
   end
 
-  checkpoint = { enabled: seam&.review&.dig('post_implementation', 'enabled') != false }
+  checkpoint = { enabled: !seam&.sha || seam.review.dig('post_implementation', 'enabled') != false }
   if %w[merge squash-message].include?(command)
     head = options.fetch(:head)
     Shaka::PostImplementationEvidence.new(github, **checkpoint).call(head)
