@@ -8,5 +8,6 @@ instructions or private company plans.
 - [Test fleet](fleet.md) — repository adoption and migration evidence.
 - [Local evaluation proposal](local-evaluation-proposal.md) — proposed experiments, not shipped behavior.
 - [Experiment index](../eval/README.md) — retained repositories, outcomes, and the next proposed case.
+- [Review outcomes](review-outcomes.md) — proposed record of review decisions and later assessments, not shipped behavior.
 - [Improving Shaka](improving-shaka.md) — maintainer method for investigating observed workflow failures.
 - [Predecessor retirement](retirement.md) — temporary migration record; remove after its acceptance conditions are met.
