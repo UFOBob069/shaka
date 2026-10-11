@@ -196,6 +196,10 @@ class ReviewCoverageLiteralTest < Minitest::Test
     assert_includes body.split('<details>', 2).last, 'Coverage excerpts may be incomplete or misidentified'
   end
 
+  def test_a_pipe_in_reported_coverage_is_published_as_an_entity
+    assert_includes render_coverage('| --- | --- |'), '<pre>&#124; --- &#124; --- &#124;</pre>'
+  end
+
   def test_html_coverage_has_a_visible_unknown_fallback_and_keeps_original_evidence
     coverage = "<pre>\n## Example heading\nMissing integration context.\n</pre>"
     body = render_coverage(coverage)

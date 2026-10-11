@@ -206,4 +206,17 @@ class LocalReviewReplyPreflightTest < Minitest::Test
     assert_includes error.message, 'literal escape sequence'
     assert_empty github.replies
   end
+
+  # https://github.com/shakacode/shaka/issues/478: the rendering check counted the literal
+  # excerpt's separator line as a table GitHub failed to render.
+  def test_a_report_with_a_coverage_table_is_published
+    github = LocalReviewCommitPublishTest::Timeline.new
+    # GitHub shows a pre block as literal text, so a table inside one never renders.
+    def github.markdown(body) = super(body.gsub(%r{^<pre>.*?</pre>}m, ''))
+    table = "| Id | Status |\n| --- | --- |\n| F1 | Resolved |"
+    report = report(body: "## Coverage\n\n#{table}\n\n## Findings\n\nNone.\n", findings: 0)
+    Shaka::LocalReviewPublisher.new({ 'rounds' => [round(findings: [], report:)] }, github, 'o/r').publish
+
+    assert_includes github.replies.first.last, "<pre>#{table.gsub('|', '&#124;')}</pre>"
+  end
 end

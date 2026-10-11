@@ -38,11 +38,15 @@ module Shaka
         value = round.value('coverage') || 'UNKNOWN; inspect the original report for limitations.'
         reported = round.reported_coverage || 'UNKNOWN; inspect the original report for complete coverage limits.'
         text = "- #{round.reviewer}: #{value}"
-        "#{text}\n\n**Unverified report excerpt · #{round.reviewer}:**\n\n<pre>#{CGI.escapeHTML(reported)}</pre>"
+        "#{text}\n\n**Unverified report excerpt · #{round.reviewer}:**\n\n<pre>#{literal(reported)}</pre>"
       end
       "**Review coverage:**\n\n" \
         "Coverage excerpts may be incomplete or misidentified; inspect the original reports.\n\n#{lines.join("\n")}"
     end
+
+    # A pipe written as an entity displays the same, and keeps a table in the excerpt from
+    # reaching the rendering check as one GitHub failed to render.
+    def literal(text) = CGI.escapeHTML(text).gsub('|', '&#124;')
 
     def usage_link
       return 'Usage and attribution: see the PR description.' unless @usage_url
