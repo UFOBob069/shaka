@@ -30,7 +30,7 @@ agent could not infer:
 
 ```text
 $shaka Add CSV export to the orders page. Reuse the filters shown on screen.
-Keep merge policy ask. Go.
+Go.
 ```
 
 Examples use Codex's `$shaka`. Use `/shaka` in Claude Code, Cursor, or OpenCode;
@@ -96,9 +96,7 @@ for recovery after a crash or when no PR exists.
 ### Configure a repository for your team
 
 ```text
-$shaka Configure this repository for Shaka. Reuse its existing setup,
-test, and validation commands. Explain the review and merge choices.
-Use merge policy ask.
+$shaka Set up Shaka for this repository.
 ```
 
 For a repository without Shaka settings, the agent prepares a separate setup PR
@@ -106,7 +104,7 @@ and names the reviewed commit for you to merge on GitHub. It stops there; propos
 settings apply after that PR merges, or when you explicitly
 [select it for a task](settings.md#preview-settings-before-adopting-them). See
 [repository setup](configure-repository.md#set-up) for the choices, or
-[individual trials](expected-experience.md#individual-trials-available-tools-incomplete-guided-experience)
+[individual setup](expected-experience.md#individual-setup)
 to try Shaka locally without team adoption.
 
 These are requests to the existing workflow. Separate stage skills such as
@@ -166,35 +164,30 @@ final diff for the agent to reconcile. Keep raw notes in the local backup.
 ### Revise earlier guidance and try again
 
 If an attempt goes in the wrong direction, return to earlier human guidance,
-adjust it, and ask for a fresh result. A **human attention checkpoint** records
-that guidance and the code state it applies to. C1, C2, and later numbers identify
+adjust it, and ask for a fresh result. Use a saved
+[decision checkpoint](pr-verification.md#decision-checkpoint) to identify the guidance
+and recoverable work state to return to.
+C1, C2, and later numbers identify
 these points within one task; each appears on the PR with a name, guidance, and
 code revision so you can tell them apart.
 
 ```text
-Return to C2 — Parser direction. Keep the acceptance criteria, use the
-existing parser, discard the abstraction, and retain the failing edge case.
+$shaka Return to C2. Use the simpler approach.
 ```
 
-C1 records your initial request. Later checkpoints record your steering or review;
-an agent proposal, question, or passing check alone establishes none. Revised
-steering gets a new checkpoint linked to the earlier one. Saying “Go” needs no
+C1 records your initial request. Later checkpoints record your steering or review.
+Revised steering gets a new checkpoint linked to the earlier one. Saying “Go” needs no
 extra confirmation, and your Ask or Auto preference still applies.
 
-The agent first preserves the rejected attempt and relevant uncommitted work.
-By default, it adds a corrective commit to the existing branch to restore owned
-code; newer commits remain in history. It then implements your revised guidance
-with unrelated newer work and relevant findings preserved. If the snapshot is
-incomplete or another writer is active, it explains the limitation before restoring.
+The agent preserves the rejected attempt, unrelated work, and relevant findings
+before restoring owned work. If the saved state is incomplete or another writer
+is active, it explains the limitation first. Rewind does not undo deployments or
+other external effects; the replacement still needs validation and review.
 
-The PR describes the active attempt and puts superseded work in expandable
-summaries with published review links. Human comments remain intact. A final
-squash merge leaves the resulting change on the base branch while the PR retains
-the attempt history. Rewind does not undo deployments or other external effects;
-the replacement still needs validation and review.
-
-These are agent instructions; reliable recovery in real use remains to be evaluated.
-Ask the agent to confirm what its saved snapshot can restore before rewinding.
+These are agent instructions using Git and task records; the Ruby `checkpoint`
+command does not save or restore snapshots. Reliable recovery in real use remains
+to be evaluated. Ask what the saved state can restore before rewinding.
+See [recovery limits](expected-experience.md#resume-or-change-your-checkout).
 
 ## Resume unfinished work
 

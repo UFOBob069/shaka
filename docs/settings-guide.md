@@ -1,82 +1,113 @@
 # Choose your settings
 
-Tell your agent how you want to work. It can prepare the configuration for you:
+Give Shaka a task:
 
-> $shaka Set up Shaka for this repository. Find its test and lint commands,
-> explain the AI review choices, and keep merge policy Ask.
+```text
+$shaka <task or issue link>
+```
 
-Start with the choices below. The [settings reference](settings.md) has the exact
-options, defaults, and advanced behavior.
+If the project has no Shaka setup, the agent asks whether to prepare individual
+or team settings. It finds your existing checks, explains the AI review choices,
+and defaults to Ask. The [settings reference](settings.md) owns the options and defaults.
 
-## Try it individually or set it up for your team
+## Use individual or team settings
 
-An **individual trial** lets you try Shaka before your team adopts it. It works
-in a repository without shared Shaka settings. Your choices stay in your local
-copy of the repository and are kept out of commits:
+**Individual setup** lets you try Shaka before your team adopts it. Your choices
+stay in your local copy of a repository without shared Shaka settings, outside commits.
+To choose it upfront:
 
-> $shaka Set up Shaka just for me in this repository. Keep the settings out of
-> my commits and use merge policy Ask.
+```text
+$shaka <task or issue link>
+Set up Shaka just for me. Go.
+```
 
-You can choose AI reviewers and adjust how Shaka writes PR descriptions. See
-[what individual trials currently support](expected-experience.md#individual-trials-available-tools-incomplete-guided-experience)
-for the remaining real-use verification gaps.
+Individual settings support reviewer choices, writing limits, opening instructions,
+and WIP preferences. Custom code-review instructions and decision-checkpoint settings
+still use the shared source or defaults; [#481](https://github.com/shakacode/shaka/issues/481)
+tracks making all supported settings configurable individually.
+See [current experience and recovery limits](expected-experience.md#individual-setup).
 
-Use [shared repository setup](configure-repository.md) when the team wants the
-same configuration. The agent opens a settings PR for you to review. Those
-choices become the team’s defaults after that PR merges into the default branch.
-[Try them on one task first](settings.md#preview-settings-before-adopting-them).
+For shared team settings:
+
+```text
+$shaka Set up Shaka for this repository.
+```
+
+The agent opens a settings PR for you to review. Its choices become the team's
+defaults after it merges into the default branch. Individual settings do not
+override team settings.
+
+[Merged #426](https://github.com/shakacode/shaka/pull/426) lets you
+[try a settings PR on one task](settings.md#preview-settings-before-adopting-them)
+before adoption. The PR keeps the experiment visible.
 
 ## Choose a merge policy
 
-With **Ask**, you review the ready PR and decide when to merge. With **Auto**, the
-agent merges when the required checks, reviews, and approvals are satisfied.
-You can choose the policy for one task:
+With **Ask**, review the ready PR, then merge it yourself or tell the agent to merge.
+With **Auto**, the agent merges after required checks, reviews, and approvals.
+Some changes still need your decision.
 
-> $shaka Fix this issue. Use merge policy Ask.
+```text
+$shaka <task or issue link>
+Use merge policy Auto. Go.
+```
 
-See [merge choices](working-with-shaka.md#choose-a-merge-policy) for examples and
-[`merge.preference`](settings.md#mergepreference) for the configuration.
+`Go` starts work; it does not authorize merging. See
+[merge choices](working-with-shaka.md#choose-a-merge-policy).
 
 ## Choose AI reviewers
 
-Shaka asks a separate AI session to review the code before publishing it. Choose
-the provider, model, and thinking effort for these local reviews. Each provider
-needs its command-line tool installed and signed in on your machine:
+A separate AI session reviews the code before publication. Choose reviewers you can
+access through their tools or API credentials:
 
-> Configure local AI reviews to try Claude first, then Codex. Use medium effort.
+```text
+$shaka Prefer Claude for code review.
+```
 
-You can request more than one AI reviewer. Each additional review adds time and
-cost. The PR records the review models and available usage for each commit.
+Shaka first prefers a provider that did not implement the change, then follows your
+configured order. The list supplies choices; the [reviewer count](settings.md#reviewlocal_review_count)
+determines how many run. Reviews can run concurrently. Additional reviewers add
+cost and may increase elapsed time. A fresh context does not guarantee a better review.
 
-See [reviewer choices](settings.md#reviewlocal_review_agents),
-[reviewer setup](settings.md#add-a-second-reviewer), and
-[multiple reviewers](settings.md#reviewlocal_review_count).
+For custom instructions:
 
-You can also choose what local reviewers look for. For shared team settings, ask:
+```text
+$shaka Focus code reviews on compatibility.
+```
 
-> Create a review prompt that emphasizes regressions, missing tests, and
-> compatibility with existing installations. Start from Shaka's default instructions.
-
-Use one prompt for all local reviewers or give a particular reviewer its own.
-The prompt takes effect after its settings PR merges. See
-[custom review prompts](settings.md#reviewprompt_file) for the options and limits.
+The agent starts from Shaka's defaults when preparing replacement instructions.
+Use one prompt for all local reviewers or one for a particular reviewer. Team
+instructions come from the default branch; individual support is tracked in
+[#481](https://github.com/shakacode/shaka/issues/481). See
+[custom review instructions](settings.md#reviewprompt_file).
 
 ## Keep PR explanations useful
 
-Ask the agent to keep PR descriptions, code walkthroughs, recommendations, and
-review replies clear and concise. For example:
+```text
+$shaka Keep PR descriptions under 200 words.
+```
 
-> Keep PR descriptions under 200 words. Use short sentences in walkthroughs and
-> review replies. Link to the code instead of repeating implementation details.
+Shaka checks [writing limits](settings.md#prose_limits) before publishing descriptions
+and code walkthroughs, including with individual settings. Recommendations and
+review replies follow agent instructions; code does not check their length.
 
-Shaka enforces [`prose_limits`](settings.md#prose_limits) when publishing PR
-descriptions and walkthroughs. For recommendations and review replies, the
-agent follows your writing instructions; those limits are not checked in code.
+An [opening check](settings.md#opening_check) advises whether the first sentence
+leads with what improves for the reader. It does not verify the whole description.
+[Merged #425](https://github.com/shakacode/shaka/pull/425) added independent opening
+reviewer choices and a way to disable the check completely after #420.
+Both team and individual settings support these options.
+
+## Decide what happens next
+
+Shaka recommends what to do next at a
+[decision checkpoint](pr-verification.md#decision-checkpoint) and records the owner's
+choice for later. See that guide for the terms and current report labels.
+Individual checkpoint settings are part of [#481](https://github.com/shakacode/shaka/issues/481).
 
 ## Resume unfinished work
 
-An unfinished PR's **WIP Details** includes a link back to the agent chat, so you
-can pick up where you left off. It also records the current state and next action.
-
-For location privacy, custom prompts, opening checks, branch names, and other
-advanced choices, use the [settings reference](settings.md).
+**WIP Details** records the chat locator, checkout path, state, and next action.
+A locator helps you resume the owning chat when your host can reach it.
+Currently, [the location setting](settings.md#wipinclude_locations) hides both
+the locator and path together. [#482](https://github.com/shakacode/shaka/issues/482)
+tracks keeping locators while independently controlling checkout-path visibility.

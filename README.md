@@ -14,17 +14,16 @@ revisions, or resolve an open question.
 
 ## Start with a small task
 
-[Install Shaka and ask it to configure your repository](docs/getting-started.md).
-The agent prepares shared settings using your existing checks. You review the
-choices and merge the first setup PR, then give it a task:
+[Install Shaka](docs/getting-started.md), then give it a task:
 
 ```text
-$shaka Fix search when the query contains an apostrophe.
-Keep merge policy ask. Go.
+$shaka <task or issue link>
 ```
 
 Examples use Codex. Use `/shaka` in Claude Code, Cursor, or OpenCode; in Pi,
 load the installed skill. You can describe an outcome or provide an issue link.
+If setup is missing, Shaka asks whether you want individual or team settings,
+finds your existing checks, and defaults to Ask.
 `Go` starts with your agent's current model and effort settings.
 [Working with Shaka](docs/working-with-shaka.md) covers practical prompts,
 merge choices, feedback, and resuming work.

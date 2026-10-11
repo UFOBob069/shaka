@@ -128,12 +128,19 @@ it is never reported as passing. Missing readiness evidence remains UNKNOWN.
 Ask the agent to show the failure on the unchanged base and explain which checks
 still block merging before accepting a base failure.
 
-## Reconsider the finished result
+<a id="reconsider-the-finished-result"></a>
 
-Before calling a change ready to merge, Shaka asks whether the result solves the
-original problem for the intended users and earns its maintenance cost. It compares
-the actual scope and complexity with the plan and considers simpler alternatives.
-Unexpected growth or repeated repairs can prompt this review earlier.
+## Decision checkpoint
+
+At a **decision checkpoint**, Shaka presents the result and recommends what to do
+next. The task owner may be a human or a coordinating agent acting within existing
+authority. This is the return from the agent's work loop; it does not mean the
+overall task is finished.
+
+The current pre-merge checkpoint evaluates whether the result solves the original
+problem for its users and earns its maintenance cost. It considers actual scope,
+complexity, and simpler alternatives. Unexpected growth or repeated repairs can
+prompt this review earlier. The code walkthrough explains what changed and how it works.
 
 The final walkthrough or a separate PR comment explains one conclusion:
 **Proceed**, **Simplify/reframe**, or **Do not merge**. Substantive unresolved concerns
@@ -141,6 +148,15 @@ hold readiness and Auto even when technical checks pass. Shaka blocks final merg
 preparation without this account's published ready review or explicit opt-out for the
 current commit. A new commit needs fresh evidence. The reviewer judges value; Ruby
 checks the published result and commit, not the judgment’s quality.
+
+Use **Recommended next action** for the proposal and **Recorded decision** for
+accepted guidance. Once a direction is chosen, the agent records that guidance
+and recoverable work state for a later return. This uses the existing
+[recovery procedure](working-with-shaka.md#revise-earlier-guidance-and-try-again),
+not an automatic Ruby snapshot or an extra human approval at every return point.
+Current generated labels still say “Post-implementation verification”, “PR disposition”,
+and “Verification conclusion”; [#483](https://github.com/shakacode/shaka/issues/483)
+tracks aligning them. Parsed identifiers and readiness rules remain unchanged.
 
 For example, a settings page may satisfy the task but introduce an interface most
 users never need. The agent can recommend extending an existing setting instead

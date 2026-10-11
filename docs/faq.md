@@ -14,10 +14,18 @@ See [repository setup](configure-repository.md).
 
 ## Can I try it without changing team configuration?
 
-Individual setup tools exist, but a seamless new-user delivery remains unproven.
-Read the [individual-trial limitations](expected-experience.md#individual-trials-available-tools-incomplete-guided-experience)
-before choosing that path. Trying an unmerged version of Shaka is a separate option:
-see [try a Shaka PR](trying-pr-versions.md).
+Yes, if the repository has no shared Shaka settings:
+
+```text
+$shaka <task or issue link>
+Set up Shaka just for me. Go.
+```
+
+Settings stay out of commits. See [individual support and acceptance gaps](expected-experience.md#individual-setup).
+With team settings, local choices do not override them. You can explicitly
+[select a settings PR](settings.md#preview-settings-before-adopting-them) for one task,
+as shipped in [#426](https://github.com/shakacode/shaka/pull/426).
+Trying a different Shaka implementation is separate: see [try a Shaka PR](trying-pr-versions.md).
 
 ## Why did the agent stop to ask about model and effort?
 
@@ -50,26 +58,24 @@ uses a listed reviewer from the same provider. When no listed reviewer is
 available, a fresh session with the implementation model reviews the change
 without the implementation conversation.
 
-## Why does Shaka review with a separate CLI instead of a subagent?
+<a id="why-does-shaka-review-with-a-separate-cli-instead-of-a-subagent"></a>
 
-A separate CLI is more independent of the agent that wrote the change, and it
-leaves a record. The coding agent could ask a subagent on its own host to review,
-but Shaka does not count that as the local review.
+## Why does Shaka use a separate review session?
 
-| | Separate reviewer CLI | Subagent on the same host |
-| --- | --- | --- |
-| Who writes the prompt | Shaka's helper; your review criteria come from the default branch | The agent whose work is under review |
-| Where it runs | An empty directory, with no edit access and without the checkout's instructions, skills, or hooks | The PR's checkout, with the host's tools and instructions |
-| Provider | Can differ from the one that wrote the change | The host's provider |
-| What it leaves | An exit status and a report naming the reviewed commit; Codex and Claude also leave a usage record | Text returned to the coding agent; its tokens count with the coding session |
+A fresh session reviews without the implementation conversation. This supplies
+another perspective, without guaranteeing quality. Shaka uses a restricted CLI
+or its supported API adapter and records the reviewed commit, findings, and
+available usage. It does not count a same-host subagent as the local review.
 
-The trade-off is reach. The Codex and Grok reviewers can read other files at the
-reviewed commit, and the Claude reviewer sees only the diff. A subagent could read
-the whole checkout and run its tests.
+Reviewers have different access to unchanged code. See
+[reviewer choices and limits](settings.md#reviewlocal_review_agents) and
+[what Shaka enforces](workflow.md#what-is-enforced).
 
-The agent follows this as an instruction. `shaka merge` checks that a review of the
-commit was published, not which process wrote it. See
-[what Shaka enforces](#what-does-shaka-enforce-and-what-relies-on-the-agent).
+## Do multiple reviews run one after another?
+
+The agent runs them concurrently and combines their findings before repairs.
+Additional reviewers add cost and may increase elapsed time.
+See [reviewer count](settings.md#reviewlocal_review_count).
 
 ## Why did the agent ignore a PR comment?
 
@@ -80,8 +86,7 @@ text could try to steer the agent. The agent withholds those comments and keeps
 their links for you to read. To change the allowlist, ask:
 
 ```text
-Explain this project's trusted GitHub actors and help me add a named user,
-bot, or team. Preserve the existing trust choices and prepare changes for review.
+$shaka Add USER to this project's trusted GitHub actors.
 ```
 
 ## Where do I put project rules?
@@ -102,7 +107,7 @@ To give Claude the same instructions every time, add a `CLAUDE.md` containing
 
 ## Can I customize the prompt Shaka gives its local reviewer?
 
-Yes. In your [settings](settings.md) file, set
+Yes, through shared settings. In your [settings](settings.md) file, set
 [`review.prompt_file`](settings.md#reviewprompt_file) to the path of a Markdown
 file, relative to the repository root, such as `.agents/review-prompt.md`. It
 replaces Shaka's default instructions for what the local reviewer looks for and
@@ -110,23 +115,35 @@ how it reports. To give one review agent different instructions, set
 `prompt_file` on that agent's entry in `local_review_agents`. Copy Shaka's
 [default instructions](../skills/shaka/config/review-prompt.md) to start.
 
-The agent reads the file from the default branch when it runs
-`shaka review run --criteria-ref`, so a PR that edits it is reviewed with the
-current version. Criteria in `AGENTS.md` still apply on top of the prompt file.
+Shaka reads the default-branch version, so a PR that edits it is reviewed with the
+current version. Individual custom instructions are not applied yet;
+[#481](https://github.com/shakacode/shaka/issues/481) tracks this gap.
+Criteria in `AGENTS.md` still apply on top of the prompt file.
 The prompt file configures local reviews; a CI review job takes its prompt from
 its own workflow.
 
-A few rules stay whatever the file says, because they are protocol rather than
-policy. For example, the closing `REVIEWED` line lets `shaka review run` confirm
-which commit was reviewed. The [settings](settings.md#reviewprompt_file) list
-them all.
+The [settings reference](settings.md#reviewprompt_file) explains which instructions
+apply and links the review protocol.
 
 ## Can a PR change Shaka's settings or rules for itself?
 
-Not until it merges. Settings and review criteria come from the default branch,
-so each PR is reviewed under the rules its maintainers already agreed on, and a
-PR from a fork cannot change how it is reviewed. Until it merges, Shaka reviews a
-settings change as part of the diff. See [settings](settings.md).
+Editing settings in a PR does not select them automatically. Shared settings and
+review criteria normally come from the default branch. A maintainer can explicitly
+[select a settings PR's pinned configuration](settings.md#preview-settings-before-adopting-them)
+for experiments. A fork PR cannot choose its own review rules. See
+[which settings apply](settings.md#which-settings-apply).
+
+## What is a decision checkpoint?
+
+It helps the task owner choose what to do next. See the
+[decision-checkpoint guide](pr-verification.md#decision-checkpoint) for its terms,
+how it differs from the code walkthrough, and current report labels.
+
+## Can I hide my checkout path while keeping the chat locator?
+
+Currently, `wip.include_locations: false` hides both. [#482](https://github.com/shakacode/shaka/issues/482)
+tracks independent checkout-path visibility. A chat locator helps resume the
+owning chat; its access rules depend on the host. See [WIP settings](settings.md#wipinclude_locations).
 
 ## What does Shaka enforce, and what relies on the agent?
 
