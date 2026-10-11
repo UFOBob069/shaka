@@ -78,7 +78,7 @@ class PostImplementationModelPublicationTest < Minitest::Test
       result['requested_model'] = 'chosen-model'
       body = rendered(result, path)
       assert_includes body, 'observed model: UNKNOWN; requested model: chosen-model'
-      assert_includes body, 'Recommendation: **Proceed**'
+      assert_includes body, 'Recommendation: **Merge if CI passes**'
       assert_includes body, '**Next action (task owner):** Complete technical validation and required approvals.'
       assert_equal 1, body.scan('Useful change').size
     end

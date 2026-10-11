@@ -10,7 +10,7 @@ module Shaka
   # Presents the checkpoint's action without confusing configuration with observations.
   class PostImplementationPublication
     ACTIONS = {
-      'Proceed' => ['Proceed',
+      'Proceed' => ['Merge if CI passes',
                     'Complete technical validation and required approvals.'],
       'Simplify/reframe' => ['Revise before merging.', 'Revise the approach, then revalidate and review.'],
       'Do not merge' => ['Do not merge; decide whether to close or replace.',

@@ -168,8 +168,9 @@ and Auto submission, along with job-scoped environments, caller-secret exclusion
 names-only reporting, and unverified permission responses. Checker fixes belong to
 #348/#354; this example is bound to the earlier report, not a current readiness claim.
 
-**Proceed** means the result remains justified and appropriately scoped; technical
-validation and required reviews still apply. **Simplify/reframe** means the goal
+**Proceed** is published as **Merge if CI passes**: the result remains justified
+and appropriately scoped. Technical validation, required reviews, and the task’s
+merge approval still apply. The recommendation does not authorize merging. **Simplify/reframe** means the goal
 may be valid but the approach needs revision. **Do not merge** means the result
 does not justify adoption. The latter two block readiness and Auto while the
 substantive concern remains. Green checks or merge authority do not resolve it.
