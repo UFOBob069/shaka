@@ -86,10 +86,5 @@ reviewing the setup PR.
 The scripts usually wrap existing commands. In Shaka's repository, `.agents/shaka/bin/setup`
 installs development dependencies; `bin/install` installs the skill.
 
-Repositories configured before this layout keep `.agents/agent-workflow.yml` and
-`.agents/bin/`, and Shaka still reads them. Moving to `.agents/shaka/` is optional;
-the [layout upgrade](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/migration.md#upgrade-the-configuration-layout)
-does it in one reviewed step.
-
 Shaka's own [configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml)
 and [scripts](https://github.com/shakacode/shaka/tree/main/.agents/shaka/bin) provide working examples.

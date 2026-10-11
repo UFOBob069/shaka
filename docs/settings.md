@@ -5,8 +5,7 @@
 Start with [Choose your settings](settings-guide.md) for common choices and
 prompts you can give your agent. This reference covers each option and its limits.
 
-Settings live in `.agents/shaka/config.yml`; repositories configured before that
-layout keep them in `.agents/agent-workflow.yml`. Ask your agent to
+Settings live in `.agents/shaka/config.yml`. Ask your agent to
 [configure the repository](configure-repository.md), or edit the file in a PR.
 
 Browse [this repository’s configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml) for a
@@ -303,7 +302,8 @@ retry or model substitution, and reject malformed, truncated or unattested outpu
 Existing reviewers and merge preferences remain unchanged.
 
 OpenRouter's response records token counts and account cost; missing usage stays
-UNKNOWN. See [API review execution and accounting](../skills/shaka/references/openrouter.md).
+UNKNOWN. See [usage and cost](reference/usage-and-cost.md) for how to interpret
+the PR's reported cost and coverage.
 
 Choose a `model` available to that reviewer. The CLI example names above are
 examples, not a closed list: newer names can run with a warning. Model names
@@ -343,8 +343,8 @@ keeps your chosen model; it does not substitute another one.
 Most warnings allow the review to run. An unsupported Claude effort stops it;
 choose one of Claude’s listed effort values to continue.
 
-Put project-specific review criteria in `AGENTS.md`. For review execution and
-setting checks, see the [local review reference](../skills/shaka/references/local-review.md#reviewer-model-and-effort).
+Put project-specific review criteria in `AGENTS.md`. To check reviewer settings,
+use the [availability prompt](getting-started.md#2-choose-individual-trial-or-team-setup).
 To choose how many hosted review reports to wait for, use
 [`review.ci_review_wait`](#reviewci_review_wait).
 
@@ -460,9 +460,9 @@ review:
 ```
 
 The prompt file and repository choices come from the trusted default branch.
-A task's explicit choices take precedence. The
-[checkpoint procedure](../skills/shaka/references/post-implementation-validation.md#run-the-checkpoint)
-owns defaults, command syntax, supported efforts, and failure outcomes.
+A task's explicit choices take precedence. See
+[reconsidering the finished result](pr-verification.md#reconsider-the-finished-result)
+for what the checkpoint means for your merge decision.
 
 The PR records the conclusion, reasons, execution settings, and available native
 usage. A failed invocation stays incomplete. “Simplify/reframe”, “Do not merge”, or
@@ -594,8 +594,6 @@ Connect your existing tools at these fixed paths:
 | `.agents/shaka/bin/validate` | Yes | Complete checks before publishing |
 | `.agents/shaka/bin/validate-local` | No | Faster checks before local review |
 | `.agents/shaka/bin/trigger-hosted-ci` | No | Start deferred CI after local fixes; requires `validate-local` |
-
-In the older layout, the same scripts live in `.agents/bin/`.
 
 A wrapper can call an existing command. `seam init` generates each required wrapper;
 it finds the repository root with Git, so it works from any directory and in linked

@@ -74,11 +74,15 @@ commit was published, not which process wrote it. See
 ## Why did the agent ignore a PR comment?
 
 Shaka trusts the people who maintain the project: anyone with write access, plus
-the users, bots, and teams listed in `.agents/trusted-github-actors.yml` or your
+the users, bots, and teams listed in `.agents/shaka/trusted-github-actors.yml` or your
 machine's allowlist. On a public repository, anyone else can comment, and that
 text could try to steer the agent. The agent withholds those comments and keeps
-their links for you to read. See
-[configure trusted actors](../skills/shaka/references/public-comments-safety.md#configure-trusted-actors).
+their links for you to read. To change the allowlist, ask:
+
+```text
+Explain this project's trusted GitHub actors and help me add a named user,
+bot, or team. Preserve the existing trust choices and prepare changes for review.
+```
 
 ## Where do I put project rules?
 

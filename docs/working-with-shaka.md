@@ -192,8 +192,8 @@ squash merge leaves the resulting change on the base branch while the PR retains
 the attempt history. Rewind does not undo deployments or other external effects;
 the replacement still needs validation and review.
 
-This is an agent procedure. See the [human attention checkpoint procedure](../skills/shaka/references/return-points.md)
-for preservation rules and the real-use evaluation still needed.
+These are agent instructions; reliable recovery in real use remains to be evaluated.
+Ask the agent to confirm what its saved snapshot can restore before rewinding.
 
 ## Resume unfinished work
 
@@ -305,9 +305,8 @@ If a skill you named is not installed, the agent says so, continues the work
 that does not need it, and asks about the rest. It does not install software for
 you.
 
-This is guidance the agent follows, not behavior that code enforces. The
-[companion skills procedure](../skills/shaka/references/companion-skills.md)
-holds the agent's rules. Loading skills automatically at set points is a
+This is guidance the agent follows, not behavior that code enforces.
+Loading skills automatically at set points is a
 [proposed feature](https://github.com/shakacode/shaka/issues/35), not shipped behavior.
 
 ## Suggest improvements to Shaka

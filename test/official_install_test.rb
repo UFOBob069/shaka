@@ -6,7 +6,10 @@ class OfficialInstallTest < Minitest::Test
   include OfficialInstallSupport
 
   def test_links_directly_to_chosen_checkout_and_reuses_recorded_location
-    official_install
+    output, status = invoke('--directory', @root, '--repository', @remote, '--skills-dir', @skills_dir)
+    assert_predicate status, :success?, output
+    assert_includes output, 'Keep Shaka updated:'
+    assert_includes output, 'install --update'
     assert_equal File.realpath(@source), File.readlink(@destination)
     output, status = invoke('--verify')
     assert_predicate status, :success?, output
@@ -16,6 +19,8 @@ class OfficialInstallTest < Minitest::Test
   def test_clones_into_the_default_location_and_links_all_requested_hosts
     output, status = invoke('--repository', @remote, '--agent', 'codex', '--agent', 'claude', '--agent', 'cursor')
     assert_predicate status, :success?, output
+    assert_includes output, 'Keep Shaka updated:'
+    assert_includes output, 'install --update'
     source = File.realpath(File.join(@home, '.agents/shaka'))
     %w[.agents .claude .cursor].each do |host|
       assert_equal File.join(source, 'skills/shaka'), File.readlink(File.join(@home, host, 'skills/shaka'))

@@ -31,7 +31,7 @@ feature PR with interventions. Its entry workflow still selected team setup, and
 walkthrough, and handoff operations failed when reading an absent team seam.
 An agent also edited individual settings to suppress local locations in public WIP Details.
 
-The [individual setup procedure](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/repository-setup.md#try-shaka-privately-in-one-clone)
+The [individual setup](getting-started.md#2-choose-individual-trial-or-team-setup)
 exists, including recovery copies and exclusions. Its availability does not mean
 every delivery operation supports that source. Expect an unsupported operation
 to be reported with its failure and any manual fallback disclosed. A guided run
@@ -83,10 +83,9 @@ consumer trial.
 | Use a linked worktree with individual settings | Each worktree has its own local settings identity and recovery copy in the common Git directory. Host permissions must allow the required writes. |
 | An outside pull adds team settings | Inspect adoption and compare saved individual settings. Default-branch team policy governs; do not overwrite it with the local copy. |
 | Clean or delete a worktree with individual settings | Previously captured settings may be restored outside a checkout for comparison. Uncaptured edits and deletion of the common Git directory cannot be recovered from those copies. |
-| Upgrade an older configuration layout | Use the reviewed migration procedure. Existing individual settings at the destination stop migration for comparison rather than being overwritten. |
 
-Use the [resume guide](working-with-shaka.md#resume-unfinished-work) and
-[migration guide](migration.md). Recovery copies protect captured configuration.
+Use the [resume guide](working-with-shaka.md#resume-unfinished-work).
+Recovery copies protect captured configuration.
 These copies exclude feature changes and the agent conversation.
 
 ## When the coding agent denies access

@@ -19,7 +19,7 @@ includes a reason and next step; Merge still follows your checks and Ask or Auto
 
 `shaka workflow` validates and prints the
 [workflow definition](../skills/shaka/config/workflow.yml). The agent loads
-[skill references](../skills/shaka/references/README.md) as needed.
+supporting procedures as needed.
 
 ## Trust model
 

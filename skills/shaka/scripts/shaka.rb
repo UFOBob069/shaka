@@ -43,8 +43,14 @@ require_relative '../lib/shaka/work'
 require_relative '../lib/shaka/workflow'
 require_relative '../lib/shaka/workflow_version'
 require_relative '../lib/shaka/welcome'
+require_relative '../lib/shaka/update_check'
 
 exit Shaka::Welcome.run if ARGV.empty?
+
+if ARGV.first == 'update-check'
+  ARGV.shift
+  exit Shaka::UpdateCheck.run(ARGV)
+end
 
 if ARGV.first == 'usage'
   ARGV.shift

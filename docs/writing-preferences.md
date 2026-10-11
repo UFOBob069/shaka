@@ -1,6 +1,6 @@
 # Writing preferences
 
-Shaka's installed skill provides [default writing guidance](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/writing.md)
+Shaka's installed skill provides default writing guidance
 for PR descriptions, code walkthroughs, and review replies. Installing Shaka does
 not create or edit `AGENTS.md`, and these defaults work without that file.
 

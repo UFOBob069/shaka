@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rbconfig'
+require 'shellwords'
 require_relative 'checkout'
 require_relative 'official_links'
 require_relative 'direct_source'
@@ -29,6 +30,7 @@ module Shaka
         return verify(targets_for(action)) if action == :verify
 
         with_lock(File.join(@checkout.root, '.git')) { install(action) }
+        update_reminder
       end
 
       private
@@ -43,6 +45,11 @@ module Shaka
         record_ruby
         switch_links(links)
         verify(targets)
+      end
+
+      def update_reminder
+        puts "Keep Shaka updated: #{Shellwords.escape(File.join(@checkout.root, 'skills/shaka/scripts/shaka'))} " \
+             'install --update (finish active Shaka chats first; start a new chat afterward).'
       end
 
       def update(targets)
@@ -83,10 +90,10 @@ module Shaka
 
         return default_directories if @agents.empty?
 
-        @agents.uniq.map do |agent|
-          File.join(Dir.home, HOSTS.fetch(agent) { raise ArgumentError, "Unknown coding agent: #{agent}" })
-        end
+        @agents.uniq.map { |agent| File.join(Dir.home, host_directory(agent)) }
       end
+
+      def host_directory(agent) = HOSTS.fetch(agent) { raise ArgumentError, "Unknown coding agent: #{agent}" }
 
       def default_directories
         return @checkout.record.fetch('targets').map { |target| target.fetch('directory') } if @checkout.record

@@ -27,6 +27,9 @@ choose another directory, such as `~/agent-tools/shaka`.
 Keep the installation outside your project repositories. Use separate checkouts
 for development so the installation stays ready for updates.
 
+The skill prompts you when an update is available. Ask your agent to
+[update Shaka](migration.md).
+
 Start a new chat if the skill does not appear. Use a source installation: the published gem is a
 name-reservation prerelease without the current workflow.
 

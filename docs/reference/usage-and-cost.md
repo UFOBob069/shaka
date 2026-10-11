@@ -86,5 +86,5 @@ Ask the agent:
 > reports overlap before comparing its total with another PR.
 
 [PR verification](../pr-verification.md) explains how to assess the change and its
-validation evidence. Agents selecting records follow the
-[usage reporting procedure](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/usage-reporting.md).
+validation evidence. Ask your agent to disclose missing records and shared
+attribution when reporting usage.

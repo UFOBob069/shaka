@@ -9,14 +9,23 @@ class InstallWorkflowTest < Minitest::Test
     replace_fixture_with_full_skill
     output, status = run_installer('--skills-dir', @skills_dir)
     assert_predicate status, :success?, output
+    assert_includes output, 'retained copy'
+    refute_includes output, 'install --update'
     FileUtils.rm_rf(File.join(@directory, 'source'))
 
     output, status = Open3.capture2e(File.join(@destination, 'scripts', 'shaka'), 'workflow', chdir: @directory)
     assert_predicate status, :success?, output
     assert_workflow_links(output)
+    assert_installed_update_check
   end
 
   private
+
+  def assert_installed_update_check
+    output, status = Open3.capture2e(File.join(@destination, 'scripts', 'shaka'), 'update-check', chdir: @directory)
+    assert_predicate status, :success?, output
+    assert_equal 'custom', JSON.parse(output).fetch('status')
+  end
 
   def assert_workflow_links(output)
     paths = output.scan(/\]\(<([^>]+)>\)/).flatten.select { |target| target.start_with?('/') }

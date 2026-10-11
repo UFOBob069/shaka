@@ -30,5 +30,5 @@ attention. You choose which task starts; setup starts no backlog work or recurri
 scans.
 
 Keep each tower set in one environment: Claude and Codex cannot read each other's
-sessions. See the [operating procedures](../skills/shaka/references/control-towers.md)
-for setup, ownership, and handoff.
+sessions. Ask the owning tower to explain its setup, ownership, or handoff before
+moving work between environments.

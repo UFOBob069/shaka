@@ -125,7 +125,8 @@ trust failures, required GitHub or seam merge checks, or protection. In the advi
 example, the security gate still needs a repair. Failed validation stays failed;
 it is never reported as passing. Missing readiness evidence remains UNKNOWN.
 
-For agent instructions, see the [base-failure procedure](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/base-validation-failure.md).
+Ask the agent to show the failure on the unchanged base and explain which checks
+still block merging before accepting a base failure.
 
 ## Reconsider the finished result
 
@@ -144,7 +145,7 @@ checks the published result and commit, not the judgment’s quality.
 For example, a settings page may satisfy the task but introduce an interface most
 users never need. The agent can recommend extending an existing setting instead
 before more work builds around that page. Maintainers can customize the
-[default review prompt](https://github.com/shakacode/shaka/blob/main/skills/shaka/references/post-implementation-validation.md#customize-for-the-project)
+[checkpoint settings](settings.md#reviewpost_implementation)
 with their audience and architectural priorities.
 
 ## Change one behavior at a time
@@ -161,8 +162,9 @@ Validation can select checks for affected files; required security checks still 
 ## Documentation changes
 
 Check links and rendered pages. For a substantial rewrite, check whether a reader
-can complete the intended task. See the agent's
-[documentation-verification procedure](../skills/shaka/references/documentation-verification.md).
+can complete the intended task. Give a fresh reader the normal entry point and
+observe whether they find the answer and act correctly, without hints from the author.
+Passing link checks alone does not establish that a guide is useful.
 
 ## Show what a person will see
 
@@ -213,8 +215,8 @@ it moved. For a removed element, a labeled before crop supplies the missing cont
 
 The agent compares the whole affected view before choosing annotations and labels
 both intended and unexpected changes. Callouts explain the comparison; they do not
-prove that the UI works. The [visual-evidence procedure](../skills/shaka/references/visual-diff.md)
-provides the agent's capture, annotation, and publication steps.
+prove that the UI works. Ask the agent to publish captures with the tested revision
+and explain what it verified through interaction.
 
 Comparable captures use the same route, viewport, theme, scroll position, test data,
 and interaction step. When layout changes, animation, or live data prevent alignment,

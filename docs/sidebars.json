@@ -50,11 +50,6 @@
         "control-towers",
         "trying-pr-versions"
       ]
-    },
-    {
-      "type": "link",
-      "label": "Skill references (GitHub)",
-      "href": "https://github.com/shakacode/shaka/tree/main/skills/shaka/references"
     }
   ]
 }

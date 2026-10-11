@@ -15,5 +15,5 @@ The catalog lists repositories and duplicate prefixes. The agent compares each
 repository's trusted review and merge settings and proposes changes through its PR.
 The catalog does not synchronize settings or enforce unique prefixes.
 
-Deleting the catalog does not change repository settings. See the agent's
-[catalog procedure](../skills/shaka/references/repository-catalog.md) for commands and file locations.
+Deleting the catalog does not change repository settings. Ask your agent to show
+the catalog's location and entries before changing it.
