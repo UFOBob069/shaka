@@ -32,6 +32,19 @@ class DoctorReviewersTest < Minitest::Test
     refute blocked
   end
 
+  def test_a_missing_configured_api_key_warns_even_when_other_reviewers_meet_the_count
+    review = review_policy('local_review_count' => 2, 'local_review_agents' => agents + [deepseek_agent])
+    with_repository('review' => review) do |root|
+      report, blocked = doctor(root:, executable: ->(*) { true })
+
+      assert_includes report, '[DEGRADED] Reviewer CLIs'
+      assert_includes report, 'This repository configures deepseek/openrouter reviews'
+      assert_includes report, 'Set OPENROUTER_API_KEY'
+      refute_includes report, 'Add a second reviewer'
+      refute blocked
+    end
+  end
+
   def test_path_lookup_does_not_execute_the_reviewer
     Dir.mktmpdir('shaka-doctor-cli') do |path|
       command = File.join(path, 'codex')
@@ -90,5 +103,10 @@ class DoctorReviewersTest < Minitest::Test
   def agents
     [{ 'provider' => 'openai', 'model_family' => 'codex' },
      { 'provider' => 'anthropic', 'model_family' => 'claude' }]
+  end
+
+  def deepseek_agent
+    { 'provider' => 'deepseek', 'model_family' => 'openrouter',
+      'model' => 'deepseek/deepseek-v4.1-flash', 'effort' => 'low' }
   end
 end

@@ -10,7 +10,7 @@ module Shaka
       provider, model, routed, effort = configuration
       { provider: provider, model: billed_model(provider, billing, model),
         routed: billed_routed(provider, billing, routed), effort: effort,
-        billing: billing, native: native_cost?(group),
+        billing: billing, native: native_cost?(group), native_sources: native_sources(group),
         recorded_native: native_recorded?(group) }.merge(priced_totals(group, reasons, provider, model))
     end
 
@@ -41,6 +41,18 @@ module Shaka
 
     def native_recorded?(group)
       group.any? { |record| record['usage'].is_a?(Hash) && record['usage'].key?('native_cost_usd') }
+    end
+
+    def native_sources(group)
+      group.filter_map do |record|
+        usage = record['usage']
+        next unless usage.is_a?(Hash)
+
+        value = usage['native_cost_usd']
+        next unless value.is_a?(Numeric) && value.finite? && value >= 0
+
+        usage['native_cost_source'] == 'openrouter' ? 'openrouter' : 'pi'
+      end.uniq
     end
 
     def keep_credit_reason?(provider, model, credits, group)

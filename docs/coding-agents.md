@@ -14,6 +14,15 @@ and use it across your repositories.
 Use the [installation prompt](getting-started.md); the agent follows the
 [installation reference](../skills/shaka/references/installation.md) for your environment.
 
+The opt-in [DeepSeek reviewer](settings.md#reviewlocal_review_agents) runs through
+Shaka's Ruby OpenRouter API adapter. It does not require native DeepSeek support in
+Codex, Claude Code or Cursor, and does not change the coding host's model.
+Local hosts need Ruby, outbound HTTPS and `OPENROUTER_API_KEY` in the process that
+runs Shaka. A Cursor cloud agent or CI job also needs those capabilities and an
+explicit secret provision; local environment variables are not automatically
+available there. Cloud execution and reviewer quality require a live trial in
+that environment; deterministic adapter tests do not establish either.
+
 To support another coding agent, [contribute](../CONTRIBUTING.md) installation
 instructions, a demonstrated task, and known limitations. Keep environment-specific
 code separate from the shared workflow.

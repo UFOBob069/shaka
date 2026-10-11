@@ -51,14 +51,15 @@ module Shaka
 
         configured = entries.select { |entry| entry[:configured] }
         lines = warnings(configured, review.fetch('local_review_count', 1))
+        lines.concat(CliInventory.setup_notices(configured).map { |notice| notice.fetch('summary') })
         lines << 'Some CLI lookups could not be checked.' if entries.any? { |entry| entry[:unchecked] }
         lines
       end
 
       def guidance(entries, warnings)
         lines = entries.filter_map { |entry| entry[:guidance] }
-        lines << "Add a second reviewer: #{GUIDE}" unless warnings.empty?
-        lines << 'Optional CLIs are suggestions; installing every provider is unnecessary.' unless lines.empty?
+        lines << "Reviewer setup: #{GUIDE}" unless warnings.empty?
+        lines << 'Configured reviewer setup is recommended; other providers are optional.' unless lines.empty?
         lines.empty? ? nil : lines.join("\n    ")
       end
 

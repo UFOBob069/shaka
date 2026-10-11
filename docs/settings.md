@@ -209,7 +209,7 @@ before continuing.
 
 **Optional.** Choose which reviewers Shaka tries first. Put a reviewer from a
 different provider first to get another perspective on the change. Each reviewer
-needs its CLI installed and signed in on the machine doing the review.
+needs its CLI installed and signed in, or its API credentials on the machine doing the review.
 
 Ask your agent:
 
@@ -239,15 +239,49 @@ one local reviewer; they do not require all three to review every change.
 
 ### Model and effort values
 
-Use these provider and family pairs for Shaka's supported local reviewer CLIs:
+Use these provider and family pairs for Shaka's supported local reviewers:
 
 | Reviewer | `provider` | `model_family` | Effort values Shaka recognizes |
 | --- | --- | --- | --- |
 | Claude Code | `anthropic` | `claude` | `low`, `medium`, `high`, `xhigh`, `max` |
 | Codex | `openai` | `codex` | `low`, `medium`, `high`, `xhigh` |
 | Grok | `xai` | `grok` | `low`, `medium`, `high` |
+| DeepSeek via OpenRouter API | `deepseek` | `openrouter` | `low`, `high`, `max` |
 
-Choose a `model` available to that reviewer's CLI. The example names above are
+DeepSeek is an optional reviewer alongside your existing reviewers. Add this entry to your trusted
+reviewer list when you want Shaka to send the prompt and diff to OpenRouter and
+its selected upstream provider. Start with low effort; high-effort trials on a
+large diff sometimes consumed the completion budget without returning a report.
+
+```yaml
+- provider: deepseek
+  model_family: openrouter
+  model: deepseek/deepseek-v4.1-flash
+  effort: low
+```
+
+Set `OPENROUTER_API_KEY` in the review process environment; keep it out of repository
+files. No separate reviewer CLI is needed. The adapter supports only this explicit
+[OpenRouter model](https://openrouter.ai/deepseek/deepseek-v4.1-flash); it refuses other
+models and unsupported effort values before sending a request. Omitted effort uses
+the provider default and remains UNKNOWN in Shaka's attestation.
+
+Account settings govern provider routing and data policies. Shaka does not enforce
+a provider allowlist or zero data retention. Before using private code, confirm
+that your account's provider and privacy policies permit every possible recipient.
+Keep your existing review checks while evaluating this optional reviewer; quality,
+completion and savings remain unproved across workloads.
+
+This reviewer receives the supplied diff and trusted criteria, with no tools or
+filesystem access. It cannot inspect unchanged callers or execute tests. Reports
+retain that coverage limit. Requests use the review timeout, make no automatic
+retry or model substitution, and reject malformed, truncated or unattested output.
+Existing reviewers and merge preferences remain unchanged.
+
+OpenRouter's response records token counts and account cost; missing usage stays
+UNKNOWN. See [API review execution and accounting](../skills/shaka/references/openrouter.md).
+
+Choose a `model` available to that reviewer. The CLI example names above are
 examples, not a closed list: newer names can run with a warning. Model names
 cannot contain spaces. Effort names use lowercase.
 
@@ -271,8 +305,8 @@ The same repository settings apply when you work in
 
 Cursor is the coding host. Reviewer entries identify the model provider and
 reviewer CLI, so use `xai` / `grok` for Grok, including when your implementation
-was written in Cursor. Shaka's local review runner supports the three CLIs in
-the table; Cursor is not a fourth reviewer CLI.
+was written in Cursor. Shaka's local review runner supports the three CLIs and the
+OpenRouter API adapter in the table. Cursor supplies the coding host rather than a reviewer CLI.
 
 ### Understand a reviewer warning
 

@@ -33,6 +33,17 @@ class LocalReviewCommitPublishTest < Minitest::Test
     github.replies.each_with_index { |(_, body), index| assert_commit_entry(body, index) }
   end
 
+  def test_deepseek_report_publishes_through_the_same_exact_head_contract
+    github = Timeline.new
+    entry = clean(HEAD, 'deepseek/openrouter').merge('model' => 'deepseek/deepseek-v4.1-flash',
+                                                     'coverage' => 'Supplied diff only; no filesystem access.')
+    assert_equal 0, publish(github, 'rounds' => [entry]).first
+    body = github.replies.first.last
+    assert_includes body, 'deepseek/deepseek-v4.1-flash'
+    assert_includes body, 'Supplied diff only'
+    assert_equal "REVIEWED #{HEAD} BY deepseek/openrouter EFFORT UNKNOWN FINDINGS 0", body.lines.last.strip
+  end
+
   def test_merge_accepts_the_final_commit_attestation_from_a_timeline_comment
     evidence = Struct.new(:issue_comments) { def viewer_login = 'agent' }
     result = Shaka::MergeReviewEvidence.new(evidence.new(timeline_comments), required: 'meaningful_changes').call(HEAD)

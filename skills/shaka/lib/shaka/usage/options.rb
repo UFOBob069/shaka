@@ -6,7 +6,7 @@ module Shaka
     ISO_TIME = /\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)\z/
 
     def source_options(flags, options)
-      flags.on('--host NAME', Usage::READERS.keys, 'codex, claude-code, cursor, opencode, or pi') do |value|
+      flags.on('--host NAME', Usage::READERS.keys, 'codex, claude-code, cursor, opencode, pi, or openrouter') do |value|
         options[:host] = value
       end
       source_file_options(flags, options)

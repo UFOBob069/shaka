@@ -9,7 +9,7 @@ cover part of a session, omit tools, or lack attribution to individual commits.
 | Column | Meaning |
 | --- | --- |
 | Report | Model and contribution, such as implementation or review. `×5` means five reports share that row. |
-| USD | Estimated cost at published list prices, or Pi's recorded nominal cost. It is not an invoice or actual charge. |
+| USD | Estimated list-price cost, Pi's recorded nominal cost, or OpenRouter's reported account charge. Read each report's pricing note; the mixed total is not an invoice. |
 | Codex credits | Estimated OpenAI Codex plan credits, separate from the USD estimate. |
 | Input | Tokens sent to the model. Hosts differ in whether cached tokens are included. |
 | Cached input | Input read from the prompt cache. Supported rate cards price cache reads separately from uncached input. |
@@ -36,6 +36,7 @@ that the reports are disjoint.
 | Cursor | Includes cache reads and writes | Reasoning is unreported |
 | OpenCode | Excludes cache reads and writes | Reasoning is counted separately |
 | Pi | Excludes cache reads and writes | Includes reasoning |
+| OpenRouter | Includes cached input | Includes reasoning |
 
 For example, a Codex row with 100,000 input tokens and 80,000 cached input
 tokens has 20,000 uncached input tokens. A Claude row with 20,000 input tokens
@@ -57,6 +58,10 @@ charge uncached input, cache reads, and cache writes separately. A one-hour
 cache write costs more than a five-minute write. Supported Opus fast-mode
 responses use their published fast-mode rates. Standard-speed responses use
 standard rates. Fast-mode responses without a published rate remain unpriced. Pi uses its recorded nominal USD instead of repricing it.
+OpenRouter uses the response's reported account charge in USD credits instead of
+direct DeepSeek list prices. Missing counters or cost remain UNKNOWN. A paid
+incomplete response can still contribute reported cost without establishing a
+completed review; a timeout without response metadata has unknown per-call cost.
 
 Shaka leaves unsupported models or incomplete billing categories unpriced.
 A partially priced report keeps the known estimate with a `+` marker and a

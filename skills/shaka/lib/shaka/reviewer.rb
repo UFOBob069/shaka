@@ -6,6 +6,7 @@ require_relative 'error'
 require_relative 'repository_config'
 require_relative 'reviewer_selection'
 require_relative 'configuration'
+require_relative 'doctor/cli_inventory'
 
 module Shaka
   # Answers which listed reviewers satisfy the alternate-review gate for one change.
@@ -36,10 +37,12 @@ module Shaka
 
     def selection
       review = config.review
-      ReviewerSelection.new(reviewers: review[RepositoryConfig::ReviewSchema::LOCAL_REVIEW_AGENTS],
-                            implementers: identities(:implementers, required: true),
-                            unavailable: identities(:unavailable),
-                            count: @options.fetch(:count) { count(review) }).call
+      result = ReviewerSelection.new(reviewers: review[RepositoryConfig::ReviewSchema::LOCAL_REVIEW_AGENTS],
+                                     implementers: identities(:implementers, required: true),
+                                     unavailable: identities(:unavailable),
+                                     count: @options.fetch(:count) { count(review) }).call
+      inventory = Doctor::CliInventory.new(root:, environment: ENV).call(review)
+      result.merge('setup_notices' => Doctor::CliInventory.setup_notices(inventory))
     end
 
     # A task's --count wins; otherwise the trusted seam's standing count, or one reviewer.

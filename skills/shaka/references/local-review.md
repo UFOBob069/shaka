@@ -52,7 +52,7 @@ using the same isolated CLI adapter as review. Omitted settings use CLI defaults
 It sends a minimal prompt without repository content; it may consume quota or incur cost.
 Plain `doctor` launches no reviewer and does not establish account access.
 
-The trusted schema rejects duplicate reviewer identities; at most the three supported adapters
+The trusted schema rejects duplicate reviewer identities; at most the four supported adapters
 can launch. A probe failure makes doctor exit nonzero; unsupported adapters remain degraded.
 Each probe has a 30-second deadline. `--probe-timeout-seconds 1..120` changes that probe bound;
 it requires `--probe-reviewers`. Failures report the reason and local diagnostic path, without
@@ -62,6 +62,11 @@ diagnostics without checking for private account data. The closed Claude effort 
 a Shaka update to accept any additional level introduced by that CLI.
 
 ## Run the selected reviewer
+
+For `deepseek/openrouter`, read [OpenRouter reviews](openrouter.md#review-execution)
+only when that reviewer is selected.
+
+### CLI reviewers
 
 Render the prompt for the selected reviewer:
 ```text
@@ -481,7 +486,9 @@ the per-commit publisher and can run independently after publishing.
 After assessing completed CI feedback, also minimize obsolete bot review reports
 and notices with GitHub's native **outdated** disclosure. Read them with `shaka comments`
 at the current head first. Select reports that earlier commits have superseded and
-notices, such as a past rate-limit warning, that no longer help the reader. Carry
+notices that no longer help the reader. Minimize a CodeRabbit review-limit notice
+when it contains no review findings; record `rate-limited; no review completed`
+in the existing review summary even when the notice concerns the current head. Carry
 still-applicable findings into the current summary; leave current review reports
 and discussions with unaddressed material concerns visible. A different SHA alone
 does not establish that findings are resolved. The agent makes this assessment;

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'value_token'
+
 module Shaka
   # Report copy for the rate-card cost scenarios.
   module CostCopy
@@ -14,7 +16,7 @@ module Shaka
     end
 
     def intro(columns)
-      [rate_intro(columns), (native_intro if columns.any? { |column| column[:native] })].compact.join(' ')
+      [rate_intro(columns), (native_intro(columns) if columns.any? { |column| column[:native] })].compact.join(' ')
     end
 
     def rate_intro(columns)
@@ -54,8 +56,12 @@ module Shaka
     def cursor_priced?(priced) = priced.any? { |column| cursor_rated?(column) }
     def anthropic_priced?(priced) = priced.any? { |column| anthropic_rated?(column) }
 
-    def native_intro
-      'Pi recorded native nominal USD.'
+    def native_intro(columns)
+      sources = columns.flat_map { |column| column[:native_sources] || [] }
+      [(sources.include?('pi') ? 'Pi recorded native nominal USD.' : nil),
+       (if sources.include?('openrouter')
+          'OpenRouter recorded charged USD; no direct DeepSeek rate estimate is applied.'
+        end)].compact.join(' ')
     end
 
     def priced_columns(columns)
@@ -109,7 +115,7 @@ module Shaka
     end
 
     def safe(value)
-      value.is_a?(String) && value.match?(/\A[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}\z/) ? value : 'UNKNOWN'
+      UsageValue.token(value) || 'UNKNOWN'
     end
   end
 end

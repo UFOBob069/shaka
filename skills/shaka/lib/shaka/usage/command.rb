@@ -8,6 +8,8 @@ require_relative 'cost_estimate'
 require_relative 'cursor_usage'
 require_relative 'opencode_usage'
 require_relative 'pi_usage'
+require_relative 'openrouter_usage'
+require_relative 'value_token'
 require_relative 'json_report'
 require_relative 'usage_records'
 require_relative 'usage_errors'
@@ -37,7 +39,7 @@ module Shaka
       ['Native total', 'total_tokens']
     ].freeze
     READERS = { 'codex' => CodexUsage, 'claude-code' => ClaudeUsage, 'cursor' => CursorUsage,
-                'opencode' => OpencodeUsage, 'pi' => PiUsage }.freeze
+                'opencode' => OpencodeUsage, 'pi' => PiUsage, 'openrouter' => OpenrouterUsage }.freeze
     HOST_CONTEXT = { 'codex' => 'CODEX_THREAD_ID', 'claude-code' => 'CLAUDE_CODE_SESSION_ID',
                      'cursor' => 'CURSOR_CONVERSATION_ID', 'opencode' => 'OPENCODE_SESSION_ID',
                      'pi' => 'PI_CODING_AGENT' }.freeze
@@ -143,7 +145,7 @@ module Shaka
     end
 
     def safe(value)
-      value.is_a?(String) && value.match?(/\A[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}\z/) ? value : 'UNKNOWN'
+      UsageValue.token(value) || 'UNKNOWN'
     end
   end
 end

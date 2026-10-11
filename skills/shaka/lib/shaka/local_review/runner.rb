@@ -21,7 +21,7 @@ module Shaka
 
     def coverage
       return 'Supplied diff only; unchanged source and test execution are unavailable to this reviewer.' if
-        reviewer == 'anthropic/claude'
+        %w[anthropic/claude deepseek/openrouter].include?(reviewer)
 
       'Read-only source lookup permitted; actual inspection coverage is UNKNOWN. Test execution is prohibited.'
     end
@@ -33,6 +33,9 @@ module Shaka
     end
 
     def source_lookup_instruction
+      return 'The API has no filesystem or tools; review the supplied diff and report missing context.' if
+        reviewer == 'deepseek/openrouter'
+
       return 'Restricted Claude cannot run Git commands; review the supplied diff and report missing context.' if
         reviewer == 'anthropic/claude'
 
@@ -312,6 +315,7 @@ module Shaka
     end
 
     def validate_model!
+      OpenrouterReview.validate!(@options) if reviewer == 'deepseek/openrouter'
       raise Shaka::Error, '--model is required for xai/grok' if reviewer == 'xai/grok' && @options[:model].to_s.empty?
 
       RepositoryConfig::ReviewSchema.effort_level!(@options[:effort], '--effort') if @options[:effort]

@@ -28,7 +28,8 @@ module Shaka
     private
 
     def coverage
-      values = @rounds.map { |round| "#{round.reviewer}: #{round.value('coverage') || 'UNKNOWN; see evidence.'}" }
+      groups = @rounds.group_by { |round| round.value('coverage') || 'UNKNOWN; see evidence.' }
+      values = groups.map { |text, rounds| "#{rounds.map(&:reviewer).join(', ')}: #{text}" }
       "**Coverage:** #{values.join(' · ')}"
     end
 

@@ -67,6 +67,7 @@ module Shaka
       end
 
       def validate_settings!(identity, entry)
+        OpenrouterReview.validate!(entry.transform_keys(&:to_sym)) if identity == 'deepseek/openrouter'
         ReviewerSettings.refuse!(ReviewerSettings.notices(identity, model: entry['model'], effort: entry['effort']))
         raise Shaka::Error, 'model is required for Grok; not launched' if identity == 'xai/grok' && !entry['model']
       end

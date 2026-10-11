@@ -75,7 +75,7 @@ module Shaka
     def native_price(record, mode)
       usage = record['usage']
       return unless usage.is_a?(Hash) && usage.key?('native_cost_usd')
-      return [nil, 'Codex credit estimate unavailable for Pi'] if mode == :credits
+      return [nil, 'Codex credit estimate unavailable for recorded native cost'] if mode == :credits
 
       value = usage['native_cost_usd']
       return [nil, 'Native nominal cost unavailable'] unless value.is_a?(Numeric) && value.finite? && value >= 0

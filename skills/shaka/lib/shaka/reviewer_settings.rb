@@ -7,6 +7,9 @@ module Shaka
     Entry = Data.define(:models, :efforts, :closed_effort)
 
     ENTRIES = {
+      'deepseek/openrouter' => Entry.new(
+        models: ['deepseek/deepseek-v4.1-flash'], efforts: %w[low high max], closed_effort: true
+      ),
       'openai/codex' => Entry.new(
         models: %w[gpt-5.6-terra gpt-5.6-sol gpt-6-astra gpt-6-sol gpt-6-luna],
         efforts: %w[low medium high xhigh],
@@ -101,7 +104,7 @@ module Shaka
       listed = @entry.efforts.join(', ')
       summary = "#{@identity} effort `#{@effort}` is not one of #{listed}."
       summary = "#{@identity} effort `#{@effort}` looks like a typo of `#{suggestion}`. #{summary}" if suggestion
-      notice('failed', summary, 'Use one of those levels. Claude rejects anything else.')
+      notice('failed', summary, 'Use one of those levels. This reviewer rejects anything else.')
     end
 
     def near_miss(value, names)

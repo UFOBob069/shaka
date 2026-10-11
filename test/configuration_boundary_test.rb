@@ -19,7 +19,8 @@ class ConfigurationBoundaryTest < Minitest::Test
     install/link_lock.rb install/package.rb install/package_verification.rb install/version.rb local_review/ledger.rb
     post_implementation.rb post_implementation_report.rb post_implementation_runner.rb usage/cursor_usage_refresh.rb
     local_review.rb local_review/cli.rb local_review/comment.rb local_review/path_guard.rb local_review/shebang.rb
-    local_review/report_check.rb local_review/runner.rb merge_tree_proof.rb opening_parse.rb opening_check.rb
+    local_review/report_check.rb local_review/runner.rb local_review/openrouter.rb usage/openrouter_usage.rb
+    merge_tree_proof.rb opening_parse.rb opening_check.rb
     opening_verdict_cache.rb recommendation.rb repos/home.rb review_prompt.rb usage/claude_usage.rb usage/codex_usage.rb
     usage/cursor_usage_store.rb usage/opencode_usage.rb usage/pi_usage.rb usage/rate_card.rb pr_watch/command.rb
     workflow_config.rb seam/upgrade_plan.rb seam/upgrade_plan/inventory.rb seam/upgrade_plan/references.rb
@@ -109,8 +110,7 @@ class ConfigurationBoundaryTest < Minitest::Test
 
   def path_findings(relative, source)
     findings = []
-    literal = source.include?('.agents')
-    findings << 'path literal' if literal && !OTHER_PATHS.include?(relative)
+    findings << 'path literal' if source.include?('.agents') && !OTHER_PATHS.include?(relative)
     findings << 'contract alias' if source.include?('RepositoryConfig::PATH')
     findings
   end

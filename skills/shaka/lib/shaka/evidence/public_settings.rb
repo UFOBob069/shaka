@@ -18,7 +18,7 @@ module Shaka
         'review.ci_review_wait' => %w[none one all],
         'overrides.command' => %w[setup test validate validate_local trigger_hosted_ci],
         'overrides.effort' => %w[none minimal low medium high xhigh max ultra],
-        'overrides.reviewer' => %w[anthropic/claude openai/codex xai/grok]
+        'overrides.reviewer' => %w[anthropic/claude openai/codex xai/grok deepseek/openrouter]
       }.freeze
       BOOLEANS = %w[wip.include_locations opening_check.external_enabled pr_description.show_shaka_credit].freeze
       NUMBERS = %w[merge.limits.max_changed_files merge.limits.max_changed_lines merge.limits.max_commits

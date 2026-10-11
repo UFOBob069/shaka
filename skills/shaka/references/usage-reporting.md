@@ -238,6 +238,9 @@ helper report or attribute summary usage to a turn.
 
 ## Cost estimates
 
+For an OpenRouter usage source, read [recorded API charges](openrouter.md#recorded-charges)
+only when collecting that source.
+
 The September 29, 2026 OpenAI rate card includes GPT-6.1 Sol. Standard API-equivalent
 rates per million tokens are $2 input, $0.10 cached input, and $10 output;
 standard credit rates are 50, 2.5, and 250 respectively. These scenarios follow the

@@ -6,6 +6,9 @@ branch. A fresh session of the implementation model is a valid reviewer; prefer
 another provider when available.
 
 Use `shaka reviewer` to select an identity and follow [local invocation](local-review.md).
+Relay its `setup_notices` once per task and recommend the stated setup action.
+These read-only checks establish missing tools or keys, not sign-in or quota,
+and do not remove a configured reviewer or authorize a fallback.
 Run the selected reviewer. Do not substitute a more expensive model on the current
 host when a listed different provider is available. Record genuine credential,
 quota, or service failures as unavailable only with `shaka review run` evidence,

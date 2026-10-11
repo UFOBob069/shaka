@@ -13,7 +13,7 @@ module Shaka
   # still prefers a different provider and the rest follow the maintainer's list order.
   class ReviewerSelection
     IDENTITY = %w[provider model_family].freeze
-    SUPPORTED_REVIEWERS = %w[openai/codex anthropic/claude xai/grok].freeze
+    SUPPORTED_REVIEWERS = %w[openai/codex anthropic/claude xai/grok deepseek/openrouter].freeze
     AVAILABLE = 'available'
     UNAVAILABLE = 'unavailable'
     SAME_PROVIDER = 'same provider as the implementation'
