@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
+require_relative '../skills/shaka/lib/shaka/usage/cost_estimate'
 require 'fileutils'
 require 'json'
 
@@ -411,6 +412,35 @@ class ClaudeUsageSinceTimeTest < Minitest::Test
       refute_predicate status, :success?
       assert_equal '', output
       assert_includes error, '--since-time cannot split an aggregate usage record'
+    end
+  end
+end
+
+class ClaudeNativeCostTest < Minitest::Test
+  include ClaudeUsageFixture
+
+  def test_fresh_shaka_cli_uses_recorded_cost_when_the_billing_speed_is_missing
+    Dir.mktmpdir do |directory|
+      file = print_result_file(directory, shaka_usage_scope: 'independent_call', total_cost_usd: 0.42,
+                                          usage: PRINT_USAGE.except(:speed))
+      output = report('--host', 'claude-code', '--file', file, '--contribution', 'review')
+      assert_metric output, 'USD estimate', '$0.420000'
+      assert_includes output, 'Claude CLI recorded estimated USD'
+      refute_includes output, 'Pi recorded'
+    end
+  end
+
+  def test_malformed_native_usage_reports_unknown_instead_of_crashing
+    sample = { 'configuration' => %w[openai gpt-6.1-sol UNKNOWN medium], 'usage' => 'invalid' }
+    assert_includes Shaka::CostEstimate.new([sample]).report, 'UNKNOWN'
+  end
+
+  def test_an_unscoped_result_does_not_attribute_a_possible_resumed_session_total
+    Dir.mktmpdir do |directory|
+      file = print_result_file(directory, total_cost_usd: 99)
+      output = report('--host', 'claude-code', '--file', file)
+      assert_metric output, 'USD estimate', '$0.001079'
+      refute_includes output, '99.000000'
     end
   end
 end

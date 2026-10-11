@@ -147,7 +147,12 @@ For CLI reviews, save `claude -p --output-format json` output. The reader consum
 the result object's `usage`, never its review text, and its turn is the `session_id`. An `is_error` result is unknown.
 A present top-level `model` is used; otherwise a single `modelUsage` entry can supply
 `canonicalModel`. Multiple model entries leave the route unknown. Effort is reported
-only when recorded.
+only when recorded. Shaka marks its fresh, non-resuming CLI launches as independent
+calls. For those saved results, a present `total_cost_usd` supplies the host's cost
+estimate even when the model or billing speed needed by the rate card is missing.
+Unmarked results use the rate card: a native total might include resumed-session
+spend. These are [client estimates](https://code.claude.com/docs/en/agent-sdk/cost-tracking),
+not invoices; native result cost can include subagents while its tokens cover the main loop.
 
 Transcript responses report the routed model and recorded effort. Validation used
 desktop `2.1.270` and CLI `2.1.272`: an independent aggregate matched a session with

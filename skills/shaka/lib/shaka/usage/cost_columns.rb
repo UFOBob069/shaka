@@ -3,6 +3,9 @@
 module Shaka
   # One cost column per configuration and billing mode.
   module CostColumns
+    # Hosts whose recorded cost is named in the report; any other recorded cost is Pi's.
+    NAMED_NATIVE_SOURCES = %w[openrouter claude-code].freeze
+
     private
 
     def column(key, group, reasons)
@@ -51,7 +54,8 @@ module Shaka
         value = usage['native_cost_usd']
         next unless value.is_a?(Numeric) && value.finite? && value >= 0
 
-        usage['native_cost_source'] == 'openrouter' ? 'openrouter' : 'pi'
+        source = usage['native_cost_source']
+        NAMED_NATIVE_SOURCES.include?(source) ? source : 'pi'
       end.uniq
     end
 

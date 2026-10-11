@@ -92,7 +92,7 @@ module Shaka
       { identity => { 'response_id' => identity, 'turn_id' => identity, 'timestamp' => record['timestamp'],
                       'aggregate' => true,
                       'configuration' => ['anthropic', 'UNKNOWN', print_model(record), record['effort']],
-                      'billing_mode' => speed(record['usage']), 'usage' => tokens(record['usage']) } }
+                      'billing_mode' => speed(record['usage']), 'usage' => print_tokens(record) } }
     end
 
     def print_model(record) = ClaudePrintResult.routed_model(record)
@@ -203,6 +203,14 @@ module Shaka
     def speed(usage)
       recorded = usage['speed'] if usage.is_a?(Hash)
       %w[standard fast].include?(recorded) ? recorded : 'UNKNOWN'
+    end
+
+    # Only Shaka's fresh CLI launch establishes that this total excludes resumed-session spend.
+    def print_tokens(record)
+      observed = tokens(record['usage'])
+      return observed unless record['shaka_usage_scope'] == 'independent_call' && record.key?('total_cost_usd')
+
+      observed.merge('native_cost_usd' => record['total_cost_usd'], 'native_cost_source' => 'claude-code')
     end
 
     def tokens(usage)

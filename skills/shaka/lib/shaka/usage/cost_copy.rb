@@ -61,6 +61,9 @@ module Shaka
       [(sources.include?('pi') ? 'Pi recorded native nominal USD.' : nil),
        (if sources.include?('openrouter')
           'OpenRouter recorded charged USD; no direct DeepSeek rate estimate is applied.'
+        end),
+       (if sources.include?('claude-code')
+          'Claude CLI recorded estimated USD for an independent call; not an invoice.'
         end)].compact.join(' ')
     end
 

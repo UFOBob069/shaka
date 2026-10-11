@@ -31,9 +31,12 @@ module Shaka
       file.path
     end
 
-    def capture_claude_usage(result, output)
+    def capture_claude_usage(result, _output)
       @options[:observed_model] = ClaudePrintResult.model_attribution(result)
-      @options[:usage] = save_usage(output) if @options.fetch(:capture_usage, true)
+      return unless @options.fetch(:capture_usage, true)
+
+      scoped = result.merge('shaka_usage_scope' => 'independent_call')
+      @options[:usage] = save_usage(JSON.generate(scoped))
     end
 
     def process_failure(command, status, stderr, stdout)
