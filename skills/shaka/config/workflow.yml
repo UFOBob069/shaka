@@ -16,6 +16,8 @@ phases:
         follow [PR trial preparation](references/pr-trials.md) before starting that task.
         Return the pinned startup prompt for a fresh chat; preparation does not switch
         this running task's helper. A plain PR URL remains the work item.
+      - When the task hands over a spec with tickets or another skill's output, or asks you
+        to use another skill, read [companion skills](<{{package_root}}/skills/shaka/references/companion-skills.md>).
       - Identify the checkout from host context and Git remotes. If trusted `AGENTS.md`
         exists, read it for human-only constraints. Load the repository configuration
         selected at the current default-branch commit with the saved helper's

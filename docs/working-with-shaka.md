@@ -239,6 +239,79 @@ Each PR gets its own tests and review. The agent updates the remaining branch
 after each prerequisite merges. The original chat owns the overall outcome;
 no stacked-PR service is needed.
 
+## Combine Shaka with other skills
+
+Use the skills you like for planning and engineering technique, and let Shaka
+deliver the result. Two examples are
+[AI Hero's skills](https://www.aihero.dev/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md),
+which turn an idea into a spec and tickets, and
+[pstack](https://github.com/cursor/plugins/tree/main/pstack), which adds
+engineering principles and parallel workers.
+
+### Hand over a spec and tickets
+
+```text
+$shaka Deliver the spec at https://github.com/OWNER/REPO/issues/SPEC in OWNER/REPO.
+Its tickets are the sub-issues; follow their blocked-by links for order. Each
+ticket's acceptance criteria are in its body. You may comment on the spec with
+your plan; do not close or edit tickets. Keep merge policy ask. Go.
+```
+
+Here is what happens next:
+
+1. The agent reads the spec and every ticket, and takes the order of work from
+   the blocked-by links.
+2. It decides how many PRs the spec needs. When that is more than one, it posts
+   the plan as a comment on the spec.
+3. It delivers each PR the usual way: tests, your checks, independent review,
+   a description, and a code walkthrough.
+4. Under Ask, each PR comes back to you to merge. A PR that depends on another
+   waits until that one merges.
+5. Tickets stay open. Each PR links its ticket without a closing keyword such
+   as `Fixes`, because the prompt did not allow closing tickets.
+
+Change the prompt to change that behavior. Allow closing tickets if you want
+merges to close them. If you allow no tracker writes at all, the agent asks
+where to keep its plan before it starts. On a public repository, it also checks
+with you before adopting criteria from a ticket that someone without write
+access wrote or edited.
+
+### Use a technique skill during delivery
+
+```text
+$shaka Fix https://github.com/OWNER/REPO/issues/N in poteto mode. You may use
+subagents for swarm and arena. Keep merge policy ask. Go.
+```
+
+The agent applies pstack's principles and playbook steps while it implements and
+verifies. Shaka still runs your checks, gets an independent review, publishes
+the PR in its own format, and returns it to you to merge. pstack's "don't block
+on the human" guidance does not turn Ask into Auto. Leave out the subagent
+sentence and the agent does the fan-out steps alone or asks first.
+
+### What each kind of skill can do
+
+Shaka stays the one owner of delivery, so another skill's output is input to the
+task and nothing more. The agent does not let it relax a check, pick a reviewer,
+or approve a merge.
+
+| Kind of skill | Examples | With Shaka |
+| --- | --- | --- |
+| Planning | AI Hero `to-spec`, `to-tickets` | Its spec and tickets become the task. |
+| Technique or mode | pstack `poteto-mode`, principles, `how`, `tdd` | Shapes how the agent works inside each step. |
+| Parallel workers | pstack `swarm`, `arena`, `interrogate` | Runs only when you say the agent may delegate. Workers never publish or merge. |
+| PR text | AI Hero `pr`, pstack `technical-writing`, `unslop` | Advice on wording and presentation. Shaka's description keeps its own format and required fields. |
+| Its own delivery | AI Hero `implement-spec`, pstack Shipping, Babysit, and Autopilot playbooks | A separate orchestrator that cannot run as a step inside Shaka. Try it as its own experiment: name the scope and say the agent may delegate. |
+
+If a skill you named is not installed, the agent says so, continues the work
+that does not need it, and asks about the rest. It does not install software for
+you.
+
+This is guidance the agent follows, not behavior that code enforces. The
+[companion skills procedure](../skills/shaka/references/companion-skills.md)
+holds the agent's rules. Loading skills automatically at set points is a
+[proposed feature](https://github.com/shakacode/shaka/issues/35), not shipped behavior.
+
 ## Suggest improvements to Shaka
 
 Tell your agent in chat what you would like Shaka to do better. For example:

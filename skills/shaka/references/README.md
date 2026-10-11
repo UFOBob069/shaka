@@ -17,6 +17,7 @@ the workflow reaches that decision:
 | Configure or inspect a repository | [Setup](repository-setup.md) and shared [settings reference](https://github.com/shakacode/shaka/blob/main/docs/settings.md) |
 | Migrate existing settings | [Migration](migration.md) |
 | Plan, split PRs, write updates, or recover work | [Delivery and communication](delivery.md) |
+| Take over a spec or use another installed skill | [Companion skills](companion-skills.md) |
 | Revise earlier human steering and restart | [Human attention checkpoints](return-points.md) |
 | Select reviewers and handle findings | [Review](review.md) |
 | Reconsider the finished result before merge | [Post-implementation validation](post-implementation-validation.md) |
