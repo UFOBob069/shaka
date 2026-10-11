@@ -50,10 +50,13 @@ wip:
 
 pr_description:
   show_shaka_credit: true # Default: show a quiet Shaka website credit below the PR summary.
-
-opening_check:
-  external_enabled: true # Default: try a configured local reviewer for the PR opening.
-  # prompt_file: .agents/shaka/opening-prompt.md # Omitted: skills/shaka/config/opening-prompt.md.
+  opening_check:
+    enabled: true # Default: check the opening; false turns the check off.
+    effort: low # Default: low, independent of the code-review effort.
+    # reviewer: openai/codex # Omitted: the agent selects from local_review_agents.
+    # model: gpt-6.1-sol # Also set reviewer; Grok and OpenRouter require a model.
+    # Omit model to use that reviewer's CLI default, not its code-review model.
+    # prompt_file: .agents/shaka/opening-prompt.md # Omitted: use Shaka's opening instructions.
 
 prose_limits: # Defaults for visible PR descriptions and walkthroughs.
   max_sentence_words: 35

@@ -479,33 +479,63 @@ concerns, and establishes merge readiness. Final merge preparation
 requires a report for the current commit with no unresolved concerns, or an explicit
 opt-out.
 
-## `opening_check`
+<a id="opening_check"></a>
 
-**Optional.** Check that a PR description's opening explains what improves for
-its reader. The coding agent always has instructions for this check.
-`external_enabled` controls whether it also requests a separate AI check:
+## `pr_description.opening_check`
+
+**Optional.** Check whether the opening of a PR description explains a useful
+outcome to its reader. This is writing advice; a failed check does not block
+publication or merging.
+
+> Use Codex to check PR openings, with my chosen model and medium thinking
+> effort. Keep my code-review settings as they are.
 
 ```yaml
-opening_check:
-  external_enabled: false
-  prompt_file: .agents/shaka/opening.md # optional custom instructions
+pr_description:
+  opening_check:
+    enabled: true
+    reviewer: openai/codex
+    model: gpt-6.1-sol
+    effort: medium
+    # prompt_file: .agents/shaka/opening.md
 ```
 
-With `external_enabled: false`, the coding agent checks the opening in the
-current chat. With the default `true`, it selects a separate AI session from
-[`review.local_review_agents`](#reviewlocal_review_agents). Here, “external” means
-outside the current chat; the session can use the same provider.
+Choose the provider and model that works best for your writing. It can be the
+same provider you use to develop the change. The opening check runs in a separate
+session and does not inherit the implementation conversation.
 
-The workflow prefers a different provider when one is available. That preference
-does not guarantee a better result. The separate check currently runs at low
-effort, independently of the effort configured for code reviews. There are no
-opening-specific provider, model, or effort settings in the configuration file.
-The command supports a listed provider and, for Claude or Grok, a model choice;
-Codex uses its CLI default model.
+You can omit the whole section to use the defaults below. The opening check
+shares the code-review preference order when it chooses a reviewer, but uses
+its own model and effort choices. It does not copy those from code review.
 
-If the separate check is unavailable, the coding agent receives its instructions
-and checks the opening itself. The check is advisory; its availability does not
-block publishing the description.
+| Setting | Effect when omitted |
+| --- | --- |
+| `enabled` | `true`. Set `false` to turn the opening check off. |
+| `reviewer` | The agent chooses from your local AI code reviewers. An explicit `provider/family`, such as `openai/codex`, selects the opening reviewer independently. |
+| `model` | The selected CLI's default model for Codex or Claude. Grok requires a model; OpenRouter requires `deepseek/deepseek-v4.1-flash`. To name a model, also set `reviewer`. |
+| `effort` | `low`. Use a thinking level supported by the selected provider. |
+| `prompt_file` | Shaka's default opening instructions. |
+
+For example, `reviewer: openai/codex` with no `model` uses the Codex CLI's
+built-in default model. Shaka runs Codex with personal configuration disabled.
+Adding `model: gpt-6.1-sol` pins the opening check to that model. Omit the model
+to follow CLI defaults, or pin it for predictable results and cost. Shaka does
+not currently load shared settings from another GitHub repository.
+
+For `reviewer: deepseek/openrouter`, use `model: deepseek/deepseek-v4.1-flash`
+and `effort: low`, `high`, or `max`. Shaka checks these fixed adapter choices
+when it loads the settings. Grok also needs an explicit model because its CLI
+has no default.
+
+The top-level `opening_check` section remains supported for existing setups.
+Use one location for these settings; Shaka rejects a configuration that supplies
+both. New setups use `pr_description.opening_check`.
+
+The older `external_enabled` setting remains supported: `false` keeps the check
+in the coding chat instead of launching a separate reviewer. Use either that
+legacy setting or `enabled`, not both. With `enabled: false`, Shaka returns no
+parsing prompt and launches no opening reviewer; the agent still follows your
+ordinary writing instructions.
 
 ### Customize the opening check
 
@@ -531,6 +561,11 @@ setting applies. Shaka then reads the file as follows:
 Prompt files must pass the [review prompt file checks](#reviewprompt_file).
 Custom instructions cannot change the JSON fields Shaka expects in the response.
 Shaka treats the PR opening as text to assess, not as instructions to follow.
+
+If the selected reviewer cannot run, Shaka returns the reason and the prompt for
+the coding agent to apply. It preserves your model choice. A successful result
+is reused while the opening, instructions, provider, model, and effort stay the
+same.
 
 ## `prose_limits`
 

@@ -17,12 +17,12 @@ class CliOpeningFlagsTest < Minitest::Test
                                             '--opening-model', 'model-name')
     refute_predicate status, :success?
     assert_includes error, '--opening-model requires --opening-reviewer'
-    ['openai/codex', ' openai / codex '].each do |reviewer|
-      _output, error, status = Open3.capture3(COMMAND, 'description', 'owner/repo', '1',
-                                              '--opening-reviewer', reviewer, '--opening-model', 'named-model')
-      refute_predicate status, :success?
-      assert_includes error, '--opening-model is unsupported for openai/codex'
-    end
+  end
+
+  def test_effort_flag_requires_a_reviewer
+    _output, error, status = Open3.capture3(COMMAND, 'description', 'owner/repo', '1', '--opening-effort', 'high')
+    refute_predicate status, :success?
+    assert_includes error, '--opening-effort requires --opening-reviewer'
   end
 
   def test_malformed_reviewer_with_a_model_is_a_usage_error

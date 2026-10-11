@@ -35,33 +35,6 @@ class OpeningCheckTest < Minitest::Test
     end
   end
 
-  def test_reuses_only_a_successful_verdict
-    with_claude(parse('shaka merge', false)) do |root, trace|
-      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
-      File.unlink(trace)
-      result = check(COMMAND_FIRST, root:)
-      assert_equal 'flagged', result.fetch('status'), result.inspect
-      assert_includes result.fetch('prompt'), COMMAND_FIRST
-      refute_path_exists trace
-    end
-  end
-
-  def test_retries_an_opening_after_the_cli_recovers
-    with_claude(nil, body: 'exit 3') do |root, trace, bin|
-      assert_equal 'not_checked', check(COMMAND_FIRST, root:).fetch('status')
-      output = JSON.generate(is_error: false, result: JSON.generate(parse('shaka merge', false)))
-      write_claude(bin, trace, "puts #{output.inspect}")
-      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
-    end
-  end
-
-  def test_changed_opening_bypasses_the_cache
-    with_claude(parse('shaka merge', false)) do |root, _trace|
-      assert_equal 'flagged', check("#{COMMAND_FIRST} It also reports the reason.", root:).fetch('status')
-      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
-    end
-  end
-
   def test_checkout_root_covers_the_whole_repository_from_a_subdirectory
     Dir.mktmpdir do |dir|
       system('git', 'init', '-q', dir, exception: true)
@@ -118,6 +91,50 @@ class OpeningCheckTest < Minitest::Test
     with_claude(parse('shaka merge', false)) do |_root, trace, bin|
       assert_equal 'not_checked', check(COMMAND_FIRST, root: bin).fetch('status')
       refute_path_exists trace
+    end
+  end
+end
+
+class OpeningCheckCacheTest < Minitest::Test
+  include OpeningCheckTestHelpers
+
+  COMMAND_FIRST = OpeningCheckTest::COMMAND_FIRST
+  OUTCOME_FIRST = OpeningCheckTest::OUTCOME_FIRST
+
+  def test_reuses_only_a_successful_verdict
+    with_claude(parse('shaka merge', false)) do |root, trace|
+      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
+      File.unlink(trace)
+      result = check(COMMAND_FIRST, root:)
+      assert_equal 'flagged', result.fetch('status'), result.inspect
+      assert_includes result.fetch('prompt'), COMMAND_FIRST
+      refute_path_exists trace
+    end
+  end
+
+  def test_retries_an_opening_after_the_cli_recovers
+    with_claude(nil, body: 'exit 3') do |root, trace, bin|
+      assert_equal 'not_checked', check(COMMAND_FIRST, root:).fetch('status')
+      output = JSON.generate(is_error: false, result: JSON.generate(parse('shaka merge', false)))
+      write_claude(bin, trace, "puts #{output.inspect}")
+      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
+    end
+  end
+
+  def test_changed_opening_bypasses_the_cache
+    with_claude(parse('shaka merge', false)) do |root, _trace|
+      assert_equal 'flagged', check("#{COMMAND_FIRST} It also reports the reason.", root:).fetch('status')
+      assert_equal 'flagged', check(COMMAND_FIRST, root:).fetch('status')
+    end
+  end
+
+  def test_changed_effort_bypasses_the_cache
+    with_claude(parse('Pull requests', true)) do |root, trace|
+      assert_equal 'passed', check(OUTCOME_FIRST, root:, effort: 'low').fetch('status')
+      File.unlink(trace)
+      assert_equal 'passed', check(OUTCOME_FIRST, root:, effort: 'high').fetch('status')
+      arguments = JSON.parse(File.read(trace)).fetch('args')
+      assert_equal 'high', arguments[arguments.index('--effort') + 1]
     end
   end
 end

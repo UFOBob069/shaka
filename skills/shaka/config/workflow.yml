@@ -465,19 +465,25 @@ phases:
         phrasing. Keep exact commands, identifiers, domain terms, risks, and evidence. Skip chatbot
         wrappers and inflated significance. A reply leads with the decision and uses the thread's
         shared context.
-      - `description` reports an advisory `opening` result. Its default `host_check` gives this
-        task's development model the parsing prompt, so the check works without another provider.
-        Pass the verified default-branch full commit SHA with `description --ref SHA`.
-        When the trusted seam has `opening_check.external_enabled: true` (the default), use
-        the same ordered reviewer selection and unavailable-provider fallback as local code review, passing the selected
-        identity with `--opening-reviewer` and any chosen `--opening-model`. The command only
-        sends the opening to a provider and model family named in the trusted reviewer list. If no
-        listed provider can complete the parse, apply the returned prompt in the current model.
-        A `flagged` result means the first sentence has an internal subject. Use the opening
-        and any returned parse to rewrite it so what the reader sees leads, then publish again.
-        `not_checked` also carries the prompt
-        for the current-model fallback. A successful verdict is cached locally, but failed calls
-        are retried when the same opening is published again.
+      - `description` reports an advisory `opening` result. Pass the verified default-branch
+        full commit SHA with `description --ref SHA`. Opening settings live under
+        `pr_description.opening_check`; the top-level `opening_check` remains a compatibility
+        input. When `enabled` is false, the command skips the check. Otherwise, a configured `reviewer`, `model`,
+        and `effort` select this check independently of code review; the same provider as the
+        implementer is allowed. Let the helper apply these settings without reconstructing them
+        as flags. Without a configured opening reviewer, use the ordered local code-review
+        selection and pass `--opening-reviewer`. Explicit task choices use that flag plus
+        optional `--opening-model` and `--opening-effort`; changing provider drops an inherited
+        model and returns effort to low unless the task supplied replacements.
+        Codex and Claude use CLI defaults without an opening model; Grok and OpenRouter require
+        an explicit model. Without an opening effort, use low. Model and effort stay independent
+        of code-review settings.
+        The legacy `opening_check.external_enabled: false` keeps the check in the current model.
+        A `host_check` or `not_checked` result carries the prompt for that fallback. Preserve a
+        configured model when its CLI fails; report the reason and apply the returned prompt.
+        A `flagged` result means the first sentence has an internal subject. Rewrite it so what
+        the reader sees leads, then publish again. Successful verdicts are cached by the
+        opening, prompt, reviewer, model, and effort; failed calls are retried on publication.
       - Supply meaning as content JSON and let the helper render it. Self-edit those summaries before
         calling `description`, `walkthrough`, or `reply`. Do not rewrite the rendered GitHub body, and
         do not invoke a separate rewrite skill. The helper owns identity, headings,
@@ -514,7 +520,7 @@ phases:
         comments OWNER/REPO NUMBER --head SHA
         comments OWNER/REPO ISSUE_NUMBER --issue
         description OWNER/REPO NUMBER --content-file PATH [--root DIR --ref SHA]
-          [--opening-reviewer PROVIDER/FAMILY] [--opening-model MODEL]
+          [--opening-reviewer PROVIDER/FAMILY] [--opening-model MODEL] [--opening-effort LEVEL]
         reply OWNER/REPO NUMBER --content-file PATH --key NAME [--comment ROOT_COMMENT_ID]
         resolve OWNER/REPO NUMBER --thread THREAD_ID
         walkthrough OWNER/REPO NUMBER --head SHA --content-file PATH --root DIR --ref SHA

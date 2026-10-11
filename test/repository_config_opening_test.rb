@@ -10,7 +10,7 @@ class RepositoryConfigOpeningTest < Minitest::Test
   def test_external_opening_checks_default_to_enabled
     with_repository do |root|
       config = Shaka::RepositoryConfig.load(root:)
-      assert_equal({ 'external_enabled' => true }, config.opening_check)
+      assert_equal({ 'enabled' => true, 'effort' => 'low' }, config.opening_check)
       assert_equal config.opening_check, config.to_h.fetch('opening_check')
     end
   end
@@ -18,16 +18,26 @@ class RepositoryConfigOpeningTest < Minitest::Test
   def test_effective_contract_includes_the_default_with_a_prompt_file
     with_repository('opening_check' => { 'prompt_file' => '.agents/opening.md' }) do |root|
       File.write(File.join(root, '.agents/opening.md'), 'Parse this opening.')
-      assert_equal({ 'external_enabled' => true, 'prompt_file' => '.agents/opening.md' },
+      assert_equal({ 'enabled' => true, 'effort' => 'low', 'prompt_file' => '.agents/opening.md' },
                    Shaka::RepositoryConfig.load(root:).to_h.fetch('opening_check'))
     end
   end
 
   def test_rejects_non_boolean_or_unknown_opening_settings
-    [{ 'external_enabled' => 'yes' }, { 'enabled' => true }, { 'foo' => true }, true].each do |opening|
+    [{ 'external_enabled' => 'yes' }, { 'enabled' => 'yes' }, { 'foo' => true }, true].each do |opening|
       with_repository('opening_check' => opening) do |root|
         error = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
         assert_includes error.message, 'opening_check'
+      end
+    end
+  end
+
+  def test_rejects_ambiguous_or_invalid_model_choices
+    [{ 'external_enabled' => false, 'enabled' => true }, { 'reviewer' => 'unlisted/model' },
+     { 'model' => 'no-reviewer' }, { 'reviewer' => 'openai/codex', 'model' => '' },
+     { 'effort' => 'not a level' }].each do |opening|
+      with_repository('opening_check' => opening) do |root|
+        assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
       end
     end
   end
@@ -36,6 +46,14 @@ class RepositoryConfigOpeningTest < Minitest::Test
     with_repository('opening_check' => { 'prompt_file' => '../outside.md' }) do |root|
       error = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
       assert_equal 'opening_check.prompt_file must be a path inside the repository', error.message
+    end
+  end
+
+  def test_non_string_reviewer_choices_are_configuration_errors
+    [5, %w[a b]].each do |reviewer|
+      with_repository('opening_check' => { 'reviewer' => reviewer }) do |root|
+        assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
+      end
     end
   end
 

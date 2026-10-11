@@ -43,6 +43,14 @@ class PublicSettingsTest < Minitest::Test
     end
   end
 
+  def test_supported_opening_reviewers_survive_the_public_allowlist
+    reviewers = { 'deepseek/openrouter' => 'deepseek/openrouter', ' OpenAI / Codex ' => 'openai/codex' }
+    reviewers.each do |reviewer, expected|
+      public = Shaka::Evidence::PublicSettings.sanitize('opening_check.reviewer' => reviewer)
+      assert_equal expected, public.fetch('opening_check.reviewer')
+    end
+  end
+
   private
 
   def private_installation

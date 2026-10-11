@@ -30,6 +30,7 @@ module Shaka
       @candidate_root = canonical_root(candidate_root)
       @reviewer = options[:reviewer]
       @model = options[:model]
+      @effort = options[:effort] || 'low'
       @prompt = options[:prompt] || PROMPT
       @cache_dir = options[:cache_dir]
     end
@@ -84,7 +85,7 @@ module Shaka
       directory ||= File.join(Dir.home, '.cache', 'shaka', 'opening-check')
       return nil if cache_inside_candidate?(directory)
 
-      OpeningVerdictCache.new(opening: @opening, model: [@reviewer, @model].join('/'),
+      OpeningVerdictCache.new(opening: @opening, model: [@reviewer, @model, @effort].join('/'),
                               prompt: model_prompt, directory:)
     rescue ArgumentError, SystemCallError
       nil # Checking still works when this host has no usable cache directory.
@@ -103,7 +104,7 @@ module Shaka
       # Reuse the review CLI adapters and run outside the candidate checkout.
       Dir.mktmpdir('shaka-opening-') do |dir|
         report = File.join(dir, 'parse.json')
-        options = { reviewer: @reviewer, model: @model, effort: 'low', timeout_seconds: TIMEOUT_SECONDS,
+        options = { reviewer: @reviewer, model: @model, effort: @effort, timeout_seconds: TIMEOUT_SECONDS,
                     capture_usage: false }
         path = LocalReviewPathGuard.safe_path(ENV['PATH'].to_s, candidate_root: @candidate_root)
         outcome = LocalReviewCli.new(options, root: dir, report:, candidate_root: @candidate_root, path:)
