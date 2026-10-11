@@ -309,6 +309,22 @@ This is guidance the agent follows, not behavior that code enforces.
 Loading skills automatically at set points is a
 [proposed feature](https://github.com/shakacode/shaka/issues/35), not shipped behavior.
 
+## Review a session for improvements
+
+At the end of a rough session, ask in the same chat what would have made it go
+better:
+
+```text
+$shaka retrospective
+```
+
+The agent lists findings, each with its evidence, a proposed fix, and what the
+fix costs to maintain. It should change nothing until you pick, for example
+`Deliver findings 1 and 3`. Each pick is delivered as an ordinary Shaka task.
+
+If a session retrospective skill such as [AI Hero's `retro`](https://www.aihero.dev/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md)
+is installed, the agent uses it for the analysis. Shaka works without one.
+
 ## Suggest improvements to Shaka
 
 Tell your agent in chat what you would like Shaka to do better. For example:

@@ -28,6 +28,7 @@ the workflow reaches that decision:
 | Choose tests and evidence | [Verification](https://github.com/shakacode/shaka/blob/main/docs/pr-verification.md) |
 | Explain visible changes on the new capture | [Annotated screenshots and optional pixel diagnostics](visual-diff.md) |
 | Report model, token, and cost evidence | [Usage reporting](usage-reporting.md) |
+| Run a requested session retrospective | [Retrospective](retrospective.md) |
 | Offer an issue for a verified Shaka gap | [Issue offers](shaka-issue-offer.md) |
 | Read public issue and review discussions | [Public comments](public-comments-safety.md) |
 | Operate a control tower | [Control towers](control-towers.md) |
