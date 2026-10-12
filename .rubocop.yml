@@ -12,6 +12,7 @@ AllCops:
   TargetRubyVersion: 3.4
   Exclude:
     - 'eval/fixtures/local_evaluation/**/*'
+    - 'eval/fixtures/dependency_delivery/**/*'
 
 # These three cops rewrite the existing suite: blank lines before asserts,
 # a 3-assert cap, and treating assert(condition, diagnostic) as expected/actual.

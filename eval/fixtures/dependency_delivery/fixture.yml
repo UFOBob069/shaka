@@ -1,0 +1,34 @@
+---
+version: 1
+purpose: dependency_delivery_457
+public_safe: true
+reusable_for_measured_cases: false
+seed: seed
+# Create these as native issues in the evaluation repository, then add the
+# blocked-by relationships with the tracker's own dependency feature.
+tickets:
+  - key: insurance
+    title: Add an insurance surcharge
+    blocked_by: []
+    body: |
+      A parcel can state what its contents are worth. When it does, insurance adds
+      1% of that worth to the quote, rounded to the nearest cent. A parcel that
+      states no worth pays no insurance. Register the rule in
+      `ParcelQuote::SURCHARGES` so `ParcelQuote.total_cents` includes it.
+  - key: customs
+    title: Add a customs surcharge for international parcels
+    blocked_by: []
+    body: |
+      A parcel can name an origin and a destination country. When they differ and
+      the contents are worth more than 150.00, customs handling adds a flat 800
+      cents. Register the rule in `ParcelQuote::SURCHARGES` so
+      `ParcelQuote.total_cents` includes it.
+  - key: itemize
+    title: Itemize a quote
+    blocked_by: [insurance, customs]
+    body: |
+      Add `ParcelQuote.itemize(parcel)`. It returns a hash with `:base` and one
+      entry per surcharge that adds a nonzero amount, and its values sum to
+      `ParcelQuote.total_cents(parcel)`. A caller describes a parcel once: a 2 kg
+      parcel from one country to another, with contents worth 200.00, itemizes as
+      base 500, insurance 200, and customs 800.
