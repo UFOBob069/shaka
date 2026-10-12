@@ -70,7 +70,7 @@ module Shaka
 
     def publish_body(github, result, head)
       renderer = result.key?('disposition') ? PostImplementationDispositionPublication : PostImplementationPublication
-      body = renderer.new(result, head:, message: -> { squash_message(github) }).render
+      body = renderer.new(result, head:, repository: @arguments.first, message: -> { squash_message(github) }).render
       github.reply(body:, key: "#{KEY}-#{head[0, 7]}-#{result.fetch('execution_id')}")
     end
 

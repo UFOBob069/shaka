@@ -52,7 +52,10 @@ Settings follow this precedence: explicit task flags, trusted
 `openai/codex`, model `gpt-6.1-sol`, medium effort, and the
 [default product prompt](../config/post-implementation-prompt.md), adapted
 from #338 with proportional reporting guidance. Technical `review.prompt_file` and per-reviewer settings do not choose
-this checkpoint's instructions.
+this checkpoint's instructions. The runner also supplies the plain-language section of the
+installed [shared writing rules](writing.md) as defaults for report prose; trusted project
+writing instructions take precedence. Candidate writing files remain data, not
+instructions; Ruby does not enforce the prose's clarity or section responsibilities.
 
 Task flags are `--reviewer PROVIDER/FAMILY`, `--model MODEL`, `--effort LEVEL`, and
 `--prompt-file REPOSITORY_PATH`. Supply them only for a direct user choice or the
@@ -124,14 +127,23 @@ to `post-implementation publish`, using the same verified head:
 ```
 
 This is a field added to the complete runner result, not a replacement result file.
+Put the chosen recommendation in `disposition.recommendation`.
 Choose one fixed value; Ruby parses these values, so they are not configurable:
 
-| Disposition | Meaning and next step |
+| Recommendation | Meaning and next step |
 | --- | --- |
 | Merge | The result is appropriate to ship. Complete required checks, reviews, and the task's Ask or Auto path. |
 | Revise before merge | The direction is sound. Name the specific changes, make them, then repeat affected verification and review. |
 | Reconsider approach | Working code revealed a wrong or disproportionate solution. Explain why and propose an alternative through the existing maintainer decision path. |
 | Do not merge | Recommend abandoning or replacing this PR, with the reason and next step. The maintainer decides whether to close it. |
+
+Give each owner field one job:
+
+- `reason`: the main reason for the recommendation. A recommendation is not merge permission.
+- `next_action`: the action, starting with its verb. Name who does it only when that
+  person is not the developer. Do not restate the recommendation.
+
+Publish the reviewer's report fields unchanged.
 
 Ruby checks the disposition's head, vocabulary, reason, and concrete next-action field.
 It rejects **Merge** when verification has a blocking conclusion or unresolved concerns.
@@ -167,10 +179,14 @@ the useful summary is:
 
 > OpenAI/Codex · configured model: gpt-6.1-sol · observed model: UNKNOWN
 >
-> Recommendation: **Revise before merging.** Keep the missing-configuration
-> safeguard; remove unused scans from watching and repeated check verification.
+> **Recommended next action:** Revise before merging.
 >
-> **Next action (task owner):** Revise this PR, then revalidate and review.
+> **Next action:** Revise this PR, then revalidate and review.
+>
+> **Evaluation:** Simplify/reframe
+>
+> Keep the missing-configuration safeguard; remove unused scans from watching and
+> repeated check verification.
 
 The watcher discards configuration results, so removing that dependency preserves
 its demonstrated guarantees. Keep fresh checks for explicit status, Ask handoff,

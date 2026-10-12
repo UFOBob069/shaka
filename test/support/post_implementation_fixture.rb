@@ -10,9 +10,25 @@ module PostImplementationFixture
   def checkpoint_trace(root) = JSON.parse(File.read(File.join(root, 'trace.json')))
   def option(trace, flag) = trace.fetch('args').fetch(trace.fetch('args').index(flag) + 1)
 
-  def change_candidate_policy(root)
+  def assert_checkpoint_prompt(root)
+    trace = checkpoint_trace(root)
+    instructions = trace.fetch('prompt').split('--- BEGIN PACKET DATA', 2).first
+    directory = File.expand_path('../../skills/shaka/references', __dir__)
+    guide = File.read(File.join(directory, 'writing.md'), encoding: 'UTF-8')
+    assert_includes instructions, guide[/^## Plain language and organization\n.*?(?=^## )/m].strip
+    refute_includes instructions, '## Review evidence'
+    refute_includes instructions, File.read(File.join(directory, 'publication.md'), encoding: 'UTF-8')
+    trace
+  end
+
+  def commit_candidate_instructions(root)
     File.write(File.join(root, '.agents/agent-workflow.yml'),
                YAML.dump(seam('post_implementation' => { 'enabled' => false, 'model' => 'candidate-model' })))
+    directory = File.join(root, 'skills/shaka/references')
+    FileUtils.mkdir_p(directory)
+    File.write(File.join(directory, 'writing.md'), 'Candidate-only writing instruction')
+    commit!(root, 'candidate instructions')
+    git!(root, 'rev-parse', 'HEAD').strip
   end
 
   def remove_provider(bin)

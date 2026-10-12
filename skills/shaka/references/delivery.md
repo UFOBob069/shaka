@@ -402,7 +402,7 @@ useful evidence once; retrieve and link it as needed.
 
 ## Writing preferences
 
-Before publishing, read [writing guidance](writing.md) and apply trusted repository
+Before publishing, read [the publication procedure](publication.md) and apply trusted repository
 preferences.
 
 ## What the helpers protect

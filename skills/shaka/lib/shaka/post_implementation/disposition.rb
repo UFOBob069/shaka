@@ -47,15 +47,14 @@ module Shaka
       @state = PostImplementationDisposition.merge?(disposition) ? 'ready' : 'blocked'
       @summary = disposition.fetch('reason')
       verification = report.fetch('summary', report.fetch('reasons').first)
-      ["Recommended next action: **#{disposition.fetch('recommendation')}**", @summary,
-       "**Next action (task owner):** #{disposition.fetch('next_action')}",
-       "Evaluation: **#{report.fetch('conclusion')}**", verification,
+      ["**Recommended next action:** #{disposition.fetch('recommendation')}", @summary,
+       "**Next action:** #{disposition.fetch('next_action')}",
+       "**Evaluation:** #{report.fetch('conclusion')}", verification,
        evidence_lines(report), supporting_analysis(report, verification)].join("\n\n")
     end
 
     def evidence_lines(report)
-      ["Head: `#{@head}`",
-       "Unresolved concerns: #{report.fetch('concerns').empty? ? 'none' : report.fetch('concerns').join('; ')}",
+      [concern_section(report),
        'Required checks, reviews, and merge authority still apply.'].join("\n\n")
     end
 

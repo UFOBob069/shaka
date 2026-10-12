@@ -462,7 +462,7 @@ phases:
         A refusal publishes nothing and quotes the long text or states the word count; rewrite it,
         publish again, and note the refusal in the description's review history details.
       - Before publishing the PR description, walkthrough, or final response, self-edit each summary
-        against the [portable baseline](<{{package_root}}/skills/shaka/references/writing.md>):
+        following [the publication procedure](<{{package_root}}/skills/shaka/references/publication.md>):
         lead with the outcome its reader notices, keep one main idea per sentence, put each condition
         beside the behavior it limits, and prefer a clear subject and active verb over diff-shaped
         phrasing. Keep exact commands, identifiers, domain terms, risks, and evidence. Skip chatbot

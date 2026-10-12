@@ -12,7 +12,7 @@ class PostImplementationTest < Minitest::Test
 
       assert_predicate status, :success?, result.inspect
       assert_equal 'post_implementation', result.fetch('purpose')
-      trace = checkpoint_trace(root)
+      trace = assert_checkpoint_prompt(root)
       assert_equal 'gpt-6.1-sol', option(trace, '-m')
       assert_includes trace.fetch('prompt'), 'Restore the missing-check error'
       refute_includes File.read(result.fetch('report')), 'REVIEWED'
@@ -25,7 +25,7 @@ class PostImplementationTest < Minitest::Test
     with_repository(settings) do |root, base, head, bin|
       fake_checkpoint(bin, head)
       _, status = run_checkpoint(root, base, head, bin)
-      trace = checkpoint_trace(root)
+      trace = assert_checkpoint_prompt(root)
 
       assert_predicate status, :success?
       assert_includes trace.fetch('args'), 'model_reasoning_effort="high"'
@@ -88,14 +88,15 @@ class PostImplementationTest < Minitest::Test
 
   def test_candidate_configuration_never_selects_execution_settings
     with_repository do |root, base, _head, bin|
-      change_candidate_policy(root)
-      commit!(root, 'candidate policy')
-      head = git!(root, 'rev-parse', 'HEAD').strip
+      head = commit_candidate_instructions(root)
       fake_checkpoint(bin, head)
       result, status = run_checkpoint(root, base, head, bin)
 
       assert_predicate status, :success?
       assert_equal 'gpt-6.1-sol', result.fetch('requested_model')
+      prompt = checkpoint_trace(root).fetch('prompt')
+      refute_includes prompt.split('--- BEGIN PACKET DATA', 2).first, 'Candidate-only writing instruction'
+      assert_includes prompt, 'Candidate-only writing instruction'
     end
   end
 

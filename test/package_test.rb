@@ -34,7 +34,7 @@ class PackageTest < Minitest::Test
     files = Gem::Package.new(archive).spec.files
 
     %w[docs/getting-started.md skills/shaka/references/review.md skills/shaka/references/writing.md
-       contributing/packaging.md CONTRIBUTING.md].each do |path|
+       skills/shaka/references/publication.md contributing/packaging.md CONTRIBUTING.md].each do |path|
       assert_includes files, path
     end
   end

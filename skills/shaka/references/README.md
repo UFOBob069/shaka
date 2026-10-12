@@ -23,7 +23,8 @@ the workflow reaches that decision:
 | Reconsider the finished result before merge | [Checkpoint](post-implementation-validation.md) |
 | Launch a reviewer CLI | [Local review](local-review.md) |
 | Resolve PR comments, including late reports | [Comment settlement](comment-settlement.md) |
-| Write PR descriptions and replies | [Writing](writing.md) |
+| Write clear publication prose and review reports | [Writing rules](writing.md) |
+| Publish PR descriptions, walkthroughs, and replies | [Publication](publication.md) |
 | Assess documentation changes | [Documentation verification](documentation-verification.md) |
 | Choose tests and evidence | [Verification](https://github.com/shakacode/shaka/blob/main/docs/pr-verification.md) |
 | Explain visible changes on the new capture | [Annotated screenshots and optional pixel diagnostics](visual-diff.md) |
