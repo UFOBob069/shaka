@@ -25,10 +25,8 @@ module Shaka
         'deleted' => delete_earlier_squash_comments(posted['id']) }
     end
 
-    private
-
     # The fence outruns any backtick run in the message, so the text cannot close its block.
-    def squash_comment_body(head, message)
+    def self.body(head, message)
       fence = '`' * [3, "#{message.headline}\n#{message.body}".scan(/`+/).map(&:length).max.to_i + 1].max
       <<~MARKDOWN
         #{SQUASH_MARK}
@@ -44,6 +42,10 @@ module Shaka
         #{fence}
       MARKDOWN
     end
+
+    private
+
+    def squash_comment_body(head, message) = SquashComment.body(head, message)
 
     def delete_earlier_squash_comments(kept)
       earlier_squash_comments(kept).map do |comment|

@@ -32,7 +32,7 @@ disable required merge gates or authorize merging.
 A settings PR becomes the team's default after it merges into the default branch.
 You can also select it for one task before adoption. Local settings do not override
 shared settings. Individual custom code-review instructions and
-decision-checkpoint settings still use the shared source or defaults;
+checkpoint settings still use the shared source or defaults;
 [#481](https://github.com/shakacode/shaka/issues/481) tracks complete individual support.
 
 [Merged #420](https://github.com/shakacode/shaka/pull/420) brought individual delivery
@@ -482,7 +482,7 @@ workflow; to give it the same instructions, have the workflow read this file.
 
 ## `review.post_implementation`
 
-**Optional.** Choose who evaluates the result at the **decision checkpoint**:
+**Optional.** Choose who evaluates the result at the **checkpoint**:
 whether it solves the intended problem, earns its maintenance cost, and what to do
 next. This differs from the code walkthrough explaining the implementation.
 With no settings, Shaka invokes Codex (`gpt-6.1-sol`) at medium effort using its
@@ -505,7 +505,7 @@ review:
 The prompt file and repository choices come from the trusted default branch,
 or the selected settings PR's pinned commit during a preview.
 A task's explicit choices take precedence. See
-[reconsidering the finished result](pr-verification.md#reconsider-the-finished-result)
+[the checkpoint](pr-verification.md#checkpoint)
 for what the checkpoint means for your merge decision.
 
 The PR records the conclusion, reasons, execution settings, and available native
@@ -518,7 +518,7 @@ custom instructions, currently do not apply; [#481](https://github.com/shakacode
 tracks this gap. [Settings previews](#preview-settings-before-adopting-them) apply
 these choices from a selected settings PR.
 
-See [decision-checkpoint terms and current report labels](pr-verification.md#decision-checkpoint).
+See [checkpoint terms and current report labels](pr-verification.md#checkpoint).
 The current automated gate concerns pre-merge readiness; these terms do not add
 an approval step or a general outer-loop mechanism.
 

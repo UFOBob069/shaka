@@ -47,9 +47,9 @@ module Shaka
       @state = PostImplementationDisposition.merge?(disposition) ? 'ready' : 'blocked'
       @summary = disposition.fetch('reason')
       verification = report.fetch('summary', report.fetch('reasons').first)
-      ["PR disposition (task owner): **#{disposition.fetch('recommendation')}**", @summary,
+      ["Recommended next action: **#{disposition.fetch('recommendation')}**", @summary,
        "**Next action (task owner):** #{disposition.fetch('next_action')}",
-       "Verification conclusion: **#{report.fetch('conclusion')}**", verification,
+       "Evaluation: **#{report.fetch('conclusion')}**", verification,
        evidence_lines(report), supporting_analysis(report, verification)].join("\n\n")
     end
 

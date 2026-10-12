@@ -165,7 +165,7 @@ final diff for the agent to reconcile. Keep raw notes in the local backup.
 
 If an attempt goes in the wrong direction, return to earlier human guidance,
 adjust it, and ask for a fresh result. Use a saved
-[decision checkpoint](pr-verification.md#decision-checkpoint) to identify the guidance
+[checkpoint](pr-verification.md#checkpoint) to identify the guidance
 and recoverable work state to return to.
 C1, C2, and later numbers identify
 these points within one task; each appears on the PR with a name, guidance, and

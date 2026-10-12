@@ -17,7 +17,7 @@ module Shaka
     # With the pull request being replaced, the provenance history carries forward from its body.
     def self.description(content, workflow_version = nil, pull = nil, settings = nil)
       new(content, require_tables: true, workflow_version:, pull:, settings:)
-        .render(%i[top_links sections table provenance details wip])
+        .render(%i[checkpoint top_links sections table provenance details wip])
     end
 
     def self.comment(content) = new(content).render([])
@@ -44,6 +44,8 @@ module Shaka
     private
 
     def sections = PublicationSections.render(@content)
+
+    def checkpoint = PublicationLinks.checkpoint(@content, head: @pull&.dig('head', 'sha'))
 
     # The steps besides merging sit under the headline links so a reader cannot miss them.
     def top_links = [*PublicationLinks.top(@content, @settings.attribution?), *StepsBesidesMerging.render(@content)]
@@ -114,9 +116,8 @@ module Shaka
 
     # Only the helper writes the history, from the previous body.
     def refuse_supplied_history(items)
-      return unless items.any? do |item|
-        item.is_a?(Hash) && item['summary'].to_s.strip.casecmp?(ProvenanceHistory::SUMMARY)
-      end
+      summary = ProvenanceHistory::SUMMARY
+      return unless items.any? { |item| item.is_a?(Hash) && item['summary'].to_s.strip.casecmp?(summary) }
 
       raise Error, 'Publication provenance history is carried from the PR body, not supplied as a details item.'
     end

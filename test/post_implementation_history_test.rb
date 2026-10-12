@@ -162,3 +162,18 @@ class PostImplementationHistoryTest < Minitest::Test
     { 'id' => id, 'created_at' => '2026-09-30T00:00:00Z', 'user' => { 'login' => login }, 'body' => "#{mark}#{body}" }
   end
 end
+
+class PostImplementationHistoryTest
+  def test_legacy_archive_retargets_without_nesting_or_losing_human_annotations
+    older = comment(1, body: "#{Shaka::PostImplementationHistory::LEGACY_MARKER} #{url(2)}\n\n" \
+                             "<details>\n<summary>Earlier product validation</summary>\n\n" \
+                             "Original conclusion\nHuman annotation\n\n</details>\n")
+    newest = comment(3)
+    github = GitHub.new([older, newest])
+    report = collapse(github, newest)
+    assert_empty report['unavailable']
+    assert_includes older['body'], "#{Shaka::PostImplementationHistory::MARKER} #{url(3)}"
+    assert_includes older['body'], 'Human annotation'
+    assert_equal 1, older['body'].scan('<details>').size
+  end
+end

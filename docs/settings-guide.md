@@ -22,7 +22,7 @@ Set up Shaka just for me. Go.
 ```
 
 Individual settings support reviewer choices, writing limits, opening instructions,
-and WIP preferences. Custom code-review instructions and decision-checkpoint settings
+and WIP preferences. Custom code-review instructions and checkpoint settings
 still use the shared source or defaults; [#481](https://github.com/shakacode/shaka/issues/481)
 tracks making all supported settings configurable individually.
 See [current experience and recovery limits](expected-experience.md#individual-setup).
@@ -100,7 +100,7 @@ Both team and individual settings support these options.
 ## Decide what happens next
 
 Shaka recommends what to do next at a
-[decision checkpoint](pr-verification.md#decision-checkpoint) and records the owner's
+[checkpoint](pr-verification.md#checkpoint) and records the owner's
 choice for later. See that guide for the terms and current report labels.
 Individual checkpoint settings are part of [#481](https://github.com/shakacode/shaka/issues/481).
 

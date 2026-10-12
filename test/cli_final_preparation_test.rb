@@ -92,7 +92,7 @@ class CliFinalPreparationTest < Minitest::Test
       %w[squash-message merge].each do |command|
         _output, error, status = run_command(root, ref, bin, command)
         refute_predicate status, :success?
-        assert_includes error, 'Post-implementation review is missing'
+        assert_includes error, 'Checkpoint is missing'
         refute_path_exists File.join(bin, 'written')
       end
     end
@@ -112,7 +112,7 @@ class CliFinalPreparationTest < Minitest::Test
       write_comments(bin, 'b' * 40)
       _output, error, status = run_command(root, ref, bin, 'squash-message')
       refute_predicate status, :success?
-      assert_includes error, 'Post-implementation review is missing'
+      assert_includes error, 'Checkpoint is missing'
       refute_path_exists File.join(bin, 'written')
     end
   end

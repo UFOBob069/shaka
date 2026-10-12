@@ -1,4 +1,4 @@
-# Post-implementation validation
+# Checkpoint
 
 Before declaring an implementation ready to merge, step back from code correctness
 and ask whether the finished result remains worth carrying. A restricted reviewer performs
@@ -24,12 +24,22 @@ links before invoking or publishing.
 ```sh
 shaka post-implementation run --root DIR --base BASE_SHA --head HEAD_SHA \
   --ref TRUSTED_DEFAULT_SHA --content-file packet.json > checkpoint.json
-shaka post-implementation publish OWNER/REPO NUMBER --content-file checkpoint.json
+shaka post-implementation publish OWNER/REPO NUMBER --content-file checkpoint.json \
+  --squash-message message.json
 ```
 
+For a ready result, supply `message.json` with the same `title` and plain-text `body`
+used by `merge --squash-message`, as defined in the workflow's publication commands.
+Publication refuses a ready checkpoint without this message. It places copyable title
+and body blocks in the checkpoint and preserves branch co-author trailers.
+Blocked, failed, and opted-out results need no message and display no merge text.
+For an authorized opt-out, keep the standalone `squash-message` command for the Ask handoff.
+Repeat publication after any head change; a recommendation supplies no merge consent.
+
 After publication, set description `post_implementation` to the returned PR comment URL
-and republish the description. The renderer places Post-implementation verification
-beside Code Walkthrough, followed by any deployment link. Until publication, it shows
+and supply the description summary using the workflow's publication contract.
+The renderer places its status and recommended next action near the top,
+with the Checkpoint link beside Code Walkthrough, followed by any deployment link. Until publication, it shows
 a named placeholder. This link locates the report; it does not establish readiness.
 
 `--base`, `--head`, and `--ref` are full commit SHAs. Resolve and verify the default
@@ -94,7 +104,7 @@ unavailable update; the new report stays published so the same execution can be 
 
 ## Act on the conclusion
 
-### Choose the owner's PR disposition
+### Recommend the next action
 
 Verification gathers evidence about the finished result. After assessing that evidence,
 the task owner recommends what happens to the PR. Every completed implementation ends

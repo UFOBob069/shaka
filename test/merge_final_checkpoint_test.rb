@@ -30,7 +30,7 @@ class MergeFinalCheckpointTest < Minitest::Test
     publish_during_last_snapshot(product_comment('blocked'))
     @merge = Shaka::Merge.new(@client, review: { checkpoint: })
 
-    assert_blocked(/Post-implementation review is missing, stale, or blocked/)
+    assert_blocked(/Checkpoint is missing, stale, or blocked/)
   end
 
   def test_ready_checkpoint_and_supplied_message_allow_normal_merge

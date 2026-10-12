@@ -20,7 +20,7 @@ the workflow reaches that decision:
 | Take over a spec or use another installed skill | [Companion skills](companion-skills.md) |
 | Revise earlier human steering and restart | [Human attention checkpoints](return-points.md) |
 | Select reviewers and handle findings | [Review](review.md) |
-| Reconsider the finished result before merge | [Post-implementation validation](post-implementation-validation.md) |
+| Reconsider the finished result before merge | [Checkpoint](post-implementation-validation.md) |
 | Launch a reviewer CLI | [Local review](local-review.md) |
 | Resolve PR comments, including late reports | [Comment settlement](comment-settlement.md) |
 | Write PR descriptions and replies | [Writing](writing.md) |

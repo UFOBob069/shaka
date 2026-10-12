@@ -491,7 +491,7 @@ phases:
         calling `description`, `walkthrough`, or `reply`. Do not rewrite the rendered GitHub body, and
         do not invoke a separate rewrite skill. The helper owns identity, headings,
         spacing, tables, details, and UNKNOWN fields. Description keys are `identity`, `summary`,
-        optional `walkthrough` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
+        optional `checkpoint`, `walkthrough` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
         required `table`, required `provenance`, required `usage` (`note` and `records` from
         `shaka usage --format json`), and `wip` while the PR is unfinished. A `details` item
         whose summary names usage is refused; walkthroughs also require `head`.
@@ -503,9 +503,12 @@ phases:
         or unclosed text refuses publication.
         The helper always renders a Code Walkthrough link after the summary: the COMMENT review
         URL when `walkthrough` is supplied, otherwise `_Not published yet._`. Do not bury that URL
-        in the opening paragraph. Beside it, the helper renders Post-implementation verification,
+        in the opening paragraph. Beside it, the helper renders Checkpoint,
         using `post_implementation` for the published PR comment URL or a named placeholder
-        until publication. After publishing the checkpoint, republish the description with that URL.
+        until publication. Supply `checkpoint` with the live full `head`, concise `status`, and
+        `next_action` naming its owner; the renderer keeps these visible near the top and rejects
+        a stale head. Summarize consequential decisions, questions or friction, and critical
+        changes in a few lines; put evidence in details. Republish when status or action changes.
         Set `deployment` to `auto` to link the newest successful GitHub
         deployment of the PR head, falling back to the latest current-head Cloudflare Pages
         check when successful from the Cloudflare GitHub App. It reports `none` when neither provides a URL.
@@ -539,11 +542,14 @@ phases:
         `pr` reports the native readiness snapshot and required checks; it is not an exit code.
         Its `requiredChecksSource` is `github`, or `seam` when GitHub enforces no required checks
         and the trusted `merge.required_checks` gates the PR instead.
-        `squash-message` and `merge --squash-message` read the same JSON: `title`, the PR title,
+        `post-implementation publish --squash-message`, `squash-message`, and
+        `merge --squash-message` read the same JSON: `title`, the PR title,
         and `body`, plain text for a `git log` reader that says what changed and why, drawn from
         the description summary without its links, tables, or evidence. The helper appends
         `(#N)`, wraps the body, and carries the branch commits' `Co-authored-by` trailers.
-        `squash-message` posts it as a new comment and deletes this account's earlier one.
+        Ready checkpoint publication embeds copyable title and body blocks in the checkpoint.
+        `squash-message` remains the standalone path for an opted-out checkpoint and older installations;
+        it posts a new comment and deletes this account's earlier standalone one.
         A merge queue takes no message, and `merge` reports that.
         `description` replaces only its marked region. `reply` reuses its stable key; `--comment`
         answers an inline thread. When a reply addresses a review, its `reviews` list holds
@@ -699,9 +705,11 @@ phases:
     title: Finish
     body: |-
       - Before calling implementation merge-ready, perform
-        [post-implementation validation](<{{package_root}}/skills/shaka/references/post-implementation-validation.md>):
+        [checkpoint evaluation](<{{package_root}}/skills/shaka/references/post-implementation-validation.md>):
         Use `post-implementation run` with a public-safe evidence packet and the verified
-        default-branch `--ref`, then publish its result on this PR. The companion procedure
+        default-branch `--ref`, then publish its result on this PR. For a ready result, pass
+        `post-implementation publish --squash-message PATH` with the commit title and body
+        so the checkpoint contains the copyable merge message. The companion procedure
         defines trusted settings, explicit task overrides, failures, and opt-outs.
         Did we build the right thing? Compare the finished result with the original problem,
         intended audience, and expected value, including actual complexity, scope drift,
@@ -766,8 +774,9 @@ phases:
         agent-owned work in this turn. If anything other than merge remains, report that blocker and
         stop. If merge is the only remaining action, refresh the WIP Details note for this GitHub merge
         click, run `attention OWNER/REPO NUMBER --state merge` to label the PR
-        `awaiting-merge-approval`, run `squash-message` for that head so the last comment holds
-        the commit title and body to paste into the squash merge boxes, name the expected head SHA,
+        `awaiting-merge-approval`, verify the checkpoint contains the current head
+        and copyable commit title and body. For an opted-out checkpoint, run `squash-message`
+        for that head instead. Name the expected head SHA,
         list each open step besides merging with its timing and who does it, and tell the user they may use
         GitHub's currently offered merge control for that SHA. Arrange continued feedback intake
         through the procedure below before ending the turn. If GitHub
@@ -818,7 +827,7 @@ phases:
         blocker, pending chat decision, or machine-only format. A remaining GitHub merge click after
         Ask gates pass is not a pending chat decision.
     done_when: >-
-      Post-implementation validation justifies the final result with no substantive concern
+      Checkpoint justifies the final result with no substantive concern
       unresolved, and the PR is merged or handed to GitHub's merge control with the report sent.
 always: |-
   Before implementing a material correction to the task plan, update its durable record
@@ -835,7 +844,7 @@ always: |-
 
   During implementation or review, unexpected breadth, growing abstractions or coupling,
   repeated fixes creating new defects, or non-converging local/CI feedback triggers
-  [post-implementation validation](<{{package_root}}/skills/shaka/references/post-implementation-validation.md>)
+  [checkpoint evaluation](<{{package_root}}/skills/shaka/references/post-implementation-validation.md>)
   before another repair round. Use two repair rounds without convergence as a default signal,
   not a budget that permits known defects or requires waiting through obvious scope drift.
   Record the observed cost and reconsider the approach before continuing; an early review

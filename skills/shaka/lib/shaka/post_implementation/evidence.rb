@@ -22,7 +22,7 @@ module Shaka
       comment = latest
       reviewed, state = comment&.fetch('body', '').to_s.match(ATTESTATION)&.captures
       unless reviewed == head && %w[ready opted_out].include?(state)
-        raise Error, "Post-implementation review is missing, stale, or blocked for #{head}; " \
+        raise Error, "Checkpoint is missing, stale, or blocked for #{head}; " \
                      'run and publish the checkpoint for this head before final preparation.'
       end
 

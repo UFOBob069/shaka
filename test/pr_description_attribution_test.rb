@@ -44,7 +44,7 @@ class PrDescriptionAttributionTest < Minitest::Test
     rendered = Shaka::Publication.description(description_content, nil, nil, settings)
     refute_includes rendered, CREDIT
     assert_includes rendered, SUMMARY
-    assert_includes rendered, 'Post-implementation verification'
+    assert_includes rendered, 'Checkpoint'
     assert_includes rendered, 'Execution provenance'
   end
 
@@ -95,5 +95,41 @@ class PrDescriptionAttributionTest < Minitest::Test
         assert_includes File.read(File.join(dir, 'published.md')), CREDIT
       end
     end
+  end
+end
+
+class PrDescriptionCheckpointCommandTest < Minitest::Test
+  include RepositoryConfigTestHelpers
+  include CliOpeningCheckFakes
+
+  COMMAND = PrDescriptionAttributionTest::COMMAND
+  SUMMARY = PrDescriptionAttributionTest::SUMMARY
+
+  def test_description_command_uses_the_live_rest_pull_head
+    with_repository do |root|
+      commit(root)
+      Dir.mktmpdir do |dir|
+        _output, error, status = run_description(dir, root:, ref: fixture_ref(root))
+        assert_predicate status, :success?, error
+        assert_includes File.read(File.join(dir, 'published.md')), '**Status:** Direction needed'
+      end
+    end
+  end
+
+  def test_description_command_refuses_stale_summary_without_publishing
+    @checkpoint_head = 'd' * 40
+    with_repository do |root|
+      commit(root)
+      Dir.mktmpdir do |dir|
+        _output, _error, status = run_description(dir, root:, ref: fixture_ref(root))
+        refute_predicate status, :success?
+        refute_path_exists File.join(dir, 'published.md')
+      end
+    end
+  end
+
+  def description_content
+    super.merge('checkpoint' => { 'head' => @checkpoint_head || ('c' * 40), 'status' => 'Direction needed',
+                                  'next_action' => 'Justin: choose the next direction.' })
   end
 end

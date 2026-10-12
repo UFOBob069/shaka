@@ -99,9 +99,10 @@ class SquashCommentTest < Minitest::Test
   def expected_body = Shaka::GitHub.new('owner/repo', 42).send(:squash_comment_body, HEAD, squash_message)
 
   # Only 7 is ours to delete: 8 is someone else's, 9 lacks the marker, 10 is the new
-  # comment, and 11 came from a concurrent run after it.
+  # comment, and 11 came from a concurrent run after it. An embedded checkpoint marker survives too.
   def listing
-    response([listed(7, 'shaka-agent'), listed(8, 'someone'), listed(9, 'shaka-agent', 'Plain note'),
+    checkpoint = "<!-- shaka:reply:post-implementation-aaaaaaa-abc12345 -->\nReport\n#{MARK}\n"
+    response([listed(7, 'shaka-agent'), listed(8, 'someone'), listed(9, 'shaka-agent', checkpoint),
               listed(10, 'shaka-agent'), listed(11, 'shaka-agent')])
   end
 

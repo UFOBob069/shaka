@@ -5,6 +5,7 @@ require_relative '../publication/text'
 require_relative '../usage/codex_usage'
 require_relative '../usage/claude_usage'
 require_relative 'evidence'
+require_relative '../github/squash_comment'
 
 module Shaka
   # Presents the checkpoint's action without confusing configuration with observations.
@@ -17,9 +18,10 @@ module Shaka
                          'Bring the close-or-replace decision to the maintainer.']
     }.freeze
 
-    def initialize(result, head:)
+    def initialize(result, head:, message: nil)
       @result = result
       @head = head
+      @message = message
       @usage = native_usage
       @configuration = @usage.last&.fetch('configuration') || []
     end
@@ -27,7 +29,8 @@ module Shaka
     def render
       @state = @result['status'] == 'opted_out' ? 'opted_out' : 'not_completed'
       body = @result['status'] == 'completed' ? completed_body : incomplete_body
-      "#{identity}\n\n# Post-implementation validation\n\n#{body}\n\n" +
+      body += "\n\n#{SquashComment.body(@head, @message.call)}" if @state == 'ready'
+      "#{identity}\n\n# Checkpoint\n\n#{body}\n\n" +
         PostImplementationEvidence.attestation(@head, @state)
     end
 
@@ -39,9 +42,7 @@ module Shaka
                                'model' => headline_model, 'effort' => known(@configuration[3]))
     end
 
-    def headline_model
-      known(@configuration[2]) || known(@configuration[1])&.then { |model| "#{model} (configured)" }
-    end
+    def headline_model = known(@configuration[2]) || known(@configuration[1])&.then { |model| "#{model} (configured)" }
 
     def execution_evidence = "#{model_text} · #{effort_text}"
 
@@ -72,7 +73,7 @@ module Shaka
       @state = PostImplementationReport.ready?(report) ? 'ready' : 'blocked'
       action, next_action = recommendation(report)
       summary = report.fetch('summary', report.fetch('reasons').first)
-      ["Recommendation: **#{action}**", summary,
+      ["Recommended next action: **#{action}**", summary,
        "**Next action (task owner):** #{owner_action(report, next_action)}",
        "Head: `#{@head}`",
        "Unresolved concerns: #{report.fetch('concerns').empty? ? 'none' : report.fetch('concerns').join('; ')}",
@@ -81,7 +82,7 @@ module Shaka
 
     def supporting_analysis(report, summary)
       ["<details>\n<summary>Supporting analysis and execution details</summary>",
-       "Conclusion: **#{report.fetch('conclusion')}**",
+       "Evaluation: **#{report.fetch('conclusion')}**",
        *report.fetch('reasons').reject { |reason| reason == summary },
        "Alternative considered: #{report.fetch('alternative')}",
        execution_evidence, "Prompt: #{@result.fetch('prompt_source')}.", usage_text,
@@ -111,7 +112,7 @@ module Shaka
                               ['Review not completed; readiness remains blocked.',
                                'Resolve the execution failure and rerun the checkpoint.']
                             end
-      "Recommendation: **#{action}**\n\n#{@result.fetch('reason')}\n\n" \
+      "Recommended next action: **#{action}**\n\n#{@result.fetch('reason')}\n\n" \
         "**Next action (task owner):** #{next_action}\n\nHead: `#{@head}`\n\n" \
         "<details>\n<summary>Execution details</summary>\n\n#{execution_evidence}\n\n#{usage_text}\n\n</details>"
     end

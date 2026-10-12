@@ -133,10 +133,13 @@ review criteria normally come from the default branch. A maintainer can explicit
 for experiments. A fork PR cannot choose its own review rules. See
 [which settings apply](settings.md#which-settings-apply).
 
-## What is a decision checkpoint?
+<a id="what-is-a-decision-checkpoint"></a>
+<a id="what-is-an-evaluation-checkpoint"></a>
+
+## What is a checkpoint?
 
 It helps the task owner choose what to do next. See the
-[decision-checkpoint guide](pr-verification.md#decision-checkpoint) for its terms,
+[checkpoint guide](pr-verification.md#checkpoint) for its terms,
 how it differs from the code walkthrough, and current report labels.
 
 ## Can I hide my checkout path while keeping the chat locator?

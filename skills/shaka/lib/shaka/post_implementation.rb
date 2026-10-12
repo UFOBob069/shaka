@@ -6,6 +6,7 @@ require_relative 'post_implementation/history'
 require_relative 'post_implementation/publication'
 require_relative 'post_implementation/disposition'
 require_relative 'github'
+require_relative 'publication/squash_message'
 
 module Shaka
   # Runs and publishes one product checkpoint on the existing PR.
@@ -69,8 +70,18 @@ module Shaka
 
     def publish_body(github, result, head)
       renderer = result.key?('disposition') ? PostImplementationDispositionPublication : PostImplementationPublication
-      body = renderer.new(result, head:).render
+      body = renderer.new(result, head:, message: -> { squash_message(github) }).render
       github.reply(body:, key: "#{KEY}-#{head[0, 7]}-#{result.fetch('execution_id')}")
+    end
+
+    def squash_message(github)
+      path = @options[:squash_message]
+      unless path
+        raise Error,
+              'Ready checkpoint requires --squash-message with the commit title and body.'
+      end
+
+      SquashMessage.for(github, JSON.parse(File.read(path, encoding: 'UTF-8')))
     end
 
     def publication_result
@@ -86,7 +97,8 @@ module Shaka
     def parser(action)
       OptionParser.new do |flags|
         flags.banner = "Usage: shaka post-implementation #{action} [options]"
-        %w[root base head reviewer model effort prompt-file content-file timeout-seconds opt-out].each do |key|
+        %w[root base head reviewer model effort prompt-file content-file squash-message timeout-seconds
+           opt-out].each do |key|
           flags.on("--#{key} VALUE") { |value| @options[key.tr('-', '_').to_sym] = value }
         end
         flags.on('--ref SHA') { |value| @options[:criteria_ref] = value }

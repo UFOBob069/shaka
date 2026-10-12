@@ -9,9 +9,9 @@ class PrivateCheckpointTest < Minitest::Test
     with_trial do
       prepare_private_opt_out
       invoke('squash-message', '--head', @ref, '--content-file', message_file,
-             exit_code: 1, error: 'Post-implementation review is missing')
+             exit_code: 1, error: 'Checkpoint is missing')
       resumed = invoke('handoff', exit_code: 2)
-      assert(resumed['owed'].any? { |item| item.include?('Post-implementation review is missing') })
+      assert(resumed['owed'].any? { |item| item.include?('Checkpoint is missing') })
     end
   end
 
@@ -20,9 +20,9 @@ class PrivateCheckpointTest < Minitest::Test
       prepare_private_opt_out
       alter_pull { |pull| pull['comments'] = [product_review('d' * 40)] }
       invoke('squash-message', '--head', @ref, '--content-file', message_file,
-             exit_code: 1, error: 'Post-implementation review is missing')
+             exit_code: 1, error: 'Checkpoint is missing')
       resumed = invoke('handoff', exit_code: 2)
-      assert(resumed['owed'].any? { |item| item.include?('Post-implementation review is missing') })
+      assert(resumed['owed'].any? { |item| item.include?('Checkpoint is missing') })
     end
   end
 

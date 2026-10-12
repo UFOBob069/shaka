@@ -252,7 +252,7 @@ class PublicationWalkthroughLinkTest < Minitest::Test
 
     assert_includes rendered,
                     "A summary.\n\n[Code Walkthrough](#{link}) · " \
-                    "Post-implementation verification: _Not published yet._\n"
+                    "Checkpoint: _Not published yet._\n"
     refute_includes rendered, '## Code Walkthrough'
     refute_match(/^# Code Walkthrough/, rendered)
   end
@@ -317,12 +317,12 @@ class PublicationPostImplementationLinkTest < Minitest::Test
   def test_verification_is_beside_the_code_walkthrough
     assert_includes render(URL),
                     "[Code Walkthrough](#{PublicationRegressionTest::WALKTHROUGH}) · " \
-                    "[Post-implementation verification](#{URL})"
+                    "[Checkpoint](#{URL})"
   end
 
   def test_missing_verification_reserves_a_named_placeholder
     [nil, '  '].each do |value|
-      assert_includes render(value), 'Post-implementation verification: _Not published yet._'
+      assert_includes render(value), 'Checkpoint: _Not published yet._'
     end
   end
 
@@ -386,13 +386,13 @@ class PublicationDeploymentLinkTest < Minitest::Test
     link = PublicationRegressionTest::WALKTHROUGH
     assert_includes render,
                     "A summary.\n\n[Code Walkthrough](#{link}) · " \
-                    'Post-implementation verification: _Not published yet._ · ' \
+                    'Checkpoint: _Not published yet._ · ' \
                     "[Deployment](<#{DEPLOYMENT}>)\n\n## Outcome"
   end
 
   def test_the_deployment_link_stays_near_the_top_before_the_walkthrough_exists
     assert_includes render('walkthrough' => nil),
-                    "A summary.\n\n_Not published yet._ · Post-implementation verification: _Not published yet._ · " \
+                    "A summary.\n\n_Not published yet._ · Checkpoint: _Not published yet._ · " \
                     "[Deployment](<#{DEPLOYMENT}>)\n"
   end
 
@@ -406,7 +406,7 @@ class PublicationDeploymentLinkTest < Minitest::Test
     refute_includes rendered, 'Deployment'
     assert_includes rendered,
                     "[Code Walkthrough](#{PublicationRegressionTest::WALKTHROUGH}) · " \
-                    "Post-implementation verification: _Not published yet._\n\n## Outcome"
+                    "Checkpoint: _Not published yet._\n\n## Outcome"
   end
 
   def test_a_missing_or_blank_deployment_is_refused
@@ -893,5 +893,49 @@ class PublicationIdentityPresentationTest < Minitest::Test
     assert_equal "#{Shaka::PublicationText.identity(IDENTITY)}\n\nDone.\n", rendered
     custom = Shaka::PublicationText.identity(IDENTITY.merge('agent' => 'Custom Agent', 'provider' => 'Custom Provider'))
     assert_includes custom, 'Custom Agent · Custom Provider'
+  end
+end
+
+class PublicationCheckpointTest < Minitest::Test
+  HEAD = 'a' * 40
+
+  def content
+    { 'identity' => PublicationRegressionTest::IDENTITY, 'summary' => 'Review the current result.',
+      'table' => PublicationRegressionTest::TABLE, 'deployment' => 'none', 'steps_besides_merging' => 'none',
+      'provenance' => PUBLIC_PROVENANCE, 'usage' => PublicationRegressionTest::USAGE_OBJECT,
+      'checkpoint' => { 'head' => HEAD, 'status' => 'Direction needed',
+                        'next_action' => 'Justin: choose the simpler parser before another review round.' } }
+  end
+
+  def test_current_status_and_action_precede_supporting_evidence
+    body = Shaka::Publication.description(content, nil, { 'head' => { 'sha' => HEAD } })
+    assert_includes body, '**Status:** Direction needed'
+    assert_includes body, '**Recommended next action:** Justin: choose the simpler parser'
+    assert_operator body.index('**Recommended next action:**'), :<, body.index('| Check |')
+    assert_includes body, "Head: `#{HEAD}`"
+  end
+
+  def test_stale_checkpoint_cannot_describe_the_current_pr
+    assert_raises(Shaka::Error) do
+      Shaka::Publication.description(content, nil, { 'head' => { 'sha' => 'b' * 40 } })
+    end
+  end
+
+  def test_single_line_html_is_visible_text_instead_of_hiding_the_action
+    data = content
+    data['checkpoint']['status'] = 'Direction needed <details>'
+    data['checkpoint']['next_action'] = 'Justin: choose a direction <!-- recorded later -->'
+    body = Shaka::Publication.description(data, nil, { 'head' => { 'sha' => HEAD } })
+    assert_includes body, 'Direction needed &lt;details&gt;'
+    assert_includes body, 'choose a direction &lt;!-- recorded later --&gt;'
+    refute_includes body, 'Direction needed <details>'
+  end
+
+  def test_status_cannot_hide_the_next_action_in_multiline_content
+    data = content
+    data['checkpoint']['status'] = "Direction needed\n\n<details>"
+    assert_raises(Shaka::Error) do
+      Shaka::Publication.description(data, nil, { 'head' => { 'sha' => HEAD } })
+    end
   end
 end

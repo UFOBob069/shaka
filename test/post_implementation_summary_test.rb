@@ -43,7 +43,7 @@ class PostImplementationModelPublicationTest < Minitest::Test
       codex_usage(result, path)
       identity = rendered(result, path)
       assert_includes identity, 'configured model: gpt-6.1-sol'
-      heading = /\A🤖 Codex · OpenAI · gpt-6\.1-sol \(configured\) · medium\n\n# Post-implementation validation\n\n/
+      heading = /\A🤖 Codex · OpenAI · gpt-6\.1-sol \(configured\) · medium\n\n# Checkpoint\n\n/
       assert_match heading, identity
       assert_operator identity.index('observed model:'), :>, identity.index('<details>')
       assert_includes identity, 'observed model: UNKNOWN'
@@ -78,7 +78,7 @@ class PostImplementationModelPublicationTest < Minitest::Test
       result['requested_model'] = 'chosen-model'
       body = rendered(result, path)
       assert_includes body, 'observed model: UNKNOWN; requested model: chosen-model'
-      assert_includes body, 'Recommendation: **Merge if CI passes**'
+      assert_includes body, 'Recommended next action: **Merge if CI passes**'
       assert_includes body, '**Next action (task owner):** Complete technical validation and required approvals.'
       assert_equal 1, body.scan('Useful change').size
     end
@@ -93,7 +93,7 @@ class PostImplementationSummaryTest < Minitest::Test
       change_report(result, 'conclusion' => 'Simplify/reframe', 'summary' => 'Keep the safeguard; remove unused scans.',
                             'next_action' => 'Revise this PR, then revalidate.', 'reasons' => ['Maintenance evidence'])
       body = rendered(result, path)
-      assert_includes body, 'Recommendation: **Revise before merging.**'
+      assert_includes body, 'Recommended next action: **Revise before merging.**'
       assert_includes body, '**Next action (task owner):** Revise the approach, then revalidate and review.'
       assert_operator body.index('Keep the safeguard'), :<, body.index('Maintenance evidence')
       assert_operator body.index('Next action (task owner)'), :<, body.index('Maintenance evidence')
@@ -104,7 +104,7 @@ class PostImplementationSummaryTest < Minitest::Test
     with_result do |result, path|
       change_report(result, 'concerns' => ['Audience mismatch remains'])
       body = rendered(result, path)
-      assert_includes body, 'Recommendation: **Resolve concerns before merging.**'
+      assert_includes body, 'Recommended next action: **Resolve concerns before merging.**'
       assert_includes body, 'Audience mismatch remains'
     end
   end

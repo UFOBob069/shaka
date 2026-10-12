@@ -68,7 +68,7 @@ class HandoffSquashMessageTest < Minitest::Test
 
   def test_final_handoff_owes_both_checkpoint_and_message_until_they_exist
     result = awaiting_merge(post_implementation: {})
-    assert owed?(result, 'Post-implementation review')
+    assert owed?(result, 'Checkpoint')
     assert owed?(result, 'squash commit message')
     assert_equal Shaka::Handoff::OWED_EXIT, Shaka::Handoff.exit_status(result)
 
@@ -81,5 +81,51 @@ class HandoffSquashMessageTest < Minitest::Test
 
   def test_in_progress_handoff_does_not_require_an_early_checkpoint
     assert_empty handoff(post_implementation: {}, comments: nil)['owed']
+  end
+end
+
+class HandoffEvaluationMessageTest < Minitest::Test
+  include HandoffHarness
+
+  def checkpoint(state: 'ready', head: HEAD, message_head: HEAD, id: 2, author: 'shaka-agent')
+    message = Shaka::SquashMessage.new({ 'title' => 'Fix', 'body' => 'Why.' }, number: 42)
+    { 'id' => id, 'user' => { 'login' => author },
+      'body' => "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\nReport\n\n" \
+                "#{Shaka::SquashComment.body(message_head, message)}\n" \
+                "#{Shaka::PostImplementationEvidence.attestation(head, state)}" }
+  end
+
+  def awaiting(comments) = handoff(labels: ['awaiting-merge-approval'], comments:)
+
+  def test_ready_checkpoint_message_settles_ask_handoff
+    assert_empty awaiting([checkpoint])['owed']
+  end
+
+  def test_mismatched_head_blocked_or_foreign_checkpoint_cannot_settle_it
+    [checkpoint(message_head: OLD), checkpoint(state: 'blocked'), checkpoint(author: 'outsider')].each do |comment|
+      assert(awaiting([comment])['owed'].any? { |item| item.include?('squash commit message') })
+    end
+  end
+
+  def test_newer_blocked_checkpoint_invalidates_earlier_merge_text
+    assert_predicate(awaiting([checkpoint(id: 1), checkpoint(state: 'blocked')])['owed'], :any?)
+  end
+
+  def test_opted_out_handoff_names_the_standalone_message_remedy
+    result = awaiting([checkpoint(state: 'opted_out')])
+    assert_includes result['owed'].join, '`squash-message` for opt-out'
+  end
+
+  def test_republished_opt_out_keeps_the_existing_standalone_message
+    body = HandoffSquashMessageTest::Poster.new.render(HEAD)
+    standalone = { 'id' => 1, 'body' => body, 'user' => { 'login' => 'shaka-agent' } }
+    assert_empty awaiting([standalone, checkpoint(state: 'opted_out')])['owed']
+  end
+
+  def test_archived_checkpoint_message_does_not_count
+    archived = checkpoint
+    archived['body'] = archived['body'].sub('Report', 'Superseded — read the current checkpoint: URL')
+    archived['body'] += "\n</details>"
+    assert_predicate(awaiting([archived])['owed'], :any?)
   end
 end
