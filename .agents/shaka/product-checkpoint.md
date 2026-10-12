@@ -11,4 +11,4 @@ List every substantive unresolved concern in `concerns`, including earlier revie
 Conclude **Proceed**, **Simplify/reframe**, or **Do not merge**, with concrete
 reasons and the smallest useful next action. Report only evidence affecting that
 decision; use a short summary, selective supporting reasons, and a concise
-alternative. The task owner uses this evidence for the existing PR disposition.
+alternative. The task owner uses this evidence for the PR recommendation.
