@@ -41,7 +41,7 @@ module PrivateTrialPublicationHelpers
 
   def assert_unfinished_private(body, root)
     assert_includes body, 'UNKNOWN: rerun missing evidence'
-    assert_includes body, '| wip.include_locations | UNKNOWN | UNKNOWN | true |'
+    assert_includes body, '| wip.include_locations | true |'
     assert_includes body, "| Workspace | #{CHECKOUT} |"
     assert_includes body, "| Chat link | #{SESSION} |"
     refute_includes body, PRIVATE_LINK

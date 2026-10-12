@@ -67,7 +67,7 @@ class PrDescriptionAttributionTest < Minitest::Test
       enable_candidate_attribution(root)
       body = published_body(root)
       refute_includes body, CREDIT
-      assert_includes body, '| pr_description.show_shaka_credit | UNKNOWN | UNKNOWN | false |'
+      assert_includes body, 'Current merge input (not evidence): trusted/team at'
     end
   end
 

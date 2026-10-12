@@ -51,10 +51,19 @@ or PATH by hand.
 
 ## Understand the PR's settings and evidence
 
-Expand the settings block to see the source and effective choices used for the
-candidate. The publication helper redacts selected settings values; this is not a
-general privacy scan. A settings block describes the run;
-it does not prove tests or review happened.
+Expand the settings block to see whether the validation and review results match
+the candidate commit. Below that line, one row per result shows the settings it used
+and what it ran with, such as the validation command or the reviewer.
+[Which settings apply](settings.md#which-settings-apply) explains where settings
+come from.
+
+When the settings are not the default branch's, as in an individual setup or a
+settings PR tried on one task, the block also holds a table of every setting.
+Settings that are UNKNOWN or never published in every column are listed below
+that table instead of taking a row.
+The publication helper redacts selected settings values; this is not a general
+privacy scan. A settings block describes the run; it does not prove tests or
+review happened.
 
 | What changes or fails | Expected response |
 | --- | --- |

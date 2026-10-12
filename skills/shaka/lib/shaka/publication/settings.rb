@@ -4,6 +4,7 @@ require_relative '../evidence/verification'
 require_relative '../evidence/public_settings'
 require_relative 'feature_guard'
 require_relative '../opening_publication'
+require_relative 'settings_table'
 
 module Shaka
   # Consumes existing results; never stores a second receipt or rewrites an earlier one.
@@ -70,31 +71,69 @@ module Shaka
     # Only resolved settings can establish whether the repository opted out.
     def attribution? = @current&.fetch('pr_description.show_shaka_credit', false) == true
 
-    def rows
-      snapshots = %w[validation review].map { |kind| checked_snapshot(kind) } + [@current]
-      safe = snapshots.map { |snapshot| Evidence::PublicSettings.sanitize(snapshot) }
-      Evidence::PublicSettings::FIELDS.map do |field|
-        "| #{field} | #{safe.map { |snapshot| snapshot[field] }.join(' | ')} |"
-      end
-    end
-
     NOTE = 'Local files remain local. This reports operation settings and cannot restore them. ' \
            'It does not prove earlier checks ran. Private merge.preference grants no Auto authority. ' \
            'Private trials default to Ask; explicit user authorization and live required gates govern merging.'
-    HEADER = '| Setting | Before push: validation | Review | Current merge input (not evidence) |'
+    OPERATIONS = { 'validation' => 'Before push: validation', 'review' => 'Review' }.freeze
+    CURRENT = 'Current merge input (not evidence)'
+    # Settings from these sources are not readable in the repository, so the block keeps every value.
+    UNCOMMITTED = %w[private/local preview/local].freeze
 
     def detail
       status = @verdict ? 'Bound to the current candidate commit.' : 'UNKNOWN: rerun missing evidence.'
-      table = [HEADER, '| --- | --- | --- | --- |', *rows].join("\n")
-      { 'summary' => SUMMARY, 'body' => [status, NOTE, table].join("\n\n") }
+      { 'summary' => SUMMARY, 'body' => [status, NOTE, current_line, *operations_table, *values].join("\n\n") }
     end
 
     private
 
-    def checked_snapshot(kind)
-      entries = @verdict&.dig('checks', kind)
-      snapshots = entries&.map { |entry| entry.dig('original', 'public_settings') }&.uniq
-      snapshots&.size == 1 ? snapshots.first : nil
+    def current_line
+      settings = Evidence::PublicSettings.sanitize(@current)
+      version, installation = settings.values_at('installation.version', 'installation.source')
+      shaka = installation == 'UNKNOWN' ? version : "#{version} (installation: #{installation})"
+      "#{CURRENT}: #{source(settings)}; Shaka #{shaka}"
+    end
+
+    # One row per recorded result. Binding refuses a result whose settings differ from the
+    # current ones, so a row needs only what can still vary: its revision and what it ran with.
+    def operations_table
+      rows = operations.map { |title, settings| [title, source(settings), ran_with(settings)] }
+      return [] if rows.empty?
+
+      lines = [['Operation', 'Settings', 'Ran with'], %w[--- --- ---], *rows]
+      [lines.map { |cells| "| #{cells.join(' | ')} |" }.join("\n")]
+    end
+
+    def operations
+      OPERATIONS.flat_map do |kind, title|
+        Array(@verdict&.dig('checks', kind)).map do |entry|
+          [title, Evidence::PublicSettings.sanitize(entry.dig('original', 'public_settings'))]
+        end
+      end
+    end
+
+    def source(settings)
+      kind, revision = settings.values_at('source', 'source.revision')
+      kind == 'UNKNOWN' ? kind : "#{kind} at #{revision}"
+    end
+
+    def ran_with(settings)
+      command, reviewer, effort = settings.values_at('overrides.command', 'overrides.reviewer', 'overrides.effort')
+      parts = [command, reviewer, ("#{effort} effort" unless effort == 'UNKNOWN')].compact - ['UNKNOWN']
+      parts.empty? ? 'UNKNOWN' : parts.join(', ')
+    end
+
+    def values
+      columns = operations.map { |title, settings| [column_title(title, settings), settings] }
+      columns << [CURRENT, Evidence::PublicSettings.sanitize(@current)]
+      return [] unless columns.any? { |_title, settings| UNCOMMITTED.include?(settings['source']) }
+
+      [SettingsTable.disclosure(columns)]
+    end
+
+    # Several reviewers would otherwise share one column title.
+    def column_title(title, settings)
+      reviewer = settings['overrides.reviewer']
+      reviewer == 'UNKNOWN' ? title : "#{title}: #{reviewer}"
     end
   end
 end

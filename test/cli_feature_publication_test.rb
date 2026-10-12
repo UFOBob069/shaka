@@ -52,8 +52,8 @@ class CliFeaturePublicationTest < Minitest::Test
   def assert_bound_results(dir, root, arguments)
     _output, error, status = publish(dir, root, *arguments)
     assert_predicate status, :success?, error
-    assert_includes File.read(File.join(dir, 'published.md')),
-                    '| overrides.command | validate | UNKNOWN | UNKNOWN |'
+    assert_match(%r{\| Before push: validation \| trusted/team at \h{40} \| validate \|},
+                 File.read(File.join(dir, 'published.md')))
   end
 
   def assert_missing_review(dir, root, arguments)
