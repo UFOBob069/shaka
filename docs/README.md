@@ -4,9 +4,12 @@ Understand what your coding agent changed, why it chose the approach, and how
 the result was checked. Shaka presents the context you need to approve a change,
 request revisions, or resolve an open question. You choose who merges it.
 
-![Two people set the work in motion and inspect its result, with automated workshop stations between them.](img/delivery-workshop.webp)
+![A sandwich surrounds an agent loop for building, testing, and review. A human checkpoint routes the result toward revision or proceeding.](img/checkpoint-switchback.webp)
 
-![You set the outcome and make the merge call. Shaka plans, implements, verifies, explains, and handles review in between, pausing only when a decision needs you.](img/attention.svg)
+Humans steer the outer loop. Agents build, test, and review inside it.
+At the [checkpoint](pr-verification.md#checkpoint), evaluate the result and decide what happens next.
+
+[View the full-size diagram](img/checkpoint-switchback.webp).
 
 ## Start here
 

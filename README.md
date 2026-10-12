@@ -7,6 +7,13 @@ review, and PR delivery. Get a clear handoff: what changed, what was checked,
 and what needs your decision—with the context to approve the change, request
 revisions, or resolve an open question.
 
+![A sandwich surrounds an agent loop for building, testing, and review. A human checkpoint routes the result toward revision or proceeding.](docs/img/checkpoint-switchback.webp)
+
+Humans steer the outer loop. Agents build, test, and review inside it.
+At the [checkpoint](docs/pr-verification.md#checkpoint), evaluate the result and decide what happens next.
+
+[View the full-size diagram](docs/img/checkpoint-switchback.webp).
+
 [Read the Shaka documentation](https://shaka.shakacode.com/).
 
 <a id="example-prompts"></a>
