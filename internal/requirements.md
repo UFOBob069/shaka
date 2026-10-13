@@ -274,6 +274,8 @@ Prospective features and retirement choices are recorded in this plan and in
 [predecessor retirement](retirement.md); website work lives
 in its own repository and consumes these guides. No fleet coordination, policy engine,
 telemetry service, tracker synchronization, or release automation is part of this kernel.
+The helper's call log is a local file of command timings that a retrospective reads;
+nothing uploads or aggregates it.
 
 Master and repository control towers may organize work through the existing
 Shaka procedure as [optional operating roles](../docs/control-towers.md). The focused

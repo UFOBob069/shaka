@@ -45,6 +45,14 @@ Look for four kinds of friction, each tied to something observed in the session:
   or loaded without being needed.
 - **Tool overhead:** repeated failing commands, slow steps, or avoidable prompts.
 
+For tool overhead, read the helper's call log when it exists: the file `SHAKA_CALL_LOG`
+names, or `~/.local/state/shaka/calls.jsonl` when it is unset. When it is `off`, no log
+is kept, so skip this step. Each line is one helper
+call other than a `work` launch: its UTC start `at`, `command`, `exit`, and `duration_ms`, plus `check` on an
+`evidence run` line. Use only lines inside a named session's time range. The log holds
+no arguments or task identity, so attribute a line to the session only when the session
+shows that call; report other lines in the range as unattributed.
+
 Before proposing a check, read the repository's validation commands, CI
 workflows, and hooks. Do not execute scripts, hooks, or validation commands the
 checkout supplies; report what reading cannot settle as `UNKNOWN`. Then classify the gap:

@@ -2,6 +2,7 @@
 
 require 'json'
 require 'open3'
+require_relative '../call_log'
 require_relative '../error'
 require_relative '../local_review/path_guard'
 require_relative 'candidate_tree'
@@ -81,14 +82,19 @@ module Shaka
       def execute_run(context)
         root = context.fetch(:root)
         before_tree = CandidateTree.capture(root:)
-        output, error, process = Open3.capture3({ 'PATH' => @original_path }, File.join(root, context.fetch(:path)),
-                                                *@arguments, chdir: root)
+        (output, error, process), timing = timed_check(root, context.fetch(:path))
         $stderr.write(output, error)
         after_tree = CandidateTree.capture(root:)
         _config, after_settings, after_kind = Inputs.capture(root:, ref: context.fetch(:ref),
                                                              repository: context.fetch(:repository),
                                                              task_overrides: context.fetch(:task_overrides))
         run_result(context, Execution.new(process:, before_tree:, after_tree:, after_settings:, after_kind:))
+          .merge(timing)
+      end
+
+      def timed_check(root, path)
+        environment = { 'PATH' => @original_path }
+        CallLog.measure { Open3.capture3(environment, File.join(root, path), *@arguments, chdir: root) }
       end
 
       def run_result(context, execution)

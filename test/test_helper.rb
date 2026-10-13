@@ -4,6 +4,9 @@ require 'minitest/autorun'
 require 'tmpdir'
 require 'open3'
 
+# Helper calls the tests spawn stay out of the developer's own call log.
+ENV['SHAKA_CALL_LOG'] = 'off'
+
 TEST_GIT = ENV.fetch('PATH').split(File::PATH_SEPARATOR).map { |dir| File.join(dir, 'git') }.find do |path|
   File.file?(path) && File.executable?(path)
 end or raise 'git executable not found'

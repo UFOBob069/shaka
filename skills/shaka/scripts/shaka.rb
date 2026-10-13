@@ -4,6 +4,10 @@ require_relative '../lib/shaka/ruby_requirement'
 
 require 'json'
 require 'optparse'
+require_relative '../lib/shaka/call_log'
+
+Shaka::CallLog.start(ARGV.dup)
+
 require_relative '../lib/shaka/github'
 require_relative '../lib/shaka/attention'
 require_relative '../lib/shaka/pr_watch/command'

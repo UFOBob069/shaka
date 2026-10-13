@@ -20,7 +20,7 @@ class ConfigurationBoundaryTest < Minitest::Test
     post_implementation.rb post_implementation_report.rb post_implementation_runner.rb usage/cursor_usage_refresh.rb
     local_review.rb local_review/cli.rb local_review/comment.rb local_review/path_guard.rb local_review/shebang.rb
     local_review/report_check.rb local_review/runner.rb local_review/openrouter.rb usage/openrouter_usage.rb
-    merge_tree_proof.rb opening_parse.rb opening_check.rb local_review/bundle.rb
+    merge_tree_proof.rb opening_parse.rb opening_check.rb local_review/bundle.rb call_log.rb
     opening_verdict_cache.rb recommendation.rb repos/home.rb review_prompt.rb usage/claude_usage.rb usage/codex_usage.rb
     usage/cursor_usage_store.rb usage/opencode_usage.rb usage/pi_usage.rb usage/rate_card.rb pr_watch/command.rb
     workflow_config.rb seam/upgrade_plan.rb seam/upgrade_plan/inventory.rb seam/upgrade_plan/references.rb
