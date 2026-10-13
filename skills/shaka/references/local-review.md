@@ -394,6 +394,14 @@ another reviewer of its commit, is refused; run it again.
 The trusted `review.local_max_rounds` (default 5) caps the commits reviewed in this ledger; several reviewers of one commit count once.
 `review run` refuses the next round with `failure_stage: round_cap` before launching a reviewer.
 The ledger records the cap used, and publication uses that value; older ledgers default to 5.
+For an explicit maintainer extension, pass `--max-review-executions TOTAL --budget-reason TEXT`
+to `review run --ledger PATH`. Record a public-safe reason describing that authorization.
+TOTAL is an absolute task limit, including all existing ledger reviews; overlapping prompts
+do not add budgets. The selected limit replaces the repository round cap for this ledger.
+Each permitted review start consumes a slot even if its launch or report fails. The ledger
+retains the limit, consumed starts, reason and prior reviews; subsequent runs reuse it without
+flags. Several reviewers of one commit each consume a slot. Verify human authorization
+before selecting the total.
 If the cap leaves an unfixed defect, stop before pushing and tell the user. Push only if they
 choose to. The comment shows a visible **Loop bound reached** section with unresolved defects,
 the rounds they appeared in, returned defects, and a ready task-reassessment prompt.

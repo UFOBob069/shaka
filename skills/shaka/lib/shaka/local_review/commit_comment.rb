@@ -21,11 +21,14 @@ module Shaka
       attention = LocalReviewAttention.new(@before + @rounds, @links)
       blocks = [TITLE, "**Reviewed revision:** #{@links.commit(@rounds.last.head)}", *attention.visible,
                 coverage, usage_link, *fallback_notice, *settings_notice, *bound,
+                *budget_notice,
                 history(attention), @rounds.last.attestation]
       "#{blocks.join("\n\n")}\n"
     end
 
     private
+
+    def budget_notice = LocalReviewBudget.notice(@task_budget, completed: @history.size)
 
     def coverage
       groups = @rounds.group_by { |round| round.value('coverage') || 'UNKNOWN; see evidence.' }
@@ -72,7 +75,9 @@ module Shaka
 
     # Only the final entry can announce that the loop reached its bound.
     def bound
-      @rounds.last.head == @history.last.head ? LocalReviewBound.new(@history, @max_rounds).lines : []
+      return [] unless @rounds.last.head == @history.last.head
+
+      LocalReviewBound.new(@history, @max_rounds, budget: @task_budget).lines
     end
   end
 end

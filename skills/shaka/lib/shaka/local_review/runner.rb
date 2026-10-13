@@ -73,6 +73,7 @@ module Shaka
     private
 
     def validate_path!
+      LocalReviewBudget.validate_options!(@options)
       ENV['PATH'] = LocalReviewPathGuard.safe_path(ENV.fetch('PATH', ''), candidate_root: root, drop_candidate: true)
     end
 
@@ -127,10 +128,18 @@ module Shaka
 
       @ledger = LocalReviewLedger.new(@options[:ledger], root:)
       @max_rounds = RepositoryConfig::ReviewLimit.from(effective_review || {})
-      @ledger.start!(base: @options[:base], head:, reviewer: @options[:reviewer], max_rounds: @max_rounds)
+      start_ledger
       @started = true
-      check_history! if @ledger.last_head
       @snapshot = @ledger.snapshot(head)
+    end
+
+    def start_ledger
+      budget = { limit: @options[:max_review_executions].to_i, reason: @options[:budget_reason] } if
+        @options[:max_review_executions]
+      @ledger.start!(base: @options[:base], head:, reviewer: @options[:reviewer], max_rounds: @max_rounds, budget:) do
+        check_history! if @ledger.last_head
+      end
+      @max_rounds = @ledger.max_rounds(@max_rounds)
     end
 
     # The next round must hold the last reviewed head and each fix the last batch records, and each

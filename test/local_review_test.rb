@@ -1553,7 +1553,7 @@ module LocalReviewArguments
   def append_review_options(arguments, reviewer, options)
     default_effort = reviewer.downcase == 'openai/codex' ? nil : 'medium'
     arguments.push('--effort', options.fetch(:effort, default_effort)) if options.fetch(:effort, default_effort)
-    %w[model criteria-ref description-file timeout-seconds ledger].each do |key|
+    %w[model criteria-ref description-file timeout-seconds ledger max-review-executions budget-reason].each do |key|
       value = options[key.tr('-', '_').to_sym]
       arguments.push("--#{key}", value.to_s) if value
     end

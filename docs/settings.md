@@ -268,6 +268,20 @@ If the cap prevents review of a last-round fix, the agent also stops before push
 and tells you. Publication still refuses that unreviewed fix; reassess the task
 before continuing.
 
+You can authorize a bounded continuation for one task while preserving its review history:
+
+```text
+Continue this task with at most fifteen review executions in total,
+including its five existing reviews. Keep merge policy ask. Go.
+```
+
+The agent records that total and your reason in the existing task ledger. It replaces
+the repository round cap for that ledger alone. Repeating the same total adds no slots.
+Each reviewer start counts, including failed launches and additional reviewers of the
+same commit. The PR shows consumed starts and the selected total; repository settings
+and other tasks retain their existing limits. Ruby enforces the supplied budget;
+the agent verifies your authorization.
+
 ## `review.local_review_agents`
 
 **Optional.** Choose which reviewers Shaka tries first. Put a reviewer from a

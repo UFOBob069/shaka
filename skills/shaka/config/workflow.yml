@@ -316,6 +316,8 @@ phases:
         maintainer; an authorized push publishes the visible Loop bound reached section and
         its ready task-reassessment prompt. If the cap prevents review of a last-round fix,
         stop before pushing and tell the user; publication still refuses unreviewed fixes.
+        For a maintainer-authorized task extension, use the absolute execution budget in the
+        [local review guide](<{{package_root}}/skills/shaka/references/local-review.md>), retaining the same ledger and history.
       - Choose the reviewer with the saved helper's `reviewer --root DIR --ref REF --implementer
         PROVIDER/FAMILY`, passing the trusted commit used for `seam check` so the preference order
         comes from the default branch. Pass `--implementer` once per provider and model family that
