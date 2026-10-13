@@ -69,32 +69,44 @@ module Shaka
     def compare
       endpoint = "repos/shakacode/shaka/compare/#{@source.fetch('revision')}...main"
       output, _error, ok = @runner.call(['gh', 'api', '--hostname', 'github.com', endpoint, '--jq',
-                                         '{status: .status}'], Dir.tmpdir)
+                                         '{status: .status, ahead_by: .ahead_by}'], Dir.tmpdir)
       return unknown unless ok
 
       response = JSON.parse(output)
       return unknown unless response.is_a?(Hash)
 
-      comparison(response['status'])
+      comparison(response['status'], response['ahead_by'])
     end
 
-    def comparison(status)
+    def comparison(status, ahead_by)
       case status
       when 'identical' then answer('current', 'This installed revision matches official main.')
-      when 'ahead' then answer('available', update_guidance)
+      when 'ahead' then available(ahead_by)
       when 'behind', 'diverged' then custom
       else unknown
       end
     end
 
+    # GitHub reports the comparison from the installed revision, so its ahead count is how far behind this is.
+    def available(ahead_by)
+      count = ahead_by if ahead_by.is_a?(Integer) && ahead_by.positive?
+      result = answer('available', "#{lag(count)} #{update_guidance}")
+      count ? result.merge('commits_behind' => count) : result
+    end
+
+    def lag(count)
+      return 'Newer official commits are available.' unless count
+
+      "This installation is #{count} #{count == 1 ? 'commit' : 'commits'} behind official main."
+    end
+
     def update_guidance
       unless @registered
-        return "Newer official commits are available. This is a retained copy; follow #{GUIDE} to migrate. " \
+        return "This is a retained copy; follow #{GUIDE} to migrate. " \
                'Keep trial and rollback copies for active chats.'
       end
 
-      'Newer official commits are available. Finish active Shaka chats, ' \
-        "run #{Shellwords.escape(@helper)} install --update, then start a new chat. " \
+      "Finish active Shaka chats, run #{Shellwords.escape(@helper)} install --update, then start a new chat. " \
         'Continue this task with its saved helper.'
     end
 

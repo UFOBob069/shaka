@@ -8,11 +8,11 @@ class UpdateCheckTest < Minitest::Test
   SOURCE = { 'kind' => 'revision', 'revision' => SHA,
              'repository' => 'https://github.com/shakacode/shaka.git' }.freeze
 
-  def check(status, source: SOURCE, branch: 'main', registered: true)
+  def check(status, source: SOURCE, branch: 'main', registered: true, ahead_by: 3)
     @calls = []
     runner = lambda do |argv, directory|
       @calls << [argv, directory]
-      [JSON.generate({ 'status' => status, 'ahead_by' => 3 }), '', true]
+      [JSON.generate({ 'status' => status, 'ahead_by' => ahead_by }), '', true]
     end
     Shaka::UpdateCheck.new(source:, branch:, registered:, helper: '/installed path/scripts/shaka',
                            runner:).result
@@ -24,7 +24,29 @@ class UpdateCheckTest < Minitest::Test
     assert_includes result.fetch('guidance'), 'install --update'
     assert_includes result.fetch('guidance'), 'Finish active Shaka chats'
     assert_equal [['gh', 'api', '--hostname', 'github.com', "repos/shakacode/shaka/compare/#{SHA}...main", '--jq',
-                   '{status: .status}'], Dir.tmpdir], @calls.fetch(0)
+                   '{status: .status, ahead_by: .ahead_by}'], Dir.tmpdir], @calls.fetch(0)
+  end
+
+  def test_available_update_says_how_many_commits_behind_the_installation_is
+    result = check('ahead')
+    assert_equal 3, result.fetch('commits_behind')
+    assert_includes result.fetch('guidance'), '3 commits behind official main'
+    assert_includes check('ahead', ahead_by: 1).fetch('guidance'), '1 commit behind official main'
+    assert_includes check('ahead', registered: false).fetch('guidance'), '3 commits behind official main'
+  end
+
+  def test_available_update_without_a_usable_count_keeps_the_advice_and_omits_the_number
+    [nil, 0, -2, '3', 2.5].each do |ahead_by|
+      result = check('ahead', ahead_by:)
+      assert_equal 'available', result.fetch('status')
+      refute result.key?('commits_behind')
+      assert_includes result.fetch('guidance'), 'Newer official commits are available.'
+      assert_includes result.fetch('guidance'), 'install --update'
+    end
+  end
+
+  def test_only_an_available_update_reports_a_count
+    %w[identical behind diverged].each { |status| refute check(status).key?('commits_behind') }
   end
 
   def test_identical_is_current_and_an_ahead_or_diverged_trial_is_not_an_update
