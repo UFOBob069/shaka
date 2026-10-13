@@ -120,7 +120,9 @@ module Shaka
           options[:comments_only] = true
         end
         flags.on('--owner VALUE', 'Exact published WIP Details Owner cell; stop on transfer') do |value|
-          options[:owner] = value
+          # Without a UTF-8 locale Ruby tags arguments as binary, which never equals the UTF-8 Owner from GitHub.
+          options[:owner] = value.dup.force_encoding(Encoding::UTF_8)
+          raise Error, '--owner must be UTF-8 text.' unless options[:owner].valid_encoding?
         end
       end
 

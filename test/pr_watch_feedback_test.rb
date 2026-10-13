@@ -95,20 +95,32 @@ class PrWatchFeedbackTest < Minitest::Test
     assert_equal 'all', settings.fetch(:ci_review_wait)
   end
 
+  def test_owner_from_a_shell_without_a_utf8_locale_matches_the_published_owner
+    options, = Shaka::PrWatch::Command.parse(['--comments-only', '--owner', OWNER.b])
+    owner = options.fetch(:owner)
+    assert_equal OWNER, owner
+    assert_equal 'timeout', watch_feedback([frame], [packet], owner:).first
+  end
+
+  def test_owner_that_is_not_utf8_is_refused
+    error = assert_raises(Shaka::Error) { Shaka::PrWatch::Command.parse(['--owner', "m5 \xB7 Codex".b]) }
+    assert_includes error.message, '--owner'
+  end
+
   private
 
   def packet(kind = nil, id = nil)
     comments_packet(frame).tap { |result| result[kind] = [{ 'id' => id }] if kind }
   end
 
-  def watch_feedback(frames, packets, baseline: packet, github: FeedbackGitHub.new(frames))
+  def watch_feedback(frames, packets, baseline: packet, github: FeedbackGitHub.new(frames), owner: OWNER)
     now = 0
     reader = -> { packets.fetch([now, packets.length - 1].min) }
     sleeper = lambda do |seconds|
       now += seconds
       github.advance
     end
-    settings = { comments_only: true, owner: OWNER, baseline:, interval: 1, settle: 1, timeout: 3 }
+    settings = { comments_only: true, owner:, baseline:, interval: 1, settle: 1, timeout: 3 }
     adapters = { clock: -> { now }, sleeper:, comments: reader }
     [Shaka::PrWatch.new(github, head: HEAD, ci_jobs: ['claude-review'], settings:, adapters:).call, now]
   end
