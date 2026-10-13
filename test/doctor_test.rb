@@ -7,7 +7,7 @@ class DoctorTest < Minitest::Test
   include DoctorHelper
 
   def test_a_ready_environment_reports_healthy_and_does_not_block
-    report, blocked = doctor
+    report, blocked = doctor(environment: { 'SHAKA_MACHINE_ALIAS' => 'm5', 'OPENROUTER_API_KEY' => 'test-only' })
     assert_includes report, 'HEALTHY'
     refute_includes report, 'FAILED'
     refute_includes report, 'DEGRADED'
@@ -97,7 +97,8 @@ class DoctorTest < Minitest::Test
   end
 
   def test_a_deliberate_alias_is_healthy_even_when_a_host_name_is_present
-    report, blocked = doctor(environment: { 'SHAKA_MACHINE_ALIAS' => 'm5', 'HOST' => 'build-host' })
+    report, blocked = doctor(environment: { 'SHAKA_MACHINE_ALIAS' => 'm5', 'HOST' => 'build-host',
+                                            'OPENROUTER_API_KEY' => 'test-only' })
     refute_includes report, 'DEGRADED'
     refute blocked
   end

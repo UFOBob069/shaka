@@ -10,7 +10,7 @@ repo_prefix: SHAKA # Omitted: derive a label from the repository name.
 # base_branch: main # Omitted: follow the repository's default branch.
 
 review:
-  local_review_count: 2
+  local_review_count: 3
   required: meaningful_changes # Repository choice: meaningful_changes, always, or none.
   ci_review_jobs: # Repository jobs, required unless review.required is none.
     - claude-review
@@ -30,6 +30,10 @@ review:
       # prompt_file omitted: inherit review.prompt_file, then Shaka's packaged prompt.
     - provider: openai
       model_family: codex
+    - provider: deepseek
+      model_family: openrouter
+      model: deepseek/deepseek-v4.1-flash
+      effort: low
     - provider: xai
       model_family: grok
       # Grok needs a model from configuration or the task to run.
