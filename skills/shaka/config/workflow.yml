@@ -530,7 +530,7 @@ phases:
           [--ci-review-wait none|one|all] [--ci-review-not-required]
         comments OWNER/REPO NUMBER --head SHA
         comments OWNER/REPO ISSUE_NUMBER --issue
-        description OWNER/REPO NUMBER --content-file PATH [--root DIR --ref SHA]
+        description OWNER/REPO NUMBER --content-file PATH [--root DIR --ref SHA] [--comments COMMENTS_JSON]
           [--opening-reviewer PROVIDER/FAMILY] [--opening-model MODEL] [--opening-effort LEVEL]
         reply OWNER/REPO NUMBER --content-file PATH --key NAME [--comment ROOT_COMMENT_ID]
         resolve OWNER/REPO NUMBER --thread THREAD_ID
@@ -573,6 +573,11 @@ phases:
         excluded author; the command posts nothing, so the thread gets no approval note either. Read the packaged
         [public-comment guide](<{{package_root}}/skills/shaka/references/public-comments-safety.md>) for the trust
         configuration sources and exclusion markers.
+        Save each `comments --head SHA` result outside the checkout and pass it to the next
+        `description` as `--comments PATH`, which renders the Human comments list from it. The list
+        quotes a very short human comment; summarize each longer one it shows in a line under
+        `human_comment_summaries`, keyed by its URL, and the helper names any it still needs. A comment
+        outside an inline thread shows No reply there until a `reply` lists its URL in `reviews`.
       - Before merge, publish a COMMENT walkthrough covering the purpose, the prior behavior it
         changes, the new behavior, key choices, validation, risks, rollback consequence, and
         commit-pinned code links. Treat those as concerns to cover rather than headings to emit, and

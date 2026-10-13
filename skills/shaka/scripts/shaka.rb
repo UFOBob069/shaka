@@ -168,6 +168,15 @@ rescue JSON::ParserError => e
   raise Shaka::Error, "Content file is not valid JSON: #{e.message}"
 end
 
+# The human comment list is read from the `comments` result, never written into the content file.
+def with_human_comments(described, path)
+  if described.key?(Shaka::HumanComments::KEY)
+    raise Shaka::Error, "#{Shaka::HumanComments::KEY} comes from --comments, not the content file."
+  end
+
+  path ? described.merge(Shaka::HumanComments::KEY => content(path)) : described
+end
+
 def merge_limits(options)
   Shaka::MergeLimits.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref],
                               confirmed_head: options[:confirmed_head])
@@ -246,6 +255,7 @@ def settings_flags(flags, options)
   %w[validation review].each do |kind|
     flags.on("--#{kind}-result PATH", 'Existing settings-bound result') { |path| (options[kind.to_sym] ||= []) << path }
   end
+  flags.on('--comments PATH', 'For description: `comments` output to list') { |path| options[:comments] = path }
   flags.on('--publication-flow FLOW', Shaka::Configuration::FeatureGuard::FLOWS,
            'Separate setup/migration flow') do |flow|
     options[:publication_flow] = flow
@@ -299,6 +309,7 @@ begin
   end
   raise Shaka::Error, '--thread is only for resolve.' if options[:thread] && command != 'resolve'
   raise Shaka::Error, '--woken-by is only for handoff.' if options[:woken_by] && command != 'handoff'
+  raise Shaka::Error, '--comments is only for description.' if options[:comments] && command != 'description'
   if command == 'handoff' && options[:ref].to_s.strip.empty?
     raise Shaka::Error, 'handoff requires --ref so seam-required checks come from a trusted commit.'
   end
@@ -359,7 +370,7 @@ begin
                  Open3.capture3(gh, *argv.drop(1), stdin_data:, chdir: neutral)
                end)
                attributed = Shaka::PublisherAttribution.prepare(content(options.fetch(:content_file)))
-               described = Shaka::DeploymentLink.resolve(attributed, github)
+               described = with_human_comments(Shaka::DeploymentLink.resolve(attributed, github), options[:comments])
                usage_records = carried = nil
                published = github.description(prose:) do |pull|
                  carried, usage_records = Shaka::UsageRecords.carry_from(described, pull)

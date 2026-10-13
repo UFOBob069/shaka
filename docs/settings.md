@@ -755,6 +755,41 @@ credit. Hiding it keeps verification, execution provenance, and usage visible in
 their existing sections. Shaka also omits the credit when repository settings
 cannot be read.
 
+## `pr_description.show_human_comments`
+
+**Optional. Default: `true`.**
+
+PR descriptions list the comments people wrote under **Human comments**, so they are
+not lost among agent posts. [See what people said](pr-verification.md#see-what-people-said)
+shows the list and explains each column.
+
+To leave the list out of this repository's PR descriptions, set:
+
+```yaml
+pr_description:
+  show_human_comments: false
+```
+
+A description published after that change drops a list an earlier one showed.
+Shaka keeps the list when repository settings cannot be read, because leaving it
+out would hide what people wrote.
+
+## `pr_description.max_human_comments`
+
+**Optional. Default: `20`.**
+
+The list shows at most this many rows, open comments first, and says how many more
+it left out. Use a positive whole number:
+
+```yaml
+pr_description:
+  max_human_comments: 40
+```
+
+How much of a comment the list repeats is not a setting. The list quotes a comment
+only when it has at most 12 words and 90 characters. A longer one is already on
+the PR, so the list shows the agent's one-line summary and links to it.
+
 ## `wip.include_locations`
 
 **Optional. Default: `true`.**

@@ -8,10 +8,11 @@ module Shaka
     DECISIONS_HEADING = 'Decisions for the maintainer'
     MARKER = '<!-- shaka:decisions -->'
 
-    def self.render(content)
+    # following sits between the maintainer's open decisions and the agent's own sections.
+    def self.render(content, following = [])
       listed = PublicationText.list(content['sections'], 'sections')
       refuse_heading(listed)
-      [*decisions(content['decisions']), *listed.map { |section| section_block(section) }]
+      [*decisions(content['decisions']), *following, *listed.map { |section| section_block(section) }]
     end
 
     def self.decisions(items)

@@ -2,6 +2,7 @@
 
 require_relative '../evidence/verification'
 require_relative '../evidence/public_settings'
+require_relative '../repository_config'
 require_relative 'feature_guard'
 require_relative '../opening_publication'
 require_relative 'settings_table'
@@ -70,6 +71,15 @@ module Shaka
 
     # Only resolved settings can establish whether the repository opted out.
     def attribution? = @current&.fetch('pr_description.show_shaka_credit', false) == true
+
+    # An unread setting leaves the list on: the agent passed a comment read for it, and leaving
+    # the list out would hide what people wrote.
+    def human_comments? = @current&.fetch('pr_description.show_human_comments', nil) != false
+
+    def human_comment_rows
+      rows = @current&.fetch('pr_description.max_human_comments', nil)
+      rows.is_a?(Integer) && rows.positive? ? rows : RepositoryConfig::DEFAULT_PR_DESCRIPTION.fetch('max_human_comments')
+    end
 
     NOTE = 'Local files remain local. This reports operation settings and cannot restore them. ' \
            'It does not prove earlier checks ran. Private merge.preference grants no Auto authority. ' \

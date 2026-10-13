@@ -9,6 +9,7 @@ require_relative 'provenance_history'
 require_relative 'wip_details'
 require_relative 'settings'
 require_relative 'steps_besides_merging'
+require_relative 'human_comments'
 require_relative '../publication_sections'
 
 module Shaka
@@ -43,7 +44,8 @@ module Shaka
 
     private
 
-    def sections = PublicationSections.render(@content)
+    # Only a description is rendered with its pull request, so only a description lists what people wrote.
+    def sections = PublicationSections.render(@content, HumanComments.for(@content, @pull, @settings))
 
     def checkpoint = PublicationLinks.checkpoint(@content, head: @pull&.dig('head', 'sha'))
 

@@ -50,6 +50,8 @@ wip:
 
 pr_description:
   show_shaka_credit: true # Default: show a quiet Shaka website credit below the PR summary.
+  show_human_comments: true # Default: list the comments people wrote; false leaves the list out.
+  max_human_comments: 20 # Default: rows the list shows, open comments first.
   opening_check:
     enabled: true # Default: check the opening; false turns the check off.
     effort: low # Default: low, independent of the code-review effort.

@@ -13,7 +13,8 @@ module Shaka
   # Loads the small, typed repository contract used by the workflow.
   class RepositoryConfig
     DEFAULT_WIP = { 'include_locations' => true }.freeze
-    DEFAULT_PR_DESCRIPTION = { 'show_shaka_credit' => true }.freeze
+    DEFAULT_PR_DESCRIPTION = { 'show_shaka_credit' => true, 'show_human_comments' => true,
+                               'max_human_comments' => 20 }.freeze
 
     # base_branch is nil when the seam omits it, meaning the repository's default branch.
     attr_reader :base_branch, :commands, :review, :merge, :wip, :pr_description,

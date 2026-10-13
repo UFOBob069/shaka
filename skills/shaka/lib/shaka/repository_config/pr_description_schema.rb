@@ -15,8 +15,10 @@ module Shaka
 
       def validate
         mapping!(@description, 'pr_description')
-        keys!(@description, [], %w[show_shaka_credit opening_check], 'pr_description')
+        keys!(@description, [], %w[show_shaka_credit show_human_comments max_human_comments opening_check],
+              'pr_description')
         validate_credit
+        validate_human_comments
         return unless @description.key?('opening_check')
 
         OpeningSchema.new(@description['opening_check'], label: 'pr_description.opening_check').validate
@@ -29,6 +31,15 @@ module Shaka
 
         enum!(@description['show_shaka_credit'], [true, false],
               'pr_description.show_shaka_credit must be true or false')
+      end
+
+      def validate_human_comments
+        shown = @description.fetch('show_human_comments', true)
+        enum!(shown, [true, false], 'pr_description.show_human_comments must be true or false')
+        rows = @description.fetch('max_human_comments', 1)
+        return if rows.is_a?(Integer) && rows.positive?
+
+        raise Error, 'pr_description.max_human_comments must be a positive integer'
       end
     end
   end

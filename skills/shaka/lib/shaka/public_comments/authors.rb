@@ -104,10 +104,11 @@ module Shaka
         meta
       end
 
+      # GitHub dates a review by its submission and a comment by its creation.
       def kept_record(item, kind, login, thread)
-        row = { 'id' => item['id'], 'author' => login, 'body' => item['body'], 'url' => item['html_url'] }
-        row['state'] = item['state'] if kind == 'review_summary'
-        row['commit_id'] = item['commit_id'] if kind == 'review_summary'
+        row = { 'id' => item['id'], 'author' => login, 'body' => item['body'], 'url' => item['html_url'],
+                'created_at' => item['created_at'] || item['submitted_at'] }
+        add_review_metadata(row, item, kind)
         row.merge!(inline_location(item)).merge!(thread) if kind == 'inline_comment'
         row
       end

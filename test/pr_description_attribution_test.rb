@@ -17,7 +17,7 @@ class PrDescriptionAttributionTest < Minitest::Test
   def test_default_contract_enables_attribution
     with_repository do |root|
       config = Shaka::RepositoryConfig.load(root:)
-      assert_equal({ 'show_shaka_credit' => true }, config.pr_description)
+      assert_equal Shaka::RepositoryConfig::DEFAULT_PR_DESCRIPTION, config.pr_description
       assert_equal config.pr_description, config.to_h.fetch('pr_description')
     end
   end

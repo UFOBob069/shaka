@@ -13,7 +13,7 @@ class RepositoryConfigDescriptionOpeningTest < Minitest::Test
       config = Shaka::RepositoryConfig.load(root:)
       assert_equal settings.merge('enabled' => true, 'effort' => 'low'), config.opening_check
       assert_equal config.opening_check, config.to_h.fetch('opening_check')
-      assert_equal({ 'show_shaka_credit' => true }, config.to_h.fetch('pr_description'))
+      assert_equal Shaka::RepositoryConfig::DEFAULT_PR_DESCRIPTION, config.to_h.fetch('pr_description')
     end
   end
 

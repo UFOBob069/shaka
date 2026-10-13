@@ -23,10 +23,10 @@ module Shaka
         'opening_check.effort' => %w[none minimal low medium high xhigh max ultra]
       }.freeze
       BOOLEANS = %w[wip.include_locations opening_check.enabled opening_check.external_enabled
-                    pr_description.show_shaka_credit].freeze
+                    pr_description.show_shaka_credit pr_description.show_human_comments].freeze
       NUMBERS = %w[merge.limits.max_changed_files merge.limits.max_changed_lines merge.limits.max_commits
                    prose_limits.max_sentence_words prose_limits.max_paragraph_words prose_limits.max_description_words
-                   prose_limits.words_per_changed_line].freeze
+                   prose_limits.words_per_changed_line pr_description.max_human_comments].freeze
       REDACTED = %w[commands paths review.prompts review.ci_review_jobs merge.required_checks branches base_branch
                     overrides.arguments overrides.model opening_check.model local_changes defaults_changed].freeze
       FIELDS = (ENUMS.keys + BOOLEANS + NUMBERS + REDACTED +
