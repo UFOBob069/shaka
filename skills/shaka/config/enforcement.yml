@@ -89,6 +89,22 @@ rules:
       the workflow owner initiates it. `merge` and `squash-message` require this account’s
       published ready or opted-out checkpoint for the exact head, unless trusted settings
       disable it. The agent compares the result and maintenance cost with the original task.
+  - id: checkpoint-after-walkthrough
+    phase: finish
+    quote: A ready checkpoint must follow this head's walkthrough.
+    enforced_by: code
+    detector: >-
+      `PostImplementation#ready_message` refuses a ready publication unless this account's
+      current walkthrough review is bound to the checkpoint's head. Blocked, failed, and
+      opted-out results skip the check. It compares heads, not times: a walkthrough
+      published again for the same head lands below the checkpoint.
+  - id: checkpoint-after-captures
+    phase: finish
+    quote: Publish a UI change's captures for this head before it too
+    enforced_by: agent
+    note: >-
+      Nothing identifies a UI change or recognizes a capture comment, so no command can
+      tell whether captures are owed or already published. The agent orders them.
   - id: post-implementation-early-trigger
     phase: always
     quote: Use two repair rounds without convergence as a default signal

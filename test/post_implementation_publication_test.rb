@@ -6,17 +6,31 @@ require 'shaka/post_implementation'
 module PostImplementationPublicationFixture
   class GitHub < Shaka::GitHub
     attr_reader :bodies
+    attr_writer :walkthrough
 
     def initialize(head)
       super('example/test', '1')
       @head = head
+      @walkthrough = head
       @bodies = []
     end
 
     def snapshot = { 'state' => 'OPEN', 'headRefOid' => @head, 'commits' => { 'totalCount' => 1 } }
 
-    def api_list(_path)
+    def api_list(path)
+      return walkthroughs if path.include?('/reviews')
+
       [{ 'commit' => { 'message' => "Fix\n\nCo-authored-by: Ada <ada@example.test>" } }]
+    end
+
+    def api(_path) = { 'login' => viewer_login }
+
+    def walkthroughs
+      return [] unless @walkthrough
+
+      footer = "_Walkthrough for commit `#{@walkthrough}`. This is a COMMENT, not an approval._"
+      [{ 'user' => { 'login' => viewer_login }, 'state' => 'COMMENTED', 'commit_id' => @walkthrough,
+         'body' => "🤖 Codex · OpenAI · UNKNOWN · UNKNOWN\n\n# Code Walkthrough\n\nSteps.\n\n#{footer}" }]
     end
 
     def viewer_login = 'test-author'

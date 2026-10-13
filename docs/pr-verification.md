@@ -150,6 +150,11 @@ The checkpoint recommends the next action for the PR and includes copyable
 squash commit title and body blocks when it recommends merging. Required checks,
 reviews, and your Ask or Auto choice still apply.
 
+A checkpoint that recommends merging comes after the code walkthrough and any
+screenshots for the same commit, so you read the evidence before the recommendation
+and merge text. Shaka refuses to publish it until the walkthrough for that
+commit exists; your agent publishes the screenshots first.
+
 The checkpoint explains one conclusion:
 **Proceed**, **Simplify/reframe**, or **Do not merge**. Substantive unresolved concerns
 hold readiness and Auto even when technical checks pass. Shaka blocks final merge

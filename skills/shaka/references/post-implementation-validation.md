@@ -30,7 +30,8 @@ shaka post-implementation publish OWNER/REPO NUMBER --content-file checkpoint.js
 
 For a ready result, supply `message.json` with the same `title` and plain-text `body`
 used by `merge --squash-message`, as defined in the workflow's publication commands.
-Publication refuses a ready checkpoint without this message. It places copyable title
+Publication refuses a ready checkpoint without this message, or before this account's
+walkthrough for the head is published. It places copyable title
 and body blocks in the checkpoint and preserves branch co-author trailers.
 Blocked, failed, and opted-out results need no message and display no merge text.
 For an authorized opt-out, keep the standalone `squash-message` command for the Ask handoff.

@@ -716,6 +716,8 @@ phases:
         `post-implementation publish --squash-message PATH` with the commit title and body
         so the checkpoint contains the copyable merge message. The companion procedure
         defines trusted settings, explicit task overrides, failures, and opt-outs.
+        A ready checkpoint must follow this head's walkthrough. Publish a UI change's captures
+        for this head before it too.
         Did we build the right thing? Compare the finished result with the original problem,
         intended audience, and expected value, including actual complexity, scope drift,
         file/commit churn, and simpler alternatives. This complements technical review.

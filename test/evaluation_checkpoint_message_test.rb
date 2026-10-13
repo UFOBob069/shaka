@@ -31,6 +31,27 @@ class EvaluationCheckpointMessageTest < Minitest::Test
     end
   end
 
+  def test_ready_checkpoint_waits_for_the_walkthrough_of_its_head
+    with_result do |result, path|
+      result['disposition'] = disposition('Merge')
+      [nil, 'b' * 40].each do |walkthrough|
+        github = PostImplementationPublicationFixture::GitHub.new('a' * 40)
+        github.walkthrough = walkthrough
+        assert_equal 1, publish(result, path, github:)[1]
+        assert_empty github.bodies
+      end
+    end
+  end
+
+  def test_blocked_checkpoint_needs_no_walkthrough
+    with_result do |result, path|
+      result['disposition'] = disposition('Revise before merge')
+      github = PostImplementationPublicationFixture::GitHub.new('a' * 40)
+      github.walkthrough = nil
+      assert_equal 0, publish(result, path, github:)[1]
+    end
+  end
+
   def test_blocked_owner_disposition_never_offers_merge_text
     with_result do |result, path|
       result['disposition'] = disposition('Revise before merge')

@@ -6,6 +6,7 @@ require_relative 'post_implementation/history'
 require_relative 'post_implementation/publication'
 require_relative 'post_implementation/disposition'
 require_relative 'github'
+require_relative 'handoff/walkthrough'
 require_relative 'publication/squash_message'
 
 module Shaka
@@ -70,8 +71,18 @@ module Shaka
 
     def publish_body(github, result, head)
       renderer = result.key?('disposition') ? PostImplementationDispositionPublication : PostImplementationPublication
-      body = renderer.new(result, head:, repository: @arguments.first, message: -> { squash_message(github) }).render
+      message = -> { ready_message(github, head) }
+      body = renderer.new(result, head:, repository: @arguments.first, message:).render
       github.reply(body:, key: "#{KEY}-#{head[0, 7]}-#{result.fetch('execution_id')}")
+    end
+
+    # A ready checkpoint closes the PR's reports, so the walkthrough it follows has to be there already.
+    def ready_message(github, head)
+      unless Handoff::Walkthrough.new(github).revision == head
+        raise Error, "Ready checkpoint follows this account's walkthrough for #{head}; publish the walkthrough first."
+      end
+
+      squash_message(github)
     end
 
     def squash_message(github)
