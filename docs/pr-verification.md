@@ -228,7 +228,9 @@ gh pr comment 42 --attach './before-desktop.png#Menu before, desktop' \
 Text after `#` is an image's alt text; a video takes no alt text.
 
 Label the tested commit and behavior. After code changes, refresh affected
-evidence or explain which part still applies. When a capture cannot be published,
+evidence or explain which part still applies. When a new comment replaces an
+earlier one, the agent folds the earlier one beneath a link to its replacement, so
+the page shows current evidence first and the older captures stay one click away. When a capture cannot be published,
 the PR records why: `uploader_absent` (no attachment route is available),
 `uploader_denied` (the upload was refused), or `upload_failed:` with the error.
 

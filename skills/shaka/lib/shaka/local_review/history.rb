@@ -2,6 +2,7 @@
 
 require 'optparse'
 require_relative '../publication/comment_history'
+require_relative '../publication/evidence_history'
 require_relative '../merge_review_evidence'
 require_relative 'bot_history'
 
@@ -25,16 +26,21 @@ module Shaka
       return 0 unless options
 
       github ||= GitHub.new(*arguments)
-      result = if options[:ids].empty?
-                 new(github).collapse
-               else
-                 BotReviewHistory.new(github).collapse(options[:ids], head: options[:head])
-               end
-      publish_result(result)
+      publish_result(collapse_selected(github, options))
+    end
+
+    def self.collapse_selected(github, options)
+      if options[:superseded].any?
+        EvidenceHistory.new(github).collapse(options[:superseded], current: options[:current])
+      elsif options[:ids].any?
+        BotReviewHistory.new(github).collapse(options[:ids], head: options[:head])
+      else
+        new(github).collapse
+      end
     end
 
     def self.parse_options(arguments)
-      options = { ids: [] }
+      options = { ids: [], superseded: [] }
       parser = option_parser(options)
       parser.parse!(arguments)
       return nil.tap { puts parser } if options[:help]
@@ -43,21 +49,40 @@ module Shaka
       options
     end
 
+    ID = /\A[1-9]\d*\z/
+
     def self.option_parser(options)
       OptionParser.new do |flags|
         flags.banner = 'Usage: shaka review collapse OWNER/REPO NUMBER'
         flags.on('-h', '--help') { options[:help] = true }
-        flags.on('--bot-comment ID', /\A[1-9]\d*\z/, 'Obsolete bot issue comment; repeat to select several') do |id|
+        flags.on('--bot-comment ID', ID, 'Obsolete bot issue comment; repeat to select several') do |id|
           options[:ids] << id.to_i
         end
         flags.on('--head SHA', /\A[0-9a-f]{40}\z/) { |sha| options[:head] = sha }
+        evidence_flags(flags, options)
       end
+    end
+
+    def self.evidence_flags(flags, options)
+      flags.on('--superseded ID', ID, 'Own AI-authored comment a newer one replaced; repeat to select several') do |id|
+        options[:superseded] << id.to_i
+      end
+      flags.on('--current ID', ID, 'Own comment that replaces them') { |id| options[:current] = id.to_i }
     end
 
     def self.check_options(arguments, options, parser)
       raise OptionParser::InvalidArgument, parser.to_s unless arguments.length == 2
       raise OptionParser::MissingArgument, '--head for --bot-comment' if options[:ids].any? && !options[:head]
       raise OptionParser::InvalidArgument, '--head requires --bot-comment' if options[:head] && options[:ids].empty?
+
+      check_evidence_options(options)
+    end
+
+    def self.check_evidence_options(options)
+      superseded = options[:superseded].any?
+      raise OptionParser::InvalidArgument, '--superseded and --current go together' unless
+        superseded == !options[:current].nil?
+      raise OptionParser::InvalidArgument, '--superseded cannot join --bot-comment' if superseded && options[:ids].any?
     end
 
     def self.publish_result(result)

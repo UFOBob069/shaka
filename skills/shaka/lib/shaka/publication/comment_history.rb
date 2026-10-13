@@ -74,15 +74,20 @@ module Shaka
     end
 
     def revised_body(body, latest)
-      mark, content = body.split("\n", 2)
-      identity = content[/\A🤖 [^\n]+\n\n/] || ''
-      content = content.delete_prefix(identity)
+      lead, content = parts(body)
       revised = if content.start_with?("#{self.class::MARKER} ")
                   retarget(content, latest)
                 else
                   wrap(content, latest)
                 end
-      "#{mark}\n#{identity}#{revised}" if revised
+      "#{lead}#{revised}" if revised
+    end
+
+    # The lines that stay above the pointer, then the content the pointer covers.
+    def parts(body)
+      mark, content = body.split("\n", 2)
+      identity = content.to_s[/\A🤖 [^\n]+\n\n/] || ''
+      ["#{mark}\n#{identity}", content.to_s.delete_prefix(identity)]
     end
 
     def retarget(content, latest)
@@ -121,10 +126,7 @@ module Shaka
       WalkthroughText.verify_archive!(html, footer_html:)
     end
 
-    def archived?(source)
-      content = source.split("\n", 2).last.to_s.sub(/\A🤖 [^\n]+\n\n/, '')
-      content.start_with?("#{self.class::MARKER} ")
-    end
+    def archived?(source) = parts(source).last.start_with?("#{self.class::MARKER} ")
 
     def url_prefix = "https://github.com/#{@github.repository}/pull/#{@github.number}#issuecomment-"
   end

@@ -439,6 +439,11 @@ phases:
       - Publish a speed-affecting change's comparison result, any maintainer acceptance, or its
         unmeasured note on its PR. Label a result with the revisions it compared, and an
         unmeasured note with the head it covers, marked as not measured.
+      - When a comment you publish replaces earlier comments of yours, such as captures or
+        samples for an older head, fold them with `review collapse OWNER/REPO NUMBER --current
+        NEW_COMMENT_ID --superseded OLD_COMMENT_ID`, repeating `--superseded`. Keep visible any
+        comment holding evidence the new one does not replace. Before the Finish checkpoint,
+        fold or minimize evidence and bot reports the current head made obsolete.
       - Before publishing, read the diff for steps besides merging: anything that has to exist
         or happen outside the code for the change to work once deployed. Look for new or renamed
         environment variables, `secrets.*` and `vars.*` references in workflows, GitHub App
