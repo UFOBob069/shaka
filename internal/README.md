@@ -7,6 +7,7 @@ instructions or private company plans.
 - [Coding-environment trials](coding-environment-trials.md) — dated observations, not a support matrix.
 - [Test fleet](fleet.md) — repository adoption and migration evidence.
 - [Local evaluation proposal](local-evaluation-proposal.md) — proposed experiments, not shipped behavior.
+- [Eval and release-gating decision record](adr/0001-eval-and-release-gating.md) — proposed comparison design and execution-layer spike.
 - [Experiment index](../eval/README.md) — retained repositories, outcomes, and the next proposed case.
 - [Review outcomes](review-outcomes.md) — proposed record of review decisions and later assessments, not shipped behavior.
 - [Improving Shaka](improving-shaka.md) — maintainer method for investigating observed workflow failures.
