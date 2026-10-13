@@ -337,18 +337,33 @@ The agent helps refine the idea and asks before filing an issue.
 
 ## Find PRs waiting on you
 
-| Search on GitHub | Your next action |
-| --- | --- |
-| `is:open label:awaiting-answer` | Answer the questions in the PR description. |
-| `is:open label:awaiting-merge-approval` | Merge or approve the named commit under Ask. |
-| `is:open label:awaiting-resume` | Paste the WIP Details next action into the agent chat. |
+Use these searches in the repository's GitHub PR list:
 
-The agent manages these labels; a stopped agent can leave one stale.
-See [approval and label details](pr-verification.md#approval-and-attention-labels)
-when you need them.
+| Search on GitHub | Why it is waiting and what to do |
+| --- | --- |
+| `is:open label:awaiting-answer` | Decision needed: answer **Decisions for the maintainer** in the description. |
+| `is:open label:awaiting-merge-approval` | Ready under Ask: authorize the agent to merge that commit, or use GitHub's offered merge control. |
+| `is:open label:awaiting-resume` | Paused without a wake: paste **WIP Details → Next action** into the owning chat. |
+
+For example, an import decision might ask whether to reject invalid rows or skip
+them. A session paused for checks can resume with the Shaka prompt and PR URL in
+its next action. Return answers to the chat unless the handoff names active
+automatic follow-up.
+
+The agent creates and manages these labels, leaving at most one on a PR. It clears
+the wait when work resumes and prepares a new handoff after validation and review.
+A label does not wake a chat or prove that checks and approvals passed. The
+handoff names any automatic follow-up; availability depends on the coding tool.
+Find the owning chat through **WIP Details → Chat link**.
+
+If a label looks stale, read **WIP Details** and the current handoff, then resume
+the owning chat so the agent can refresh the PR's state. You can remove a stale
+label by hand if the agent stopped; removing it does not restart work or authorize
+merging. See [approval details](pr-verification.md#approval-and-attention-labels)
+for Ask authority, required GitHub approvals, and branch updates.
 
 ## Squash with a useful commit message
 
-For a squash merge, copy the title and body from the agent's last PR comment into
-GitHub's merge boxes. See [squash merge details](pr-verification.md#squash-merge-details)
-for repository defaults and automatic merges.
+When you choose a manual squash merge through GitHub, use the agent's prepared
+message for the commit in the handoff. See [squash merge details](pr-verification.md#squash-merge-details)
+to find it and copy it into GitHub's merge boxes.

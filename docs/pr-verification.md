@@ -5,6 +5,45 @@
 Use a Shaka PR to understand the change, assess its evidence, and decide what
 needs closer review. The same record helps you revisit decisions after merging.
 
+## Approval and attention labels
+
+To find work waiting on you, use the [attention-label searches and next actions](working-with-shaka.md#find-prs-waiting-on-you).
+The agent manages the labels as it works. Your part is to answer open decisions,
+authorize an Ask merge, provide any required GitHub approval, or resume a paused
+chat when nothing can wake it.
+
+![While the agent works, a PR has no attention label. The agent sets awaiting-answer for a decision, awaiting-merge-approval when the PR is ready to merge, and awaiting-resume when it paused and nothing will wake it.](img/attention-labels.svg)
+
+Under **Ask**, the agent brings you the verified commit and waits for your merge
+decision. You can tell it in chat to merge that commit, or merge it yourself
+through GitHub's offered control. For example: “Merge the commit in your handoff.”
+Saying “Go” to start the task does not grant this later merge authority.
+
+An **Approve** review on GitHub also grants Ask authority when it comes from a
+login you named to the agent as a merge approver for this task. For example:
+“Treat `maria` as a merge approver for this task.” That review can also satisfy
+a required GitHub approval if the reviewer is eligible under the repository's rules.
+Return to the owning chat unless the handoff names active automatic follow-up.
+Approval in chat does not
+satisfy a required GitHub review; a required review must come from an eligible
+GitHub reviewer. GitHub does not let the PR author approve their own PR.
+
+After authorization, the agent submits the merge when required checks, approvals,
+and review findings are settled. Under **Auto**, it already has that authority
+for eligible work. Both paths preserve repository protection and required approvals;
+a checkpoint recommendation alone grants no merge authority.
+
+If GitHub requires a branch update, the agent rebases, revalidates, and reviews
+the new commit. Your merge decision carries forward when the change keeps the
+approved behavior. A branch rule may still require fresh GitHub approval.
+If behavior changes, the agent explains the difference and returns the new
+commit for your decision.
+
+When you choose to merge through GitHub, compare its current commit with the
+agent's chat handoff before using the offered control. If they differ, or no allowed merge
+method is offered, return to the agent. For a squash merge, use the
+[prepared commit message](#squash-merge-details).
+
 <a id="read-a-pr-for-your-decision"></a>
 
 <a id="answers-for-your-merge-decision"></a>
@@ -94,11 +133,14 @@ Shaka makes the recorded work inspectable. It does not prove that every workflow
 instruction was followed or that the tests and review were sufficient. See
 [what is enforced](workflow.md#what-is-enforced).
 
-## Keep the PR easy to read
+<a id="keep-the-pr-easy-to-read"></a>
 
-Lead with the outcome and a short validation result. Put the most useful comparison
-beside the explanation; keep longer output and extra captures in expandable
-sections. Publish evidence once and link to it from chat.
+## Expect a readable delivery record
+
+The agent writes the description, publishes validation and review evidence, and
+prepares the code walkthrough and checkpoint. It leads with the outcome and a
+short validation result, puts useful comparisons beside the explanation, and
+keeps longer output in expandable sections. Its chat handoff links to that record.
 
 For example: “The menu stays reachable on narrow screens. The regression test
 failed before the fix and passes now; desktop and mobile screenshots show the
@@ -233,16 +275,17 @@ or missing, then fixes the code and simplifies it while tests stay green. Tests
 exercise behavior through public interfaces; matching implementation details or
 instruction wording does not prove the result.
 
-When automation is impractical, record the limitation and useful before/after
-evidence. Wording edits need documentation checks, not invented failing tests.
-Validation can select checks for affected files; required security checks still apply.
+When automation is impractical, the agent records the limitation and useful
+before/after evidence. Wording edits need documentation checks, not invented
+failing tests. Validation can select checks for affected files; required security
+checks still apply.
 
 ## Documentation changes
 
-Check links and rendered pages. For a substantial rewrite, check whether a reader
-can complete the intended task. Give a fresh reader the normal entry point and
-observe whether they find the answer and act correctly, without hints from the author.
-Passing link checks alone does not establish that a guide is useful.
+The agent checks links and rendered pages. For a substantial rewrite, it also
+checks whether a fresh reader can complete the intended task from the normal
+entry point, without hints from the author. Expect that result alongside the
+validation evidence; passing link checks alone does not establish that a guide is useful.
 
 ## Show what a person will see
 
@@ -252,36 +295,27 @@ Passing link checks alone does not establish that a guide is useful.
 | Interaction, animation, or timing | A short recording, with screenshots where they help comparison. |
 | Backend or command-line behavior | Focused tests and concise before/after output. |
 
-Inspect screenshots for the intended state, not an error page, blank screen, or
-loading placeholder. Review the relevant video frames to confirm the interaction
-is visible. Screenshots and video complement tests.
+The agent inspects screenshots for the intended state and reviews relevant video
+frames to confirm the interaction is visible. Expect useful evidence of the
+change, rather than an error page, blank screen, or loading placeholder.
+Screenshots and video complement tests.
 
-Use safe test data. Before publishing, check for credentials, private task details,
-customer data, and unrelated screen content. Expandable sections on public PRs
-are public too.
+The agent uses safe test data and checks captures for credentials, private task
+details, customer data, and unrelated screen content before publishing.
+Expandable sections on public PRs are public too.
 
 For any on-screen change other than command-line output, the agent also uses the
 change by hand on the head it pushes, and repeats that pass after any later commit
 that changes runtime behavior.
 When the PR has a preview deployment, it checks the preview too, or says why not.
 
-Attach captures to a PR comment with GitHub CLI 2.99 or later, then open the
-comment to confirm each path became an uploaded link. A local path is not shared
-evidence.
-
-```sh
-gh pr comment 42 --attach './before-desktop.png#Menu before, desktop' \
-  --attach './after-desktop.png#Menu after, desktop' --attach './menu-open.mp4'
-```
-
-Text after `#` is an image's alt text; a video takes no alt text.
-
-Label the tested commit and behavior. After code changes, refresh affected
-evidence or explain which part still applies. When a new comment replaces an
-earlier one, the agent folds the earlier one beneath a link to its replacement, so
-the page shows current evidence first and the older captures stay one click away. When a capture cannot be published,
-the PR records why: `uploader_absent` (no attachment route is available),
-`uploader_denied` (the upload was refused), or `upload_failed:` with the error.
+The agent uploads captures to the PR and verifies that you can open them; a local
+path is not shared evidence. It names the tested commit and behavior, then
+refreshes affected evidence after code changes or explains which part still applies.
+When a new comment replaces an earlier one, the agent folds the earlier one
+beneath a link to its replacement. Current evidence appears first; older captures
+stay one click away. When a capture cannot be published, the PR records the
+missing upload route, refusal, or upload error.
 
 ## Show what changed between captures
 
@@ -319,51 +353,19 @@ pages, metrics, sample count, and the base and change commits. Any regression or
 ambiguous result, and a wash for an intended speed-up, go back for a fix or for the
 maintainer to accept. When no comparison can run, the PR says the speed was not measured.
 
-## Approval and attention labels
-
-[Working with Shaka](working-with-shaka.md#find-prs-waiting-on-you) lists the labels
-and your next action.
-
-![While the agent works, a PR has no attention label. The agent sets awaiting-answer for a decision, awaiting-merge-approval when the PR is ready to merge, and awaiting-resume when it paused and nothing will wake it.](img/attention-labels.svg)
-
-You don't create these labels. The first time the agent needs one in a repository,
-it creates it: `awaiting-answer` in amber, `awaiting-merge-approval` in purple, and
-`awaiting-resume` in blue, each with a description. Recolor or reword them freely; the agent never changes a
-label that already exists. Creating a label needs write access; with triage access
-the agent can still apply labels someone else created.
-
-When the PR description lists decisions for you, its publication helper applies
-`awaiting-answer` and removes `awaiting-resume`. The helper refuses to publish
-those decisions while `awaiting-merge-approval` is set.
-An empty decisions list removes that section and `awaiting-answer`, and leaves the other
-two labels in place.
-
-To approve, tell the agent in chat. An **Approve** review on GitHub also counts
-when it comes from a login you named to the agent as a merge approver; GitHub does
-not let the account that opened the PR approve it. Return to the chat so the agent
-can act on the approval. If GitHub requires updating the branch first, the agent
-rebases, revalidates, and merges without asking again. When a branch rule requires
-GitHub approval of the new commit, it asks for that approval. When the rebase changes
-behavior, with or without conflicts, it explains the difference and asks you to
-approve the new commit. While it waits for either approval, the PR keeps its
-`awaiting-merge-approval` label.
-
-A PR carries at most one of these labels. The agent removes it when work resumes.
-Search `is:open label:awaiting-answer`, `is:open label:awaiting-merge-approval`, or
-`is:open label:awaiting-resume` to see your queue. Nothing but the agent clears these labels, so one can go stale
-if the agent stops before work resumes; remove it by hand.
-
 ## Squash merge details
 
-When a PR is ready for your merge, the agent posts the squash commit message as the
-PR's last comment, just above the merge button: a title such as `Add CSV export (#42)`
-and a short plain-text body that says what changed and why, followed by the branch
-commits' `Co-authored-by` lines. Each block has a copy button; paste them into
-GitHub's squash merge boxes. When the head changes, the agent posts a new comment
-and deletes the old one. When the agent merges under **Auto**, it sends the same
-message itself, except through a merge queue, which uses the repository default.
-The merge command refuses missing message input; final handoff reports a missing
-or outdated posted message. A prepared message cannot change GitHub’s queue default.
+For a manual squash merge through GitHub, open the **Checkpoint** linked from the
+PR description. A ready checkpoint includes copyable title and body blocks for
+its commit: a title such as `Add CSV export (#42)` and a short body explaining
+what changed and why, with any branch `Co-authored-by` lines. If the checkpoint
+was explicitly skipped, the agent publishes a separate squash-message comment.
+
+Check that the message covers the commit in the handoff, then paste its title and
+body into GitHub's squash merge boxes. The agent refreshes the message when the
+commit changes. When the agent submits an authorized merge, it supplies that
+message itself. A merge queue uses the repository default instead; the prepared
+message does not change that default.
 
 GitHub fills those boxes from a repository setting, by default with every branch
 commit's title. To start from the PR title and an empty body instead, set **Settings →
