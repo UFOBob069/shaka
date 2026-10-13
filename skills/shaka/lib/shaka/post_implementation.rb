@@ -5,6 +5,7 @@ require_relative 'post_implementation_runner'
 require_relative 'post_implementation/history'
 require_relative 'post_implementation/publication'
 require_relative 'post_implementation/disposition'
+require_relative 'post_implementation/merge_warning'
 require_relative 'github'
 require_relative 'handoff/walkthrough'
 require_relative 'publication/squash_message'
@@ -42,6 +43,7 @@ module Shaka
 
     def present(result, action)
       puts JSON.pretty_generate(result)
+      return 1 if result.dig('merge_safeguard', 'state') == 'failed'
       return 1 if result.dig('earlier_checkpoints', 'unavailable')&.any?
 
       %w[completed opted_out].include?(result['status']) || action == 'publish' ? 0 : 1
@@ -72,8 +74,16 @@ module Shaka
     def publish_body(github, result, head)
       renderer = result.key?('disposition') ? PostImplementationDispositionPublication : PostImplementationPublication
       message = -> { ready_message(github, head) }
-      body = renderer.new(result, head:, repository: @arguments.first, message:).render
-      github.reply(body:, key: "#{KEY}-#{head[0, 7]}-#{result.fetch('execution_id')}")
+      publication = renderer.new(result, head:, repository: @arguments.first, message:)
+      published = github.reply(body: publication.render, key: "#{KEY}-#{head[0, 7]}-#{result.fetch('execution_id')}")
+      safeguard = merge_safeguard(github, head, publication, published)
+      published.merge('merge_safeguard' => safeguard)
+    end
+
+    def merge_safeguard(github, head, publication, published)
+      PostImplementationMergeWarning.new(github).call(head:, publication:, published:)
+    rescue Error, KeyError, TypeError => e
+      { 'state' => 'failed', 'reason' => e.message, 'head' => head }
     end
 
     # A ready checkpoint closes the PR's reports, so the walkthrough it follows has to be there already.

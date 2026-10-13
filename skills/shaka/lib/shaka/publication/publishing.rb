@@ -7,6 +7,7 @@ require_relative '../public_comments/reply_guard'
 require_relative 'publication'
 require_relative 'feature_guard'
 require_relative 'managed_region'
+require_relative 'merge_warning_region'
 
 module Shaka
   # Publishes rendered Markdown, checking GitHub's own rendering before anything is written
@@ -82,7 +83,7 @@ module Shaka
 
       opens = existing.scan(OPEN_MARK).size
       closes = existing.scan(CLOSE_MARK).size
-      return "#{managed}\n\n#{existing}" if opens.zero? && closes.zero?
+      return MergeWarningRegion.prepend(existing, managed) if opens.zero? && closes.zero?
 
       check_region(existing, opens, closes)
       prefix, rest = existing.split(OPEN_MARK, 2)

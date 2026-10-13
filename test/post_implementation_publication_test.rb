@@ -5,7 +5,7 @@ require 'shaka/post_implementation'
 
 module PostImplementationPublicationFixture
   class GitHub < Shaka::GitHub
-    attr_reader :bodies
+    attr_reader :bodies, :description_body
     attr_writer :walkthrough
 
     def initialize(head)
@@ -13,17 +13,35 @@ module PostImplementationPublicationFixture
       @head = head
       @walkthrough = head
       @bodies = []
+      @draft = false
+      @description_body = "<!-- shaka:begin -->\nFeature summary\n<!-- shaka:end -->\n\nHuman notes"
     end
 
-    def snapshot = { 'state' => 'OPEN', 'headRefOid' => @head, 'commits' => { 'totalCount' => 1 } }
+    def snapshot
+      { 'state' => 'OPEN', 'headRefOid' => @head, 'isDraft' => @draft, 'id' => 'PR_1',
+        'commits' => { 'totalCount' => 1 } }
+    end
+
+    def api(path, method: 'GET', fields: {})
+      return { 'login' => viewer_login } if path == 'user'
+
+      @description_body = fields.fetch(:body) if method == 'PATCH'
+      { 'state' => 'open', 'head' => { 'sha' => @head }, 'base' => { 'sha' => 'b' * 40 },
+        'body' => @description_body }
+    end
+
+    def graphql(_query, **)
+      @draft = true
+      { 'convertPullRequestToDraft' => { 'pullRequest' => snapshot.slice('id', 'isDraft', 'headRefOid') } }
+    end
+
+    def verify_rendering(body) = body
 
     def api_list(path)
       return walkthroughs if path.include?('/reviews')
 
       [{ 'commit' => { 'message' => "Fix\n\nCo-authored-by: Ada <ada@example.test>" } }]
     end
-
-    def api(_path) = { 'login' => viewer_login }
 
     def walkthroughs
       return [] unless @walkthrough
@@ -190,6 +208,21 @@ class PostImplementationPublicationHistoryTest < Minitest::Test
       assert_equal 1, outcome[1]
       assert_equal 1, github.bodies.size
       assert_equal ['Listing unavailable'], JSON.parse(outcome[2]).dig('earlier_checkpoints', 'unavailable')
+    end
+  end
+end
+
+class PostImplementationFailureReasonTest < Minitest::Test
+  include PostImplementationPublicationFixture
+
+  def test_invalid_failure_reasons_are_refused_before_publication
+    [nil, 42, ''].each do |reason|
+      with_result do |result, path|
+        outcome = publish(result.merge('status' => 'not_completed', 'reason' => reason), path)
+        assert_equal 1, outcome[1]
+        assert_empty outcome[0].bodies
+        refute outcome[0].snapshot['isDraft']
+      end
     end
   end
 end

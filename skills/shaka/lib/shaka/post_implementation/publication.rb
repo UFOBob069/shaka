@@ -5,11 +5,18 @@ require_relative '../publication/text'
 require_relative '../usage/codex_usage'
 require_relative '../usage/claude_usage'
 require_relative 'evidence'
+require_relative 'publisher_identity'
 require_relative '../github/squash_comment'
 
 module Shaka
   # Presents the checkpoint's action without confusing configuration with observations.
   class PostImplementationPublication
+    include PostImplementationPublisherIdentity
+
+    attr_reader :state
+
+    def summary = @summary || PublicationText.required(@result.fetch('reason'), 'checkpoint failure reason')
+
     ACTIONS = {
       'Proceed' => ['Merge if CI passes', 'Complete technical validation and required approvals.'],
       'Simplify/reframe' => ['Revise before merging.', 'Revise the approach, then revalidate and review.'],
@@ -20,8 +27,8 @@ module Shaka
     def initialize(result, head:, repository:, message: nil)
       @result = result
       @head = head
-      @revision = "[`#{head[0, 7]}`](https://github.com/#{repository}/commit/#{head})"
       @message = message
+      @revision = "[`#{head[0, 7]}`](https://github.com/#{repository}/commit/#{head})"
       @usage = native_usage
       @configuration = @usage.last&.fetch('configuration') || []
     end
@@ -35,14 +42,6 @@ module Shaka
     end
 
     private
-
-    def identity
-      provider, family = @result.fetch('reviewer', 'UNKNOWN/UNKNOWN').split('/', 2)
-      PublicationText.identity('agent' => family, 'provider' => provider,
-                               'model' => headline_model, 'effort' => known(@configuration[3]))
-    end
-
-    def headline_model = known(@configuration[2]) || known(@configuration[1])&.then { |model| "#{model} (configured)" }
 
     def execution_evidence = "#{model_text} · #{effort_text}"
 
@@ -70,7 +69,7 @@ module Shaka
       report = PostImplementationReport.read(@result.fetch('report'), head: @head)
       @state = PostImplementationReport.ready?(report) ? 'ready' : 'blocked'
       action, next_action = recommendation(report)
-      summary = report.fetch('summary', report.fetch('reasons').first)
+      summary = @summary = report.fetch('summary', report.fetch('reasons').first)
       ["**Recommended next action:** #{action}",
        "**Next action:** #{owner_action(report, next_action)}",
        "**Evaluation:** #{report.fetch('conclusion')}", summary,
@@ -113,7 +112,7 @@ module Shaka
                               ['Review not completed; readiness remains blocked.',
                                'Resolve the execution failure and rerun the checkpoint.']
                             end
-      "**Recommended next action:** #{action}\n\n#{@result.fetch('reason')}\n\n" \
+      "**Recommended next action:** #{action}\n\n#{summary}\n\n" \
         "**Next action:** #{next_action}\n\n" \
         "<details>\n<summary>Execution details</summary>\n\n#{execution_evidence}\n\n#{usage_text}\n\n</details>"
     end
