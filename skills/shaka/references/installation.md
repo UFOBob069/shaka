@@ -96,8 +96,10 @@ directory or ancestor owned by an account other than the installer or root;
 a writable ancestor is accepted only with a sticky bit and a child owned by
 the installer or root. For example, an existing `0775` skills directory
 created under umask `002` must have group write removed or be replaced with a
-protected directory. The error names the path to fix; use `--managed-dir DIR`
-if the default package path is unsuitable.
+protected directory. The error names the path and the rule it broke; use
+`--managed-dir DIR` if the default package path is unsuitable. When the error
+says a sandbox or container is hiding the real owner, run the installer from a
+terminal outside it.
 
 ## Install from a personal fork
 
