@@ -28,6 +28,7 @@ Ask the agent to handle configuration. These guides explain your choices:
 - [Repository setup](configure-repository.md) — reuse your checks and review the setup PR.
 - [Choose your settings](settings-guide.md) — common choices and prompts for your agent.
 - [Coding agents](coding-agents.md) — invocation and installation for your environment.
+- [Install Shaka manually](manual-installation.md) — review and run the installer yourself.
 - [Upgrade an installation](migration.md) — preserve customizations when updating.
 
 ## Look deeper

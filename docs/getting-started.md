@@ -17,6 +17,8 @@ Ask your coding agent:
 Install Shaka from https://github.com/shakacode/shaka.
 ```
 
+Prefer to run the commands yourself? Follow [manual installation](manual-installation.md).
+
 The agent checks for Ruby 3.4 or later, Git, and an authenticated GitHub CLI.
 It installs one dedicated checkout outside your projects and links the skill
 directly into it. The default location is `~/.agents/shaka`; you can

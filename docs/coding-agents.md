@@ -12,7 +12,8 @@ and use it across your repositories.
 | Pi | Load the installed Shaka skill | Uses Pi's existing permissions; no separate Shaka launcher |
 
 Use the [installation prompt](getting-started.md); your agent selects the
-installation steps for its environment.
+installation steps for its environment. To run them yourself, follow
+[manual installation](manual-installation.md).
 
 The opt-in [DeepSeek reviewer](settings.md#reviewlocal_review_agents) runs through
 Shaka's Ruby OpenRouter API adapter. It does not require native DeepSeek support in
