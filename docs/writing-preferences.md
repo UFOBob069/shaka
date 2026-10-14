@@ -19,7 +19,9 @@ To reuse preferences across tasks, add `.agents/writing-style.md` to your reposi
 - Use before-and-after examples when they clarify behavior.
 ```
 
-Once the file is merged into your default branch, Shaka loads it automatically.
+In repositories with shared Shaka settings, Shaka loads the file automatically
+after it merges into the default branch. With individual setup, give preferences
+in chat or through `AGENTS.md`.
 You can override these defaults in a task. Existing writing instructions in
 `AGENTS.md` and your personal agent instructions also take precedence.
 
