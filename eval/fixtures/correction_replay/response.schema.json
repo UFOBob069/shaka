@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "dismiss_from_local_result": {"type": "boolean"},
+    "path": {"type": "string", "enum": ["bounded", "full"]},
+    "validation_runs_on_h2": {"type": "integer"},
+    "local_review_batches_on_h2": {"type": "integer"},
+    "reuse_h1_validation_as_h2_evidence": {"type": "boolean"},
+    "checkpoint": {"type": "string", "enum": ["rerun", "reuse_h1", "skip"]},
+    "walkthrough": {"type": "string", "enum": ["rewrite_whole", "republish_with_affected_steps", "none"]},
+    "wait_for_hosted_review_of_h2": {"type": "boolean"},
+    "new_replies_to_settled_advisory_comments": {"type": "boolean"},
+    "nit_reopens_implementation": {"type": "boolean"},
+    "final_action": {"type": "string", "enum": ["handoff", "merge"]},
+    "steps": {"type": "array", "items": {"type": "string"}},
+    "reason": {"type": "string"}
+  },
+  "required": ["dismiss_from_local_result", "path", "validation_runs_on_h2", "local_review_batches_on_h2",
+               "reuse_h1_validation_as_h2_evidence", "checkpoint", "walkthrough", "wait_for_hosted_review_of_h2",
+               "new_replies_to_settled_advisory_comments", "nit_reopens_implementation", "final_action", "steps", "reason"],
+  "additionalProperties": false
+}

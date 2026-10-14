@@ -1,0 +1,34 @@
+{
+  "context": "Trusted seam at the immutable default-branch SHA: merge.preference: ask; review.required: meaningful_changes; review.ci_review_wait: one; review.ci_review_jobs: claude-review; review.local_review_count: 2; checkpoint enabled; commands.validate set. Required checks run the test suite with the URI gem at 1.0.3. Your machine's default URI gem is 1.1.1.\nPull request #463 is open. Its head H1 already has: passing repository validation bound to H1, two completed local reviews of H1 in one ledger with all findings recorded, a ready checkpoint for H1, a published walkthrough for H1, a verified claude-review report for H1, and replies on every advisory bot comment.\nA hosted review of H1 then reports: the installer's SSH origin cleanup may leave a password in the recorded URL.",
+  "cases": [
+    {
+      "id": "one-line-repair",
+      "state": "The regression test for that cleanup passes on your machine. The repair, if needed, is one line that clears the password explicitly. Nothing else about the task changes. After the repair is committed as H2 and reviewed, one local reviewer reports a naming nit in a file H2 did not touch.",
+      "expected": {
+        "dismiss_from_local_result": false,
+        "path": "bounded",
+        "validation_runs_on_h2": 1,
+        "local_review_batches_on_h2": 1,
+        "reuse_h1_validation_as_h2_evidence": false,
+        "checkpoint": "rerun",
+        "walkthrough": "republish_with_affected_steps",
+        "wait_for_hosted_review_of_h2": true,
+        "new_replies_to_settled_advisory_comments": false,
+        "nit_reopens_implementation": false,
+        "final_action": "handoff"
+      }
+    },
+    {
+      "id": "repair-grows",
+      "state": "The regression test fails when run with URI 1.0.3. While repairing it you decide to replace the cleanup with a new redaction module used by three other commands, and to add a repository setting that turns redaction off. This is committed as H2.",
+      "expected": {
+        "dismiss_from_local_result": false,
+        "path": "full",
+        "reuse_h1_validation_as_h2_evidence": false,
+        "checkpoint": "rerun",
+        "wait_for_hosted_review_of_h2": true,
+        "final_action": "handoff"
+      }
+    }
+  ]
+}
