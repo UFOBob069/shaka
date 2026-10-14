@@ -11,6 +11,7 @@ module Shaka
   # One fixed model, one bounded request, no tools or automatic model fallback.
   class OpenrouterReview
     MODEL = 'deepseek/deepseek-v4.1-flash'
+    DEFAULT_TIMEOUT_SECONDS = 600
     EFFORTS = %w[low high max].freeze
     ENDPOINT = URI('https://openrouter.ai/api/v1/chat/completions')
 

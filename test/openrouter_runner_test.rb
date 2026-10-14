@@ -31,6 +31,14 @@ class OpenrouterRunnerTest < Minitest::Test
     end
   end
 
+  def test_default_timeout_reaches_the_api_for_normalized_reviewer_identity
+    assert_request_timeout(600, reviewer: 'DeepSeek / OpenRouter')
+  end
+
+  def test_explicit_timeout_overrides_the_deepseek_default
+    assert_request_timeout(90, timeout_seconds: '90')
+  end
+
   def test_unsupported_model_or_effort_fails_before_a_request
     [{ model: 'deepseek-flash' }, { model: nil }, { effort: 'medium' }].each do |choices|
       with_review_repository do |root, base, head|
@@ -44,6 +52,17 @@ class OpenrouterRunnerTest < Minitest::Test
   end
 
   private
+
+  def assert_request_timeout(expected, **choices)
+    with_review_repository do |root, base, head|
+      with_request(->(_data, **options) { completion(head).tap { assert_equal expected, options.fetch(:timeout) } }) do
+        with_run(root, base, head, **choices) do |result, status|
+          assert_equal 0, status
+          assert_equal 'completed', result.fetch('status')
+        end
+      end
+    end
+  end
 
   def capturing_request(response)
     lambda do |prompt, **|
@@ -68,7 +87,7 @@ class OpenrouterRunnerTest < Minitest::Test
 
   def with_run(root, base, head, **choices)
     args = { root:, base:, head:, reviewer: 'deepseek/openrouter', model: MODEL, effort: 'high' }.merge(choices)
-    command = ['run', *args.compact.flat_map { |key, value| ["--#{key}", value] }]
+    command = ['run', *review_arguments(args)]
     with_key do
       output, error = capture_io { @status = Shaka::LocalReview.run(command) }
       assert_empty error
@@ -77,6 +96,10 @@ class OpenrouterRunnerTest < Minitest::Test
     ensure
       %w[report usage].each { |key| FileUtils.rm_f(result[key]) if result && result[key] }
     end
+  end
+
+  def review_arguments(args)
+    args.compact.flat_map { |key, value| ["--#{key.to_s.tr('_', '-')}", value] }
   end
 
   def assert_publishable(result)

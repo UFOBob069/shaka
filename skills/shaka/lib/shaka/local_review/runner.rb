@@ -89,7 +89,9 @@ module Shaka
     end
 
     def validate_timeout!
-      timeout = @options.fetch(:timeout_seconds, '300').to_s
+      identity = @options[:reviewer].to_s.split('/').map { |part| part.strip.downcase }.join('/')
+      default = identity == 'deepseek/openrouter' ? OpenrouterReview::DEFAULT_TIMEOUT_SECONDS : 300
+      timeout = @options.fetch(:timeout_seconds, default).to_s
       valid = timeout.match?(/\A[1-9]\d*\z/) && timeout.to_i <= 3600
       raise Shaka::Error, '--timeout-seconds must be 1..3600' unless valid
 

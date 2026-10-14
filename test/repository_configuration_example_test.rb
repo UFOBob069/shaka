@@ -2,6 +2,7 @@
 
 require_relative 'test_helper'
 require 'shaka/repository_config'
+require 'shaka/local_review/runner'
 
 # The repository contract doubles as the browsable example of shipped defaults.
 class RepositoryConfigurationExampleTest < Minitest::Test
@@ -36,6 +37,14 @@ class RepositoryConfigurationExampleTest < Minitest::Test
   def test_example_post_implementation_defaults_match
     defaults = Shaka::RepositoryConfig::PostImplementationSchema::DEFAULTS.merge('enabled' => true)
     assert_equal defaults, @example.fetch('review').fetch('post_implementation').except('prompt_file')
+  end
+
+  def test_review_deadline_defaults_applied_outside_repository_config
+    %w[anthropic/claude openai/codex xai/grok deepseek/openrouter].each do |reviewer|
+      options = { reviewer: }
+      Shaka::LocalReviewRunner.new(options).send(:validate_timeout!)
+      assert_equal reviewer == 'deepseek/openrouter' ? 600 : 300, options.fetch(:timeout_seconds)
+    end
   end
 
   private

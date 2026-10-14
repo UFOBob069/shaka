@@ -32,6 +32,7 @@ review:
       model_family: codex
     - provider: deepseek
       model_family: openrouter
+      # Review deadline defaults to 600 seconds; --timeout-seconds overrides it per run.
       model: deepseek/deepseek-v4.1-flash
       effort: low
     - provider: xai
