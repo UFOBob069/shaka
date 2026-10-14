@@ -9,13 +9,17 @@ module Shaka
   module DeploymentLink
     AUTO = 'auto'
     PAGE = 100
+    # Set beside `none` so the renderer can tell an empty lookup from a repository that deploys nothing.
+    NOT_FOUND_FOR = 'deployment_not_found_for'
 
     module_function
 
     def resolve(content, github)
       return content unless content['deployment'] == AUTO
 
-      content.merge('deployment' => live_url(github, github.snapshot.fetch('headRefOid')) || 'none')
+      head = github.snapshot.fetch('headRefOid')
+      url = live_url(github, head)
+      url ? content.merge('deployment' => url) : content.merge('deployment' => 'none', NOT_FOUND_FOR => head)
     end
 
     # Only the head commit counts, so a link never describes code the PR no longer holds.

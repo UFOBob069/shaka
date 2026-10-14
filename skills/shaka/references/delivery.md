@@ -280,7 +280,7 @@ the GitHub Deployments API for the PR head and links the newest successful
 deployment's `environment_url`, the same link GitHub shows as "View deployment";
 when that API has no live URL, it checks the current head's latest Cloudflare Pages check
 from the Cloudflare GitHub App and extracts its immutable `pages.dev` preview when successful.
-It renders nothing when neither source supplies a URL. Supply a URL yourself when
+When neither source supplies a URL, it renders `Deployment: none found` with the head's short SHA. Supply a URL yourself when
 another provider exposes the preview solely in a comment or CI log, or to select among
 several preview projects. The helper links
 it beside the walkthrough. Republish after hosted checks and preview builds settle,

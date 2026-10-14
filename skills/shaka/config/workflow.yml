@@ -518,7 +518,7 @@ phases:
         changes in a few lines; put evidence in details. Republish when status or action changes.
         Set `deployment` to `auto` to link the newest successful GitHub
         deployment of the PR head, falling back to the latest current-head Cloudflare Pages
-        check when successful from the Cloudflare GitHub App. It reports `none` when neither provides a URL.
+        check when successful from the Cloudflare GitHub App. When neither provides a URL, the description shows `Deployment: none found` for that head.
         Supply an https URL yourself when the preview exists only in another provider comment
         or CI log. Use an explicit URL to choose among several preview projects, or `none`
         when the repository deploys nothing for the change. The helper links it beside the walkthrough.

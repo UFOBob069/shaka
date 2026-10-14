@@ -28,10 +28,11 @@ module Shaka
     end
 
     # Keep both review surfaces together before an optional deployment preview.
-    def top(content, attribution)
+    def top(content, settings, pull)
       reviews = "#{walkthrough(content['walkthrough'])} · #{post_implementation(content['post_implementation'])}"
-      preview = deployment(content['deployment'])
-      [(CREDIT if attribution), preview ? "#{reviews} · #{preview}" : reviews].compact
+      preview = deployment(content['deployment']) ||
+                deployment_not_found(content['deployment_not_found_for'], pull&.dig('head', 'sha'))
+      [(CREDIT if settings.attribution?), preview ? "#{reviews} · #{preview}" : reviews].compact
     end
 
     def post_implementation(url)
@@ -53,6 +54,18 @@ module Shaka
 
       # Angle brackets keep a `)` in the URL from ending the Markdown link early.
       "[Deployment](<#{url}>)"
+    end
+
+    # `auto` found nothing for this head; saying so keeps a premature lookup from reading as no deployment.
+    # The helper sets the looked-up head itself, so a carried-over value for another head is refused.
+    def deployment_not_found(looked_up, head)
+      return if looked_up.nil?
+      raise Error, 'Publication deployment_not_found_for must be a full commit SHA.' unless
+        looked_up.is_a?(String) && looked_up.match?(/\A\h{40}\z/)
+      raise Error, 'The deployment lookup is not for the current PR head; publish the description again.' if
+        head && looked_up != head
+
+      "Deployment: none found for `#{looked_up[0, 7]}`"
     end
 
     def https_url?(url)

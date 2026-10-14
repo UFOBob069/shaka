@@ -164,6 +164,11 @@ class DeploymentLinkTest < Minitest::Test
     assert_equal 'none', resolve([{ 'id' => 1, 'created_at' => 'x' }], { 1 => [] })['deployment']
   end
 
+  # https://github.com/shakacode/shaka/issues/495: an empty lookup read like a repository that deploys nothing.
+  def test_auto_names_the_head_it_found_no_deployment_for
+    assert_equal({ 'deployment' => 'none', 'deployment_not_found_for' => HEAD }, resolve([], {}))
+  end
+
   def test_a_full_page_without_a_live_deployment_is_not_reported_as_none
     deployments = Array.new(100) { |index| { 'id' => index + 1, 'created_at' => format('%03d', index) } }
     statuses = deployments.to_h { |deployment| [deployment['id'], [status('failure')]] }

@@ -409,6 +409,26 @@ class PublicationDeploymentLinkTest < Minitest::Test
                     "Checkpoint: _Not published yet._\n\n## Outcome"
   end
 
+  # https://github.com/shakacode/shaka/issues/495: `auto` that found nothing rendered like an explicit `none`.
+  def test_an_empty_auto_lookup_names_the_head_beside_the_walkthrough_link
+    assert_includes render('deployment' => 'none', 'deployment_not_found_for' => 'abcdef0123' * 4),
+                    "[Code Walkthrough](#{PublicationRegressionTest::WALKTHROUGH}) · " \
+                    "Checkpoint: _Not published yet._ · Deployment: none found for `abcdef0`\n\n## Outcome"
+  end
+
+  def test_a_malformed_lookup_head_is_refused
+    error = assert_raises(Shaka::Error) { render('deployment' => 'none', 'deployment_not_found_for' => 'main`x') }
+    assert_includes error.message, 'deployment_not_found_for'
+  end
+
+  def test_a_lookup_for_another_head_is_refused
+    content = { 'deployment' => 'none', 'deployment_not_found_for' => 'a' * 40 }
+    top = ->(sha) { Shaka::PublicationLinks.top(content, Shaka::PublicationSettings.new, { 'head' => { 'sha' => sha } }) }
+    assert_includes top.call('a' * 40).last, 'none found for `aaaaaaa`'
+    error = assert_raises(Shaka::Error) { top.call('b' * 40) }
+    assert_includes error.message, 'current PR head'
+  end
+
   def test_a_missing_or_blank_deployment_is_refused
     [nil, '  '].each do |value|
       error = assert_raises(Shaka::Error) { render('deployment' => value) }
