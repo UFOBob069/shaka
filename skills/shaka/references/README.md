@@ -26,6 +26,7 @@ the workflow reaches that decision:
 | Write clear publication prose and review reports | [Writing rules](writing.md) |
 | Publish PR descriptions, walkthroughs, and replies | [Publication](publication.md) |
 | Assess documentation changes | [Documentation verification](documentation-verification.md) |
+| Review documentation with the user, one topic at a time | [Guided documentation review](guided-documentation-review.md) |
 | Choose tests and evidence | [Verification](https://github.com/shakacode/shaka/blob/main/docs/pr-verification.md) |
 | Explain visible changes on the new capture | [Annotated screenshots and optional pixel diagnostics](visual-diff.md) |
 | Report model, token, and cost evidence | [Usage reporting](usage-reporting.md) |

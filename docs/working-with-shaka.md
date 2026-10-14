@@ -80,6 +80,29 @@ Replace the URL with your PR. The agent reviews its current revision and reports
 findings and verification gaps, then stops. This request does not take over delivery
 or fix findings; ask separately when you want those changes.
 
+### Review documentation together
+
+```text
+$shaka Review docs with me: https://github.com/OWNER/REPO/pull/N
+```
+
+Replace the URL with your PR, or give a documentation path. The agent starts with a
+short map of the topics and explains the first one for a reader new to the project:
+what the reader can do, a minimal example prompt, and links to the code that backs
+each claim. It should say when the documentation and the code disagree, and keep
+that separate from its own suggestions.
+
+It pauses after every topic. Ask questions, correct it, or reorder the topics; say
+`continue` for the next one. At the end it lists the wording you agreed on and the
+gaps it verified. It should not edit files, comment on the PR, or file issues; ask
+separately when you want those changes.
+
+For a merged PR, the agent reviews the change that PR made and should say when a
+later PR changed what it describes. To get every finding in one report instead, use
+[Review an existing PR](#review-an-existing-pr).
+
+This is guidance the agent follows, not behavior that code enforces.
+
 ### Resume a PR you already started
 
 ```text

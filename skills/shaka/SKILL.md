@@ -19,6 +19,9 @@ Once per chat, run the saved helper's `update-check`; relay its guidance only fo
 With no task or with `doctor` alone, follow the [guided start](references/guided-start.md)
 and stop after its welcome or diagnostic. For a requested `retrospective` of coding sessions,
 follow the [retrospective procedure](references/retrospective.md) and stop at its findings.
+For a request to review documentation together, one topic at a time, follow the
+[guided documentation review](references/guided-documentation-review.md) and stop after each
+topic.
 For a task, continue below.
 
 Run the trusted helper's `workflow` command now and follow the complete validated procedure it
