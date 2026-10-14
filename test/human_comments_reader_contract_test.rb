@@ -17,12 +17,12 @@ class HumanCommentsReaderContractTest < Minitest::Test
   def test_the_list_reads_what_the_comment_reader_prints_for_a_public_pull_request
     rendered = Shaka::HumanComments.for({ 'human_comments' => read_comments }, PULL, Shaka::PublicationSettings.new).first
 
-    assert_equal ['| Author [maintainer](https://github.com/maintainer) | ' \
+    assert_equal ['| [maintainer](https://github.com/maintainer) | ' \
                   "[“Is this a bug\\?”](#{URL}#discussion_r6) | " \
                   "[“No\\. The caller checks it\\.”](#{URL}#discussion_r7) | **Open** |",
                   '| Unverified [outside](https://github.com/outside) | ' \
                   "[Not read by the agent](#{URL}#issuecomment-1) | — | Not read |",
-                  '| Author [maintainer](https://github.com/maintainer) | ' \
+                  '| [maintainer](https://github.com/maintainer) | ' \
                   "[“Fix this behavior”](#{URL}#discussion_r4) | [“Fixed it\\.”](#{URL}#discussion_r5) | Resolved |"],
                  rendered.lines.map(&:chomp).grep(/\A\| (?!From |--- )/)
     assert_includes rendered, "**1 open** · 2 from the PR author, 1 unverified · read at `aaaaaaa`\n"

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'publication_test'
+require 'shaka/usage/publisher_attribution'
 
 # Builds the `shaka comments --head SHA` output a description lists human comments from.
 module HumanCommentsFixture
@@ -52,14 +53,15 @@ module HumanCommentsFixture
 
   LONG = 'It is a little confusing what internal testers are versus external testers, and listings feel abstract.'
 
-  def rows(rendered) = rendered.lines.map(&:chomp).grep(/\A\| (?:\*\*Reviewer\*\*|Author|Unverified) /)
+  def rows(rendered) = rendered[Shaka::HumanComments::BLOCK].to_s.lines.map(&:chomp).grep(/\A\| (?!From |--- )/)
 
   def cells(rendered) = rows(rendered).map { |row| row.delete_prefix('| ').delete_suffix(' |').split(' | ') }
 
   # Each row's cells at the given columns: From, Said, Response, Status.
   def columns(rendered, *indexes) = cells(rendered).map { |row| row.values_at(*indexes) }
 
-  def roles(rendered) = cells(rendered).map { |row| row.first.split.first }
+  # The word that marks a row someone other than the PR author wrote; the author's has none.
+  def roles(rendered) = cells(rendered).map { |row| row.first[/\A(\*\*Reviewer\*\*|Unverified) /, 1] }
 
   # The count line without the commit it was read at.
   def counts(rendered) = rendered[/^(.*) · read at `ccccccc`$/, 1]
@@ -88,7 +90,7 @@ class PublicationHumanCommentsTest < Minitest::Test
     rendered = describe(packet(inline_comments: [inline(1, 'ann', 'you mean chat, not owner.', resolved: true),
                                                  inline(2, 'ann', REPLY, resolved: true)]))
 
-    assert_equal [['Author [ann](https://github.com/ann)', "[“you mean chat\\, not owner\\.”](#{URL}#discussion_r1)",
+    assert_equal [['[ann](https://github.com/ann)', "[“you mean chat\\, not owner\\.”](#{URL}#discussion_r1)",
                    "[“Removed both placeholders\\. The example now runs in one chat\\.”](#{URL}#discussion_r2)",
                    'Resolved']], cells(rendered)
     assert_includes rendered, "## Human comments\n\nNone open · 1 from the PR author · read at `ccccccc`\n\n"
@@ -99,7 +101,7 @@ class PublicationHumanCommentsTest < Minitest::Test
                                                  inline(2, 'Bob', 'This is inconsistent.', thread: 'T2'),
                                                  inline(3, 'ann', 'An open note.', thread: 'T3')]))
 
-    assert_equal %w[**Reviewer** Author Author], roles(rendered)
+    assert_equal ['**Reviewer**', nil, nil], roles(rendered)
     assert_equal [['**Open**'], ['**Open**'], ['Resolved']], columns(rendered, 3)
     assert_equal '**2 open** · 1 from 1 reviewer, 2 from the PR author', counts(rendered)
   end
@@ -114,14 +116,14 @@ class PublicationHumanCommentsTest < Minitest::Test
   def test_the_login_decides_author_or_reviewer_whatever_its_letter_case
     rendered = describe(packet(issue_comments: [issue_comment(1, 'ANN', 'Mine.')]), pull: pull(author: 'ann'))
 
-    assert_equal 'Author [ANN](https://github.com/ANN)', cells(rendered).first.first
+    assert_equal '[ANN](https://github.com/ANN)', cells(rendered).first.first
   end
 
   def test_a_bot_is_not_a_person_and_its_reply_in_the_thread_is_the_response
     rendered = describe(packet(inline_comments: [inline(1, 'ann', 'Is this a bug?'),
                                                  inline(2, 'claude[bot]', 'No. The caller checks it first.')]))
 
-    assert_equal [['Author [ann](https://github.com/ann)', "[“Is this a bug\\?”](#{URL}#discussion_r1)",
+    assert_equal [['[ann](https://github.com/ann)', "[“Is this a bug\\?”](#{URL}#discussion_r1)",
                    "[“No\\. The caller checks it first\\.”](#{URL}#discussion_r2)", '**Open**']], cells(rendered)
   end
 
@@ -341,7 +343,7 @@ class PublicationUnverifiedCommentsTest < Minitest::Test
                                                  inline(2, 'Bob', 'Open.', thread: 'T2')],
                                excluded_interactions: [excluded(5, 'outsider')]))
 
-    assert_equal %w[**Reviewer** Unverified Author], roles(rendered)
+    assert_equal ['**Reviewer**', 'Unverified', nil], roles(rendered)
     assert_equal '**1 open** · 1 from 1 reviewer, 1 from the PR author, 1 unverified', counts(rendered)
   end
 end
@@ -349,6 +351,26 @@ end
 # Whatever a comment holds, its quotation stays inside its cell.
 class PublicationHumanCommentQuotationTest < Minitest::Test
   include HumanCommentsFixture
+
+  # Each note is the publisher's own wording for a host it cannot read, placed by the comment
+  # renderer, so rewording a note or moving it fails here.
+  def test_the_response_skips_a_publisher_note_under_the_agent_s_identity_line
+    hosts = [{}, { 'CLAUDE_CODE_SESSION_ID' => 'none' }, { 'CODEX_THREAD_ID' => 'none' }]
+
+    hosts.each do |host|
+      content = { 'identity' => PublicationRegressionTest::IDENTITY, 'summary' => 'Shortened the prompt.' }
+      noted = Shaka::PublisherAttribution.prepare(content, environment: host.merge('HOME' => '/nonexistent'))
+
+      assert_includes Shaka::Publication.comment(noted), "_#{noted.fetch('publisher_note')}_"
+      assert_equal [["[“Shortened the prompt\\.”](#{URL}#discussion_r2)"]],
+                   columns(answered(Shaka::Publication.comment(noted)), 2), host
+    end
+  end
+
+  def test_the_response_keeps_an_agent_s_own_italic_first_line
+    assert_equal [["[“\\_UNKNOWN cause\\; unable to reproduce\\.\\_”](#{URL}#discussion_r2)"]],
+                 columns(answered("#{IDENTITY}\n\n_UNKNOWN cause; unable to reproduce._"), 2)
+  end
 
   def test_markdown_in_a_comment_cannot_break_the_table_link_elsewhere_or_read_as_an_escape
     body = 'a | b [x](https://evil.example) <img src=x> @bob `c` C:\\new **bold**'
@@ -386,6 +408,13 @@ class PublicationHumanCommentQuotationTest < Minitest::Test
 
     assert_equal 20, rows(rendered).size
     assert_includes rendered, "\n\n_3 more not shown; open comments come first._\n\n<!-- /shaka:human-comments -->"
+  end
+
+  private
+
+  def answered(reply)
+    describe(packet(inline_comments: [inline(1, 'ann', 'more concise', resolved: true),
+                                      inline(2, 'ann', reply, resolved: true)]))
   end
 end
 

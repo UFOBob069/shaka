@@ -107,10 +107,11 @@ sections:
 | From | Said | Response | Status |
 | --- | --- | --- | --- |
 | **Reviewer** maria | Finds the tester terms unclear; suggests template notation | — | **Open** |
-| Author sam | “you mean chat, not owner.” | “Changed the guide to use chat throughout…” | Resolved |
+| sam | “you mean chat, not owner.” | “Changed the guide to use chat throughout…” | Resolved |
 
-- **From** says whether the PR author or someone else wrote the comment. Agents
-  post from a person's account, so the account name cannot tell them apart.
+- **From** names the account. The PR author's comments show the account alone;
+  **Reviewer** marks one from another trusted account. Agents post from a person's
+  account, so the account name cannot tell a person from an agent.
   Every post a person did not write opens with the agent's 🤖 line, so a comment
   without it counts as a person's. A bot account's post, a post that opens with
   a hidden tool marker such as `<!-- shaka:reply:… -->`, and a superseded

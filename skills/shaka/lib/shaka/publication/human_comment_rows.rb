@@ -11,7 +11,11 @@ module Shaka
     # reviewer is the login of a trusted person other than the PR author.
     Row = Struct.new(:entry, :status, :reviewer, :open, :unverified)
     ANCHOR = /\A(?:issuecomment-|discussion_r|pullrequestreview-)\d+\z/
-    IDENTITY_LINE = /^🤖 [^\n]*$/
+    # The three ways a publisher note opens. An agent's own italic first line is its answer.
+    UNREAD = /UNKNOWN (?:provider|model|effort)[,:]/
+    PUBLISHER_NOTE = /_(?:Publisher model is configured;|Native publisher settings unavailable|#{UNREAD})[^\n]*_/
+    # The agent's identity line, with the publisher note the helper may print under it.
+    IDENTITY_LINE = /^🤖 [^\n]*$(?:\n\n#{PUBLISHER_NOTE}$)?/
     # The content key that maps a longer comment's URL to the agent's one-line summary of it.
     SUMMARIES = 'human_comment_summaries'
 
@@ -79,8 +83,9 @@ module Shaka
       ["Unverified #{name(entry.login)}", link('Not read by the agent', entry.url), '—', 'Not read']
     end
 
+    # The author's rows carry no label: the count line already says how many are theirs.
     def trusted(row)
-      ["#{row.reviewer ? '**Reviewer**' : 'Author'} #{name(row.entry.login)}", said(row.entry),
+      ["#{'**Reviewer** ' if row.reviewer}#{name(row.entry.login)}", said(row.entry),
        response(row.entry), row.open ? "**#{row.status}**" : row.status]
     end
 
