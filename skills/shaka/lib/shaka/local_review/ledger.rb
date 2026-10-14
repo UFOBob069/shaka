@@ -8,10 +8,33 @@ require_relative 'finding'
 require_relative 'ledger_batch'
 require_relative 'ledger_running'
 require_relative 'budget'
+require_relative 'timing'
 require_relative 'triage_history'
 require_relative '../repository_config/review_schema'
 
 module Shaka
+  # Compact terminal attempts stay beside the ledger without rewriting protected history.
+  module LocalReviewAttemptHistory
+    # Keep attribution and terminal state, never prompt, report, diagnostic or error prose.
+    ATTEMPT_FIELDS = %w[head reviewer status attempted failure_stage failure_cause started_at
+                        duration_ms timeout_seconds requested_model requested_effort model prompt_source
+                        criteria_ref coverage].freeze
+
+    def attempt_log = "#{path}.attempts.jsonl"
+
+    # Reuse the ledger lock, but do not parse or rewrite its history: even a refused
+    # pre-start retry or a corrupt ledger still has a measurable terminal outcome.
+    def record_attempt!(result)
+      attempt = result.slice(*ATTEMPT_FIELDS)
+      attempt['attempted'] = result['status'] == 'completed' || result.fetch('attempted', false)
+      locked do
+        File.open(attempt_log, File::WRONLY | File::CREAT | File::APPEND, 0o600) do |file|
+          file.write("#{JSON.generate(attempt)}\n")
+        end
+      end
+    end
+  end
+
   # Private record of a local review loop: each round's commit, reviewer settings, report, and
   # what became of its findings. It stays outside the checkout until `review publish` renders it,
   # and it has the same shape as that command's content file. Rounds that share a commit form a
@@ -22,6 +45,7 @@ module Shaka
     include LocalReviewLedgerRunning
     include LocalReviewLedgerBudget
     include LocalReviewTriageHistory
+    include LocalReviewAttemptHistory
 
     class RoundCap < Error; end
 

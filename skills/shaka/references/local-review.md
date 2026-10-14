@@ -112,6 +112,11 @@ than supplying their bodies.
 Restrict the CLI to read and search tools, and disable hooks, plugins, and MCP servers.
 `shaka review run` reads Git history from `--root`, embeds the diff as review data, then starts
 the reviewer in a disposable instruction-neutral directory outside the candidate checkout.
+Report `duration_ms` as elapsed runner setup, reviewer invocation and report validation;
+`started_at` is UTC and `timeout_seconds` is its validated deadline. With `--ledger`, retain
+terminal timing from the returned `attempt_log`; failed attempts remain separate from completed
+rounds. Report `timing_retention: not_retained` as a measurement gap. Keep missing durations UNKNOWN.
+
 DeepSeek/OpenRouter reviews have a 600-second deadline by default; CLI reviewers have 300 seconds.
 `--timeout-seconds 1..3600`
 sets a task-specific bound. A timeout returns `cli_failure` with a reason and requires cause

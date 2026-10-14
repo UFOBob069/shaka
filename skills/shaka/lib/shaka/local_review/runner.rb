@@ -4,6 +4,7 @@ require 'json'
 require 'securerandom'
 require 'tempfile'
 require 'tmpdir'
+require_relative 'timing'
 require_relative '../reviewer_selection'
 require_relative '../reviewer_settings'
 require_relative 'cli'
@@ -95,7 +96,7 @@ module Shaka
       valid = timeout.match?(/\A[1-9]\d*\z/) && timeout.to_i <= 3600
       raise Shaka::Error, '--timeout-seconds must be 1..3600' unless valid
 
-      @options[:timeout_seconds] = timeout.to_i
+      @validated_timeout_seconds = @options[:timeout_seconds] = timeout.to_i
     end
 
     def validate_criteria_ref!
@@ -172,14 +173,15 @@ module Shaka
     # A run that ended without appending its round stops holding up the batch's record.
     def finish_ledger
       @ledger.finish! if @started && !@appended
-    rescue Shaka::Error, SystemCallError
+    rescue Shaka::Error, SystemCallError, JSON::ParserError
       nil
     end
 
     def record_round(result)
       return result unless @ledger && result['status'] == 'completed'
 
-      round = result.slice('head', 'reviewer', 'report', 'prompt_source', 'criteria_ref', 'model', 'usage', 'coverage')
+      round = result.slice('head', 'reviewer', 'report', 'prompt_source', 'criteria_ref', 'model', 'usage', 'coverage',
+                           'started_at', 'duration_ms', 'timeout_seconds')
       # The observed model comes from Claude's result or native usage, never from the request.
       round = round.merge('effort' => effort, 'requested_model' => @options[:model]).compact
       @ledger.append!(base: @options[:base], round:, snapshot: @snapshot, max_rounds: @max_rounds)
@@ -249,15 +251,9 @@ module Shaka
     include LocalReviewPromptFile
     include LocalReviewRounds
     include LocalReviewCheckout
+    include LocalReviewTiming
 
     def initialize(options) = @options = options
-
-    def run
-      @attempted = false
-      with_requested_model(outcome)
-    ensure
-      finish_ledger
-    end
 
     private
 
@@ -267,8 +263,8 @@ module Shaka
       validate!
       validate_tempdir!
       open_ledger
-      record_round(run_report(review_prompt))
-    rescue Shaka::Error, SystemCallError => e
+      run_report(review_prompt)
+    rescue Shaka::Error, SystemCallError, JSON::ParserError => e
       setup_failure(e)
     end
 
