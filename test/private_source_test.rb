@@ -285,26 +285,27 @@ class PrivateSourceSafetyTest < Minitest::Test
     end
   end
 
-  def test_staged_prompt_needs_a_commit
+  def test_tracked_prompt_must_be_on_the_default_branch
     with_private_repository do |root, ref|
       File.write(File.join(root, 'review.md'), 'private prompt')
       write_review_prompt_policy(root)
       system('git', '-C', root, 'add', 'review.md', exception: true)
       assert_equal 'partial', report(root, ref).status
       system('git', '-C', root, 'commit', '--quiet', '-m', 'review prompt', exception: true)
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'partial', report(root, ref).status
+      assert_equal 'complete', report(root, head(root)).status
     end
   end
 
-  def test_external_prompt_symlink_must_itself_be_committed
-    with_private_repository do |root, ref|
+  def test_prompt_symlink_must_itself_be_on_the_default_branch
+    with_private_repository do |root, _ref|
       File.write(File.join(root, 'shared-review.md'), 'tracked prompt')
       commit_file(root, 'shared-review.md', 'shared prompt')
       File.symlink('shared-review.md', File.join(root, 'review.md'))
       write_review_prompt_policy(root)
-      assert_equal 'partial', report(root, ref).status
+      assert_equal 'partial', report(root, head(root)).status
       commit_file(root, 'review.md', 'prompt link')
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'complete', report(root, head(root)).status
     end
   end
 
@@ -472,20 +473,21 @@ end
 class PrivateSourceSymlinkChainTest < Minitest::Test
   include PrivateSourceFixture
 
-  def test_prompt_through_committed_directory_symlink_is_complete
+  def test_prompt_through_default_branch_directory_symlink_is_complete
     with_private_repository do |root, ref|
       create_directory_prompt(root)
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'partial', report(root, ref).status
+      assert_equal 'complete', report(root, head(root)).status
     end
   end
 
-  def test_committed_prompt_link_into_private_tree_is_complete
-    with_private_repository do |root, ref|
+  def test_committed_prompt_link_into_private_tree_is_partial
+    with_private_repository do |root, _ref|
       File.write(File.join(root, '.agents/shaka/review.md'), 'prompt')
       File.symlink('.agents/shaka/review.md', File.join(root, 'review.md'))
       write_review_prompt_policy(root)
       commit_file(root, 'review.md', 'prompt link')
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'partial', report(root, head(root)).status
     end
   end
 
@@ -511,24 +513,25 @@ class PrivateSourceSymlinkChainTest < Minitest::Test
     end
   end
 
-  def test_external_prompt_requires_every_hop_committed
+  def test_prompt_requires_every_hop_on_the_default_branch
     with_private_repository do |root, ref|
       create_chain(root, final: 'final.md', middle: 'middle.md', first: 'review.md', content: 'prompt')
       write_review_prompt_policy(root)
-      assert_equal 'partial', report(root, ref).status
+      assert_equal 'partial', report(root, head(root)).status
       commit_file(root, 'middle.md', 'middle link')
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'partial', report(root, ref).status
+      assert_equal 'complete', report(root, head(root)).status
     end
   end
 
   def test_prompt_link_that_leaves_and_reenters_worktree_is_partial
-    with_private_repository do |root, ref|
+    with_private_repository do |root, _ref|
       File.write(File.join(root, 'shared.md'), 'prompt')
       File.symlink("../#{File.basename(root)}/shared.md", File.join(root, 'review.md'))
       write_review_prompt_policy(root)
       commit_file(root, 'shared.md', 'shared prompt')
       commit_file(root, 'review.md', 'prompt link')
-      assert_equal 'partial', report(root, ref).status
+      assert_equal 'partial', report(root, head(root)).status
     end
   end
 
@@ -619,14 +622,14 @@ class PrivateSourceInputTest < Minitest::Test
     end
   end
 
-  def test_committed_unicode_prompt_path_matches_git_inventory
-    with_private_repository do |root, ref|
+  def test_default_branch_unicode_prompt_path_is_complete
+    with_private_repository do |root, _ref|
       path = 'révision.md'
       File.write(File.join(root, path), 'prompt')
       policy = config.merge('review' => review_policy('prompt_file' => path))
       File.write(File.join(root, '.agents/shaka/config.yml'), YAML.dump(policy))
       commit_file(root, path, 'unicode prompt')
-      assert_equal 'complete', report(root, ref).status
+      assert_equal 'complete', report(root, head(root)).status
     end
   end
 end

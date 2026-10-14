@@ -21,10 +21,9 @@ $shaka <task or issue link>
 Set up Shaka just for me. Go.
 ```
 
-Individual settings support reviewer choices, writing limits, opening instructions,
-and WIP preferences. Custom code-review instructions and checkpoint settings
-still use the shared source or defaults; [#481](https://github.com/shakacode/shaka/issues/481)
-tracks making all supported settings configurable individually.
+Individual settings support the same choices as shared settings: reviewers, custom
+code-review instructions, checkpoint choices, writing limits, opening instructions,
+and WIP preferences.
 See [current experience and recovery limits](expected-experience.md#individual-setup).
 
 For shared team settings:
@@ -77,8 +76,8 @@ $shaka Focus code reviews on compatibility.
 
 The agent starts from Shaka's defaults when preparing replacement instructions.
 Use one prompt for all local reviewers or one for a particular reviewer. Team
-instructions come from the default branch; individual support is tracked in
-[#481](https://github.com/shakacode/shaka/issues/481). See
+instructions come from the default branch; individual instructions stay in your
+local settings folder. See
 [custom review instructions](settings.md#reviewprompt_file).
 
 ## Keep PR explanations useful
@@ -102,7 +101,8 @@ Both team and individual settings support these options.
 Shaka recommends what to do next at a
 [checkpoint](pr-verification.md#checkpoint) and records the owner's
 choice for later. See that guide for the terms and current report labels.
-Individual checkpoint settings are part of [#481](https://github.com/shakacode/shaka/issues/481).
+[Checkpoint settings](settings.md#reviewpost_implementation) choose who evaluates
+the result, with team or individual setup.
 
 ## Resume unfinished work
 

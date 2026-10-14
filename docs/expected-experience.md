@@ -25,10 +25,8 @@ Set up Shaka just for me. Go.
 ```
 
 Individual settings remain outside commits in a repository without team setup.
-[Merged #420](https://github.com/shakacode/shaka/pull/420) added delivery support for
-individual reviewer choices, writing limits, opening instructions, and WIP preferences.
-Custom code-review instructions and checkpoint settings remain incomplete;
-[#481](https://github.com/shakacode/shaka/issues/481) tracks those gaps.
+They cover the same choices as shared settings: reviewers, custom code-review
+instructions, checkpoint choices, writing limits, opening instructions, and WIP preferences.
 
 The agent follows setup instructions to find existing commands and continue into
 your task. That is not proof of seamless first-user delivery. The

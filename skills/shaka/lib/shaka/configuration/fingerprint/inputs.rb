@@ -38,15 +38,13 @@ module Shaka
                                       opening: @settings.fetch('opening_check')).map(&:last)
       end
 
+      # Hashes each prompt where it is read: the private tree, or the default-branch commit.
       def private_hashes(candidate, commands)
-        opening = @settings.dig('opening_check', 'prompt_file')
-        local_opening = !opening || PrivateInventory.private_path?(root: @root, path: opening)
-        prompts = RepositoryConfig::ReviewSchema.prompt_files(@settings.fetch('review')).map(&:last)
-        prompts << opening if opening && local_opening
-        hashes = @files.hashes(candidate + prompts, files_only: commands + prompts)
-        return hashes if local_opening
+        local, trusted = prompt_paths.uniq.partition { |path| PrivateInventory.private_path?(root: @root, path:) }
+        hashes = @files.hashes(candidate + local, files_only: commands + local)
+        return hashes if trusted.empty?
 
-        merge_trusted(hashes, [opening], ref: @private_source.ref)
+        merge_trusted(hashes, trusted, ref: @private_source.ref)
       end
 
       def merge_trusted(candidate, paths, ref: @trusted_ref)

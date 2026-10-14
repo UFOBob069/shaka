@@ -27,22 +27,23 @@ module PrivateDeliveryEvidence
     output
   end
 
-  def review_result(*options)
+  def review_result(*options, head: @ref, error: nil)
     reviewer = invoke('reviewer', '--implementer', 'openai/codex')['reviewer']
     Dir.mktmpdir('review-cli', @state) do |bin|
       write_executable(bin, reviewer.split('/').last, delivery_reviewer)
-      run_review_cli(bin, reviewer, options)
+      output, stderr, status = run_review_cli(bin, reviewer, head, options)
+      assert_equal error.nil?, status.success?, "#{output}\n#{stderr}"
+      assert_includes output + stderr, error if error
+      output
     end
   end
 
-  def run_review_cli(bin, reviewer, options)
-    output, error, status = Open3.capture3(
+  def run_review_cli(bin, reviewer, head, options)
+    Open3.capture3(
       { 'PATH' => "#{bin}:#{ENV.fetch('PATH')}", 'REVIEW_TRACE' => File.join(@state, 'reviewer.json') },
-      PrivateDeliveryFixture::COMMAND, 'review', 'run', '--root', @root, '--base', @ref, '--head', @ref,
+      PrivateDeliveryFixture::COMMAND, 'review', 'run', '--root', @root, '--base', @ref, '--head', head,
       '--reviewer', reviewer, '--settings-ref', @ref, '--repository', 'owner/repo', *options
     )
-    assert_predicate status, :success?, "#{output}\n#{error}"
-    output
   end
 
   def assert_reviewer_arguments(*expected)

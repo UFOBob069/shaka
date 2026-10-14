@@ -4,10 +4,13 @@ require 'rbconfig'
 require 'tempfile'
 require_relative '../configuration'
 require_relative '../reviewer_settings'
+require_relative 'settings_source'
 
 module Shaka
   # Reads the repository's review instructions from the same trusted commit as its criteria.
   module LocalReviewPromptFile
+    include LocalReviewSettingsSource
+
     private
 
     def review_instructions
@@ -31,9 +34,9 @@ module Shaka
       end
     end
 
-    # Effective model and effort apply where the task named none; instructions remain trusted.
+    # Effective model and effort apply where the task named none.
     def apply_trusted_settings!
-      agent = reviewer_settings(execution_review || {})
+      agent = reviewer_settings(effective_review || {})
       return unless agent
 
       schema = RepositoryConfig::ReviewSchema
@@ -47,16 +50,6 @@ module Shaka
         end
     end
 
-    def execution_review
-      review = effective_review
-      return review if review || !@options[:criteria_ref]
-
-      ref = @options[:criteria_ref]
-      return unless Configuration.private_source(root:, ref:).status == 'complete'
-
-      Configuration.resolve_source(root:, ref:, candidate_commands: false).first.review
-    end
-
     def apply_reviewer_settings!
       apply_trusted_settings!
       validate_model!
@@ -68,43 +61,22 @@ module Shaka
       review = effective_review
       return unless review
 
-      ref = settings_ref
       path = configured_prompt_path(review)
+      path && configured_prompt(path, 'review prompt_file')
+    end
+
+    # Individual setup keeps its own instructions in its untracked settings directory. Any other
+    # path is read at the settings commit, so a branch cannot supply its own instructions.
+    def configured_prompt(path, label)
+      @private_prompt = individual_prompt?(path)
+      return Configuration.private_prompt(root:, path:, label:) if @private_prompt
+
       access = { executable: git_executable, capture: method(:capture), resolver: method(:bounded_git) }
-      path && Configuration.prompt_at_commit(root:, ref:, path:, git_access: access)
+      Configuration.prompt_at_commit(root:, ref: settings_ref, path:, git_access: access)
     end
 
-    def trusted_review
-      return @trusted_review if defined?(@trusted_review)
-
-      ref = @options[:criteria_ref]
-      @trusted_review = (trusted_review_settings(ref) if ref && trusted_seam?(ref))
-    end
-
-    # Repository instructions stay trusted; explicit selection replaces configuration.
-    def settings_ref
-      return unless @options[:criteria_ref]
-
-      Configuration::SettingsPreview.ref(root:) || @options[:criteria_ref]
-    end
-
-    def effective_review
-      ref = settings_ref
-      return trusted_review if ref == @options[:criteria_ref]
-
-      trusted_review_settings(ref)
-    end
-
-    # Reads only the review section, so the rest of the seam need not be valid for a review to run;
-    # `shaka seam check` validates the whole contract.
-    def trusted_review_settings(ref)
-      Configuration.review_at_commit(root:, ref:, git: git_executable, capture: method(:capture),
-                                     probe: method(:bounded_git))
-    end
-
-    # A commit without either configuration keeps the default instructions; invalid sources fail closed.
-    def trusted_seam?(ref)
-      Configuration.contract_at_commit?(root:, ref:, git: method(:bounded_git))
+    def individual_prompt?(path)
+      @individual_review && Configuration::PrivateInventory.private_path?(root:, path:)
     end
 
     # Runs the vetted Git under the review timeout, for this module and TrustedPathResolver.
@@ -138,6 +110,7 @@ module Shaka
     # Names the instructions the reviewer received, for the published review summary.
     def prompt_source
       return 'Local settings preview (private source)' if @prompt_source && settings_ref != @options[:criteria_ref]
+      return 'Individual settings (private source)' if @private_prompt
 
       @prompt_source || 'Shaka default'
     end

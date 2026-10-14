@@ -15,14 +15,6 @@ module Shaka
         new(root:, path:, committed:).uncommitted
       end
 
-      def self.committed_path?(root:, path:, committed:)
-        resolved = Pathname.new(File.realpath(File.expand_path(path, root))).relative_path_from(Pathname.new(root)).to_s
-        (resolved.start_with?("#{DIRECTORY}/") || committed.include?(resolved)) &&
-          uncommitted(root:, path:, committed:).empty?
-      rescue SystemCallError, EscapedRoot
-        false
-      end
-
       def initialize(root:, path:, committed:)
         @root = root
         @path = path

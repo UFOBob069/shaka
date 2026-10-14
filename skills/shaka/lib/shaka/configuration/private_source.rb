@@ -48,7 +48,7 @@ module Shaka
         inventory = PrivateInventory.new(root: @root, committed:).scan
         @blockers.concat(inventory.blockers)
         inspect_conflicts(trusted, indexed, committed, inventory.entries)
-        result(sha, trusted, inventory, load_candidate(inventory, committed))
+        result(sha, trusted, inventory, load_candidate(inventory))
       end
 
       private
@@ -113,7 +113,7 @@ module Shaka
         @conflict = true
       end
 
-      def load_candidate(inventory, committed)
+      def load_candidate(inventory)
         return if inventory.unsafe || @conflict || inventory.entries.empty?
 
         unless inventory.entries.any? { |entry| entry[:path] == Paths::NEW_CONTRACT && entry[:type] == 'regular' }
@@ -121,13 +121,12 @@ module Shaka
           return
         end
 
-        validate_candidate(committed)
+        validate_candidate
       end
 
-      def validate_candidate(committed)
-        config = RepositoryConfig.load(root: @root) { |label, path| validate_trusted_opening(label, path) }
+      def validate_candidate
+        config = RepositoryConfig.load(root: @root) { |label, path| validate_trusted_prompt(label, path) }
         inspect_optional_pair(config)
-        inspect_prompt_dependencies(config, committed)
         config
       rescue Error, SystemCallError, ArgumentError => e
         @blockers << e.message
@@ -140,24 +139,12 @@ module Shaka
         @blockers << 'Private validate-local and trigger-hosted-ci must be present together'
       end
 
-      def inspect_prompt_dependencies(config, committed)
-        RepositoryConfig.prompt_files(review: config.review, opening: config.opening_check).each do |label, path|
-          next if label == 'opening_check.prompt_file' || committed_prompt?(path, committed)
-
-          @blockers << "#{label} #{path} lacks a candidate HEAD commit"
-        end
-      end
-
-      def validate_trusted_opening(label, path)
-        return false unless label == 'opening_check.prompt_file' && !PrivateInventory.private_path?(root: @root, path:)
+      # A prompt outside the private tree supplies instructions only from the default branch.
+      def validate_trusted_prompt(label, path)
+        return false if PrivateInventory.private_path?(root: @root, path:)
 
         require_relative '../trusted_config_source'
         TrustedConfigSource.new(root: @root).read_prompt(path, @ref, label)
-      end
-
-      def committed_prompt?(path, committed)
-        File.expand_path(path, @root).start_with?("#{@root}/#{PrivateInventory::DIRECTORY}/") ||
-          PrivatePathHops.committed_path?(root: @root, path:, committed:)
       end
     end
   end

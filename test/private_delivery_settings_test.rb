@@ -5,17 +5,6 @@ require_relative 'private_delivery_helper'
 class PrivateDeliverySettingsTest < Minitest::Test
   include PrivateDeliveryFixture
 
-  def test_explicit_review_choices_win_without_using_private_prompt_instructions
-    with_trial do
-      prepare_private_review
-      result = JSON.parse(review_result('--model', 'claude-sonnet-4-6', '--effort', 'medium'))
-      trace = JSON.parse(File.read(File.join(@state, 'reviewer.json')))
-      assert_reviewer_arguments(['--model', 'claude-sonnet-4-6'], ['--effort', 'medium'])
-      refute_includes trace['prompt'], 'PRIVATE INSTRUCTIONS'
-      assert_equal 'Shaka default', result['prompt_source']
-    end
-  end
-
   def test_description_and_walkthrough_read_changed_private_prose_limits
     with_trial do
       publish_delivery
@@ -51,15 +40,6 @@ class PrivateDeliverySettingsTest < Minitest::Test
   end
 
   private
-
-  def prepare_private_review
-    File.write(File.join(@root, '.agents/shaka/review.md'), 'PRIVATE INSTRUCTIONS')
-    update_private do |data|
-      data['review']['prompt_file'] = '.agents/shaka/review.md'
-      data['review']['local_review_agents'] = [{ 'provider' => 'anthropic', 'model_family' => 'claude',
-                                                 'model' => 'claude-opus-4-6', 'effort' => 'high' }]
-    end
-  end
 
   def prepare_private_opening
     write_executable(@state, 'claude', fake_claude)

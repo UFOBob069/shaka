@@ -67,22 +67,22 @@ module Shaka
         return TrustedConfigSource.new(root:).opening_prompt(config, ref: config.sha || ref)
       end
 
-      private_opening_prompt(root, path)
+      private_prompt(root:, path:, label: 'opening_check.prompt_file')
     end
 
-    def private_opening_prompt(root, path)
+    # Reads instructions an individual setup keeps in its untracked settings directory.
+    def private_prompt(root:, path:, label:)
       full = File.realpath(File.expand_path(path, root))
       unless full.start_with?("#{File.realpath(root)}/#{PrivateInventory::DIRECTORY}/")
-        raise Error, 'Opening prompt must remain inside the private settings tree.'
+        raise Error, "#{label} must remain inside the private settings tree."
       end
 
       text = nil
       error = ReviewPrompt.file_error(File.size(full)) { text = File.binread(full) }
-      raise Error, "opening_check.prompt_file #{error}" if error
+      raise Error, "#{label} #{error}" if error
 
       text.force_encoding(Encoding::UTF_8)
     end
-    private_class_method :private_opening_prompt
 
     def path(root, name)
       Paths.at(root, Paths::REPOSITORY_NAMES.fetch(name))

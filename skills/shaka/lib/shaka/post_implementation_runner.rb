@@ -119,8 +119,7 @@ module Shaka
       return File.read(DEFAULT_PROMPT, encoding: 'UTF-8') unless @prompt_path
 
       @prompt_source = "#{settings_ref}:#{@prompt_path}"
-      access = { executable: git_executable, capture: method(:capture), resolver: method(:bounded_git) }
-      Configuration.prompt_at_commit(root:, ref: settings_ref, path: @prompt_path, git_access: access)
+      configured_prompt(@prompt_path, 'review.post_implementation.prompt_file')
     end
 
     def validate_report(path)

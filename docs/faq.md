@@ -107,7 +107,7 @@ To give Claude the same instructions every time, add a `CLAUDE.md` containing
 
 ## Can I customize the prompt Shaka gives its local reviewer?
 
-Yes, through shared settings. In your [settings](settings.md) file, set
+Yes. In your [settings](settings.md) file, set
 [`review.prompt_file`](settings.md#reviewprompt_file) to the path of a Markdown
 file, relative to the repository root, such as `.agents/review-prompt.md`. It
 replaces Shaka's default instructions for what the local reviewer looks for and
@@ -115,9 +115,9 @@ how it reports. To give one review agent different instructions, set
 `prompt_file` on that agent's entry in `local_review_agents`. Copy Shaka's
 [default instructions](../skills/shaka/config/review-prompt.md) to start.
 
-Shaka reads the default-branch version, so a PR that edits it is reviewed with the
-current version. Individual custom instructions are not applied yet;
-[#481](https://github.com/shakacode/shaka/issues/481) tracks this gap.
+With shared settings, Shaka reads the default-branch version, so a PR that edits it
+is reviewed with the current version. With individual setup, keep the file in
+`.agents/shaka/`, where it stays out of commits.
 Criteria in `AGENTS.md` still apply on top of the prompt file.
 The prompt file configures local reviews; a CI review job takes its prompt from
 its own workflow.
