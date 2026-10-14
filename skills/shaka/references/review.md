@@ -73,8 +73,11 @@ under [reviews after merge](#reviews-after-merge).
 - A skipped, failed, missing, or stale review cannot satisfy a required gate.
   Only the authority that set a requirement may change it.
 - The Shaka repository's Claude Action skips changes to its own workflow and
-  reports **UNAVAILABLE**. A successful model run remains **UNVERIFIED** until
-  the owner reads its visible report for the reviewed commit.
+  fails the Claude check as **UNAVAILABLE**. Successful execution also needs a
+  new head-bound report with its closing findings attestation to pass that check.
+  **REPORT POSTED** verifies presence; the owner must read and handle its findings.
+  An independent local review can satisfy the separate review requirement when
+  the Claude job is optional; it does not turn that failed job green.
 - Claude `--bare` ignores keychain/OAuth credentials. Its “Not logged in” message
   does not prove the normal signed-in CLI is unavailable.
 
