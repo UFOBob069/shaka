@@ -12,6 +12,8 @@ require_relative 'summary'
 require_relative 'bound'
 require_relative 'budget'
 require_relative 'triage'
+require_relative 'assessment_view'
+require_relative 'bundle'
 
 module Shaka
   # Renders one pull request comment for a local adversarial review: a summary a reader skims,
@@ -33,6 +35,8 @@ module Shaka
     # GitHub has a commit, so one lost to a rebase is named without a broken link.
     def initialize(content, repository: nil, published: nil)
       raise Error, 'Local review content must be an object.' unless content.is_a?(Hash)
+
+      LocalReviewBundle.version!(content)
       raise Error, 'Expected a GitHub repository in OWNER/REPO form.' unless
         repository.nil? || repository.match?(%r{\A[\w-]+/[\w.-]+\z})
 
@@ -41,9 +45,10 @@ module Shaka
       @fallback = content['fallback']
       @task_budget = LocalReviewBudget.record_from(content, completed: @rounds.size)
       @max_rounds = RepositoryConfig::ReviewLimit.from(content)
+      @assessment_view = LocalReviewAssessmentView.new(content)
     end
 
-    def loop_summary = LocalReviewSummary.new(@rounds).lines.take(2).join("\n\n")
+    def loop_summary = @assessment_view.summary(@rounds, @links, LocalReviewSummary.new(@rounds).lines.first)
 
     def render
       blocks = [TITLE, table, *LocalReviewSummary.new(@rounds).lines, *fallback_notice, *settings_notice,
@@ -115,8 +120,7 @@ module Shaka
     end
 
     def table
-      rows = @rounds.map { |round| line(round.cells(@links)) }
-      [line(COLUMNS), line(['---'] * COLUMNS.size), *rows].join("\n")
+      [line(COLUMNS), line(['---'] * COLUMNS.size), *@rounds.map { |round| line(round.cells(@links)) }].join("\n")
     end
 
     # Escaping backslashes first keeps a supplied `\|` from ending its cell early.

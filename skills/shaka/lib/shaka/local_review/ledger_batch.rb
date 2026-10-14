@@ -65,7 +65,7 @@ module Shaka
     def triaged(round, index, findings, content)
       mine = findings&.select { |finding| reported?(finding, round) }&.map { |finding| individual(finding, round) }
       usage = merged_usage(round, content)
-      round = round.merge({ 'findings' => mine || round['findings'] }.compact, usage)
+      round = preserve_triage(round, mine, content['by']).merge(usage)
       check_findings!(round, index + 1)
       round
     end
@@ -87,11 +87,6 @@ module Shaka
     end
 
     # The copy of a collated finding kept in one reporter's round, with that reviewer's own number.
-    def individual(finding, round)
-      label = finding['reviewers']&.find { |reviewer, _| same_reviewer?(round, reviewer) }&.last
-      finding.except('reviewers').merge('reported_as' => label).compact
-    end
-
     # Each finding maps every reviewer that reported it to that reviewer's own finding number, and
     # no reviewer's number is claimed twice. With each reviewer's `FINDINGS n` matched, every
     # individual finding then belongs to exactly one collated finding.
@@ -103,7 +98,7 @@ module Shaka
 
     def claims(finding)
       named = finding['reviewers']
-      return [] if named.nil? && batch.one?
+      return solo_claim(finding) if named.nil? && batch.one?
 
       mapping!(finding['id'], named)
       named.map { |reviewer, label| [reviewer.downcase, label] }

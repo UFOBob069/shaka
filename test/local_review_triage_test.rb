@@ -78,9 +78,10 @@ class LocalReviewTriageTest < Minitest::Test
   def test_a_usage_only_record_keeps_the_findings
     append(EARLIER, 'openai/codex', findings: 1)
     record([NIT])
+    original = ledger.rounds.first['findings']
     ledger.record!({ 'tokens' => '9' })
 
-    assert_equal([[NIT], '9'], ledger.rounds.first.values_at('findings', 'tokens'))
+    assert_equal([original, '9'], ledger.rounds.first.values_at('findings', 'tokens'))
   end
 
   # Break caught: a second reviewer of a commit used up a turn of the round cap.

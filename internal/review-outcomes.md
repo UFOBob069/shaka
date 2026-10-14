@@ -1,7 +1,7 @@
 # Preserve review decisions and later outcomes
 
 Design proposal for the remaining work on [issue #395](https://github.com/shakacode/shaka/issues/395).
-Retention has shipped; assessments and export have not. [Requirements](requirements.md) owns pilot scope;
+Retention and assessments have shipped; export and real-use evaluation remain open. [Requirements](requirements.md) owns pilot scope;
 issue #395 owns this extension's acceptance checklist.
 
 A maintainer should be able to ask, months after a merge, "which reviewer
@@ -29,7 +29,20 @@ the hash finds the copy again beside a ledger that has moved.
 The issue's presentation checklist has not been rechecked against real review
 records since those PRs merged. That check belongs to the real-use evaluation below.
 
-## What the records keep today
+The assessment step now preserves replaced triage in ordered `earlier_findings`
+snapshots, records actor/time attribution when supplied, and appends later judgments
+through `review assess`. The current comment exposes action and disagreement while
+keeping settled chains in history. Actors are transcribed, not authenticated.
+[Assessment instructions](../skills/shaka/references/review-assessments.md) describe
+use; the proposal below preserves the accepted design and its alternatives.
+
+Compatibility differs at the old publication boundary: version 2 ledger writers
+refuse version 3, but version 2 publishers can omit its assessments. Use current
+Shaka for reading and publication. Current readers reject newer formats before
+reading reports or publishing; released older publishers cannot gain that check
+through this change. The retained ledger still contains the judgments. Acceptance of this released-publisher\nlimitation was accepted by the maintainer for PR #518. Public triage history\nnow projects supported fields and marks omitted metadata; complete legacy snapshots\nstay private in the ledger.
+
+## Inventory before retention and assessments
 
 Inspected revision: `64cf06040e6e0f609079327fa6b2c225a2359e15`. Paths are relative
 to `skills/shaka/lib/shaka/local_review/`.

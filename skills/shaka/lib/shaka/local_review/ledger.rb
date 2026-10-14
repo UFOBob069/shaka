@@ -8,6 +8,7 @@ require_relative 'finding'
 require_relative 'ledger_batch'
 require_relative 'ledger_running'
 require_relative 'budget'
+require_relative 'triage_history'
 require_relative '../repository_config/review_schema'
 
 module Shaka
@@ -20,6 +21,7 @@ module Shaka
     include LocalReviewLedgerBatch
     include LocalReviewLedgerRunning
     include LocalReviewLedgerBudget
+    include LocalReviewTriageHistory
 
     class RoundCap < Error; end
 
@@ -91,7 +93,7 @@ module Shaka
         check_nothing_running!
         select_record_batch!(head)
 
-        write(data.merge(content.slice('fallback'), 'rounds' => recorded_rounds(content)))
+        record_current!(content)
         prune_running
         batch.map { |index| index + 1 }
       end

@@ -34,7 +34,7 @@ class LocalReviewRetentionTest < Minitest::Test
 
     assert_equal({ 'report' => copy, 'report_sha256' => digest }, kept_round.slice('report', 'report_sha256'))
     assert_equal original, File.read(copy)
-    assert_equal 2, stored.fetch('version')
+    assert_equal Shaka::LocalReviewBundle::VERSION, stored.fetch('version')
   end
 
   def test_the_review_publishes_after_the_reviewers_own_report_file_is_gone
@@ -148,7 +148,7 @@ class LocalReviewUnavailableReportTest < Minitest::Test
   end
 
   def test_a_ledger_from_a_newer_shaka_is_refused
-    File.write(@path, JSON.generate('version' => 3, 'rounds' => []))
+    File.write(@path, JSON.generate('version' => Shaka::LocalReviewBundle::VERSION + 1, 'rounds' => []))
 
     error = assert_raises(Shaka::Error) { ledger.rounds }
     assert_includes error.message, 'newer Shaka'

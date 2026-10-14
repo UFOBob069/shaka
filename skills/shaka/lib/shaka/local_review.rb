@@ -29,7 +29,7 @@ module Shaka
       @github = github
     end
 
-    ACTIONS = %w[run check record publish collapse].freeze
+    ACTIONS = %w[run check record assess publish collapse].freeze
 
     def run
       action = @arguments.shift
@@ -39,7 +39,7 @@ module Shaka
       parser = send(:"#{action}_parser")
       parser.parse!(@arguments)
       return 0.tap { puts parser } if @options[:help]
-      return send(action, parser) if %w[record publish].include?(action)
+      return send(action, parser) if %w[record assess publish].include?(action)
 
       raise OptionParser::InvalidArgument, parser.to_s unless @arguments.empty?
 
@@ -90,6 +90,19 @@ module Shaka
       recorded = LocalReviewLedger.new(@options[:ledger]).record!(content, head: @options[:head])
       puts JSON.pretty_generate('ledger' => File.expand_path(@options[:ledger]), 'rounds' => recorded)
       0
+    end
+
+    def assess(parser)
+      raise OptionParser::InvalidArgument, parser.to_s unless
+        @arguments.empty? && @options[:ledger] && @options[:content_file] && !@options[:head]
+
+      id = LocalReviewLedger.new(@options[:ledger]).assess!(content)
+      puts JSON.pretty_generate('ledger' => File.expand_path(@options[:ledger]), 'assessment' => id)
+      0
+    end
+
+    def assess_parser
+      record_parser.tap { |parser| parser.banner = 'Usage: shaka review assess --ledger PATH --content-file PATH' }
     end
 
     def record_parser

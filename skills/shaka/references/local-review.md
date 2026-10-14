@@ -569,3 +569,7 @@ The [React on Rails review workflow](https://github.com/shakacode/react_on_rails
 is an example: it posts comments and inspects Claude's execution result because
 an unsuccessful review can otherwise report a successful action. Its separate
 `@claude` workflow is a different capability, not required by this ordinary path.
+
+When later evidence challenges a recommendation, including after merge, follow
+[record later review evidence](review-assessments.md). Assessments preserve the
+original triage and add no merge gate.

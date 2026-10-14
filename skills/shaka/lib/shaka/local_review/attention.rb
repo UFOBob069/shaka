@@ -4,7 +4,8 @@ module Shaka
   # A presentation of retained findings, not a new decision or a recommendation-quality judgment.
   # Legacy documented defects and risks remain visible even after a clean round or reclassification.
   class LocalReviewAttention
-    def initialize(rounds, links)
+    def initialize(rounds, links, assessments: nil)
+      @assessments = assessments
       @rounds = rounds
       @links = links
       @findings = rounds.chunk(&:head).flat_map { |_, batch| batch.flat_map(&:findings).uniq(&:id) }.group_by(&:id)
@@ -27,7 +28,9 @@ module Shaka
     private
 
     def partition
-      @findings.values.partition { |copies| LocalReviewFinding.pending?(copies) }
+      @findings.values.partition do |copies|
+        LocalReviewFinding.pending?(copies) || @assessments&.attention?(copies.last.id)
+      end
     end
 
     def finding_table(pending)
@@ -39,11 +42,19 @@ module Shaka
 
     def finding_row(copies)
       finding = copies.last
+      text, status = finding_text(copies)
+      cells = [text, status, reporters(finding.id).join(', ')].map { |cell| PublicationText.table_cell(cell) }
+      "| #{cells.join(' | ')} |"
+    end
+
+    def finding_text(copies)
+      finding = copies.last
       text = "`#{finding.id}` · #{finding.summary}"
       text += ' · **returned after its fix**' if copies[0...-1].any?(&:fixed?)
       text += ' · **earlier defect/risk remains unassessed**' if reclassified?(copies)
-      cells = [text, finding.status, reporters(finding.id).join(', ')].map { |cell| PublicationText.table_cell(cell) }
-      "| #{cells.join(' | ')} |"
+      return [text, finding.status] unless @assessments&.attention?(finding.id)
+
+      ["#{text} · #{@assessments.visible(finding.id)}", "#{finding.status}; #{@assessments.status(finding.id)}"]
     end
 
     def reclassified?(copies)
