@@ -544,8 +544,8 @@ Ruby validates settings, execution outcome, report shape, and head binding.
 The AI reviewer assesses whether the change solves the problem and is worth
 maintaining. The task owner supplies the original problem and evidence, resolves
 concerns, and establishes merge readiness. Final merge preparation
-requires a report for the current commit with no unresolved concerns, or an explicit
-opt-out.
+requires a report for the current commit with no unresolved concerns, counting a concern
+you [accepted](pr-verification.md#checkpoint) as resolved, or an explicit opt-out.
 
 <a id="opening_check"></a>
 

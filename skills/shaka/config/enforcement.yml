@@ -126,7 +126,8 @@ rules:
     enforced_by: agent
     note: >-
       The owner supplies and judges the disposition. Ruby validates a supplied disposition's
-      vocabulary, head, reason and next action, rejects Merge against blocked verification,
+      vocabulary, head, reason and next action, rejects Merge against a blocking conclusion or a
+      concern without a recorded `accepted_concerns` decision,
       and publishes other dispositions through the existing blocked attestation. It does not
       infer merge authority, evaluate free-form prose, close a PR, or require the optional field.
   - id: post-implementation-merge-blocker

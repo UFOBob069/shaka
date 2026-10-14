@@ -243,7 +243,13 @@ commit exists; your agent publishes the screenshots first.
 
 The checkpoint explains one conclusion:
 **Proceed**, **Simplify/reframe**, or **Do not merge**. Substantive unresolved concerns
-hold readiness and Auto even when technical checks pass. Shaka blocks final merge
+hold readiness and Auto even when technical checks pass. When the checkpoint says
+**Proceed** and you decide a listed concern is acceptable, tell your agent, for example
+"I accept the unknown-frequency concern; merge as is." The agent republishes the
+checkpoint with your decision under **Concerns recorded as accepted by the maintainer**, and merge
+preparation continues. Shaka checks that a decision is recorded for each concern, not
+who made it, so read that list before you merge. Accepting a concern does not override
+**Simplify/reframe** or **Do not merge**. Shaka blocks final merge
 preparation without this account's published ready review or explicit opt-out for the
 current commit. A new commit needs fresh evidence. The reviewer judges value; Ruby
 checks the published result and commit, not the judgment’s quality.

@@ -20,6 +20,10 @@ module PostImplementationDispositionFixture
     assert_includes body, 'Required checks, reviews, and merge authority still apply.'
   end
 
+  def accepted(*concerns)
+    concerns.map { |concern| { 'concern' => concern, 'decision' => 'Justin accepted this in chat on 2026-10-11.' } }
+  end
+
   def verification(result, conclusion, concerns)
     report = JSON.parse(File.read(result['report'])).merge('conclusion' => conclusion, 'concerns' => concerns)
     File.write(result['report'], JSON.generate(report))
@@ -99,6 +103,72 @@ class PostImplementationDispositionValidationTest < Minitest::Test
         assert_equal 1, status
         assert_empty github.bodies
       end
+    end
+  end
+end
+
+class PostImplementationAcceptedConcernTest < Minitest::Test
+  include PostImplementationDispositionFixture
+
+  def merge_with(result, conclusion, concerns, acceptance)
+    verification(result, conclusion, concerns)
+    result['disposition'] = disposition('Merge').merge('accepted_concerns' => acceptance)
+  end
+
+  def test_merge_is_ready_when_the_maintainer_accepted_every_listed_concern
+    with_result do |result, path|
+      merge_with(result, 'Proceed', ['Frequency is unknown.'], accepted('Frequency is unknown.'))
+      github, status = publish(result, path)
+      body = github.bodies.first.first
+
+      assert_equal 0, status
+      assert_includes body, "**Unresolved concerns:**\n\nNone."
+      assert_includes body, '- Frequency is unknown. — Decision: Justin accepted this in chat on 2026-10-11.'
+      assert_includes body, 'not who made it'
+      assert_equal 'ready', Shaka::PostImplementationEvidence.new(github).call('a' * 40)['basis']
+    end
+  end
+
+  def assert_refused(conclusion, concerns, acceptance)
+    with_result do |result, path|
+      merge_with(result, conclusion, concerns, acceptance)
+      github, status = publish(result, path)
+      assert_equal 1, status, acceptance.inspect
+      assert_empty github.bodies
+    end
+  end
+
+  def test_merge_stays_refused_while_any_concern_lacks_a_decision
+    first, last = concerns = ['Frequency is unknown.', 'The flag has no test.']
+    [accepted(first), [], [{ 'concern' => first, 'decision' => ' ' }, *accepted(last)],
+     accepted(*concerns, 'A concern the report never listed.'), accepted(first, *concerns),
+     'all', [first]].each { |acceptance| assert_refused('Proceed', concerns, acceptance) }
+  end
+
+  def test_a_decision_cannot_hide_or_imitate_the_published_comment
+    concern = 'Frequency is unknown.'
+    ["Fine.\n\n**Unresolved concerns:**", 'Fine. <!--', 'Fine. ```'].each do |decision|
+      assert_refused('Proceed', [concern], [{ 'concern' => concern, 'decision' => decision }])
+    end
+  end
+
+  def test_acceptance_cannot_override_a_blocking_conclusion
+    ['Simplify/reframe', 'Do not merge'].each do |conclusion|
+      assert_refused(conclusion, ['Too costly.'], accepted('Too costly.'))
+    end
+  end
+
+  def test_other_recommendations_stay_blocked_and_show_the_remaining_concern
+    with_result do |result, path|
+      merge_with(result, 'Proceed', ['Frequency is unknown.', 'The flag has no test.'],
+                 accepted('Frequency is unknown.'))
+      result['disposition']['recommendation'] = 'Revise before merge'
+      github, = publish(result, path)
+      body = github.bodies.first.first
+
+      assert_includes body, "**Unresolved concerns:**\n\n- The flag has no test."
+      assert_includes body, '- Frequency is unknown. — Decision:'
+      assert_raises(Shaka::Error) { Shaka::PostImplementationEvidence.new(github).call('a' * 40) }
     end
   end
 end

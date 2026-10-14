@@ -12,11 +12,35 @@ module Shaka
 
     def read(content, head:, report:)
       validate(content, head:)
+      accepted = accepted_concerns(content, report)
       raise Error, 'Merge disposition cannot override a blocking conclusion or unresolved concerns' if
-        merge?(content) && !PostImplementationReport.ready?(report)
+        merge?(content) && !PostImplementationReport.ready?(report.merge('concerns' => unresolved(report, accepted)))
 
-      content.slice('head', 'recommendation', 'reason', 'next_action')
+      content.slice('head', 'recommendation', 'reason', 'next_action').merge('accepted_concerns' => accepted)
     end
+
+    # Checks that each acceptance names one listed concern and records a decision, not who decided.
+    def accepted_concerns(content, report)
+      entries = content.fetch('accepted_concerns', [])
+      raise Error, 'PR disposition accepted_concerns needs each concern and a one-line decision without < or `' unless
+        entries.is_a?(Array) && entries.all? { |entry| acceptance?(entry) }
+
+      listed_once!(entries.map { |entry| entry['concern'] }, report)
+      entries.map { |entry| entry.slice('concern', 'decision') }
+    end
+
+    def listed_once!(names, report)
+      raise Error, 'PR disposition accepts a concern the checkpoint report does not list, or lists one twice' unless
+        names.uniq == names && (names - report.fetch('concerns')).empty?
+    end
+
+    # One plain line, so a decision cannot hide or imitate the rest of the published comment.
+    def acceptance?(entry)
+      entry.is_a?(Hash) && %w[concern decision].all? { |key| PostImplementationReport.text?(entry[key]) } &&
+        !entry['decision'].match?(/[\r\n<`]/)
+    end
+
+    def unresolved(report, accepted) = report.fetch('concerns') - accepted.map { |entry| entry['concern'] }
 
     def validate(content, head:)
       raise Error, 'PR disposition must be an object for the verified head' unless
@@ -50,12 +74,22 @@ module Shaka
       ["**Recommended next action:** #{disposition.fetch('recommendation')}", @summary,
        "**Next action:** #{disposition.fetch('next_action')}",
        "**Evaluation:** #{report.fetch('conclusion')}", verification,
-       evidence_lines(report), supporting_analysis(report, verification)].join("\n\n")
+       evidence_lines(report, disposition.fetch('accepted_concerns')),
+       supporting_analysis(report, verification)].join("\n\n")
     end
 
-    def evidence_lines(report)
-      [concern_section(report),
+    def evidence_lines(report, accepted)
+      open = report.merge('concerns' => PostImplementationDisposition.unresolved(report, accepted))
+      [concern_section(open), *accepted_section(accepted),
        'Required checks, reviews, and merge authority still apply.'].join("\n\n")
+    end
+
+    def accepted_section(accepted)
+      return [] if accepted.empty?
+
+      items = accepted.map { |entry| "- #{entry['concern']} — Decision: #{entry['decision']}" }
+      ['**Concerns recorded as accepted by the maintainer:** ' \
+       "Ruby checked that each records a decision, not who made it.\n\n#{items.join("\n")}"]
     end
 
     def incomplete_body

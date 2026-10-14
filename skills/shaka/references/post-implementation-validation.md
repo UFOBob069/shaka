@@ -164,8 +164,29 @@ Give each owner field one job:
 
 Publish the reviewer's report fields unchanged.
 
+When the maintainer explicitly accepts a listed concern for this task, record it in
+`disposition.accepted_concerns`, one entry per concern:
+
+```json
+{
+  "accepted_concerns": [
+    {
+      "concern": "THE CONCERN TEXT, COPIED EXACTLY FROM THE REPORT",
+      "decision": "The maintainer's decision in their words, with where and when they gave it."
+    }
+  ]
+}
+```
+
+Record only a decision the maintainer gave for this concern, in chat or in a comment
+the `comments` command admits from a maintainer; do not infer one from silence, a start
+word, or merge approval. Write the decision on one line without `<` or backticks. Ask through the existing decision path when
+it is missing. Repeat an entry for a later head only when its report lists the same
+concern and the change behind it is unchanged; ask again when the concern differs.
+
 Ruby checks the disposition's head, vocabulary, reason, and concrete next-action field.
-It rejects **Merge** when verification has a blocking conclusion or unresolved concerns.
+It rejects **Merge** when verification has a blocking conclusion, or lists a concern
+without a matching `accepted_concerns` entry, and never verifies who made a decision.
 The other three values publish the existing `blocked` attestation, including when
 verification says **Proceed**. A disposition for an older head cannot publish. A failed
 or opted-out execution has no completed verification to attach a disposition to;
@@ -190,7 +211,7 @@ criterion; report only evidence that affects the decision. For routine **Proceed
 results, aim for 60–100 visible words; this is prompt guidance, not a Ruby word limit.
 Blockers and consequential tradeoffs can need more explanation.
 A completed execution with concerns does not recommend
-merging. Failed executions stay blocked; an opt-out states that no product review
+merging until the maintainer accepts each one; the comment then lists each decision. Failed executions stay blocked; an opt-out states that no product review
 completed. Keep demonstrated defects separate from value judgments and missing evidence.
 
 For [PR #354's reviewed head](https://github.com/shakacode/shaka/pull/354#issuecomment-5922898266),
