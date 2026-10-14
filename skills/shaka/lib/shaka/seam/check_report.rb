@@ -16,14 +16,16 @@ module Shaka
         new(config:, mode: LOCAL_MODE)
       end
 
-      def self.trusted(config, ref:, writing_style: nil, warning: nil)
-        new(config:, mode: TRUSTED_MODE, ref:, writing_style:, warning:)
+      def self.trusted(config, ref:)
+        new(config:, mode: TRUSTED_MODE, ref:)
       end
 
       def self.from_ref(root:, ref:)
         config = TrustedConfigSource.from_ref(root:, ref:)
         mode = Configuration::SettingsPreview.ref(root:) ? 'preview/local' : TRUSTED_MODE
-        new(config:, mode:, ref:)
+        sha = Configuration.resolve_commit(root:, ref:, label: 'writing style ref')
+        writing_style, warning = WritingStyle.optional { WritingStyle.load(root:, sha:) }
+        new(config:, mode:, ref:, writing_style:, warning:)
       end
 
       def self.private_settings(root:, ref:)

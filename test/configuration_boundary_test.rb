@@ -13,7 +13,7 @@ class ConfigurationBoundaryTest < Minitest::Test
                    merge_review_comparison.rb seam/initializer_readme.rb seam/pointer.rb writing_style.rb].freeze
   OTHER_GIT_READ = %w[local_review/criteria.rb seam/upgrade_plan/indexed_references.rb writing_style.rb].freeze
   OTHER_FILE_IO = %w[
-    hosts/codex_wake.rb trial/prepare.rb trial/command.rb writing_style.rb install/display.rb install/checkout.rb install/official.rb
+    hosts/codex_wake.rb trial/prepare.rb trial/command.rb install/display.rb install/checkout.rb install/official.rb
     checkpoint.rb doctor.rb doctor/installation_identity.rb doctor/cursor_stop_hook.rb local_review/ledger_running.rb
     enforcement_config.rb evidence/command.rb evidence/verification.rb installer.rb install/source.rb install/tree.rb
     install/link_lock.rb install/package.rb install/package_verification.rb install/version.rb local_review/ledger.rb
@@ -28,7 +28,7 @@ class ConfigurationBoundaryTest < Minitest::Test
     seam/private_recovery/preparation.rb seam/private_recovery/rotation.rb seam/private_recovery/identity.rb
     seam/upgrade_plan/reference_dependencies.rb seam/upgrade_plan/continued_references.rb seam/upgrader/recovery.rb
     seam/upgrade_plan/symlink_chain.rb seam/private_recovery/exclusion.rb seam/upgrader.rb seam/upgrader/filesystem.rb
-  ].freeze
+  ].push('writing_style.rb').freeze
 
   def test_public_paths_remain_concrete_and_independent
     paths = Shaka::Configuration::Paths

@@ -1,47 +1,46 @@
-# Writing guidance
+# Shared writing rules
 
-Before publishing, reread each summary for these points:
+- Use these rules for publication prose and checkpoint reports.
+- When trusted `AGENTS.md` exists, read its writing preferences and any Markdown
+  style file it explicitly points to. Those preferences take precedence; current
+  task instructions can refine them.
 
+- Apply `writing_style.guide` from trusted seam output as repository defaults when present.
+
+## Plain language and organization
+
+- Prefer lists for instructions, findings, and explanations with multiple points.
+  Use numbered lists when order matters or readers need to refer to individual points.
 - Lead with the outcome its reader notices.
 - Give each sentence one main idea and a clear subject and verb.
 - Put conditions beside the behavior they limit.
-- Use familiar words; explain necessary technical terms.
+- Use familiar words; explain unfamiliar project terms through the behavior they name.
+- Name the feature, user, or dependency behind references to an agreed design
+  or earlier discussion; supply the context the reader needs.
 - Keep exact commands, identifiers, risks, and evidence intact.
-- In replies, state the decision and use the thread's existing context.
-- Delete greetings, praise, repeated explanations, and claims of significance
-  that add no information.
+- Delete greetings, praise, and claims of significance that add no information.
+  State each visible conclusion once; different wording or labels do not add meaning.
+- Describe observable behavior rather than implementation jargon. For example:
+  - Instead of: “Adds validation of the configured base parameter.”
+  - Write: “Shaka now rejects an invalid base branch before the agent starts work.”
+- Keep explanations proportional to the change. Aim for sentences under 25 words
+  and paragraphs of about four sentences when prose is useful.
 
-For example, replace “Adds validation of the configured base parameter” with
-“Shaka now rejects an invalid base branch before the agent starts work.” A code
-walkthrough can then explain the validation and its edge cases.
+## Review evidence
 
-Use `writing_style.guide` from trusted `shaka seam check` output when the repository
-has `.agents/writing-style.md`. When trusted `AGENTS.md` exists, read its writing
-preferences and linked style files from the trusted branch. Current task
-instructions take precedence, followed by user-level writing instructions,
-trusted `AGENTS.md`, then the conventional style defaults. Use the guidance above in every
-repository; current task instructions can refine it. No style schema or prose
-score is needed beyond the limits below. Self-edit the content JSON; do not rewrite the rendered GitHub
-body or invoke a separate rewriting skill for Shaka's publication step.
-
-## Point readers to the code
-
-Reviewing code is easier than reading a wall of text about it. The diff already
-shows what changed, so prose should say why, flag what needs a close look, and
-link to it. A description sends the reader to the walkthrough; a walkthrough
-links each step to the lines it explains.
-
-Keep the text in proportion to the change. A three-line fix needs a sentence or
-two, not a page. Describe the result at this head; review rounds belong in the
-description's collapsed history, not in its visible sections.
-
-Aim for sentences under 25 words and paragraphs of about four sentences.
-`description` and `walkthrough` refuse text past the
-[prose limits](https://github.com/shakacode/shaka/blob/main/docs/settings.md#prose_limits): long sentences, long
-paragraphs, or more visible words than the change warrants. Split the text,
-collapse supporting detail into `details`, or link to the code, then publish again.
-Record each refusal in the description's review history details: what it
-reported, a quoted passage or the word count, and what you changed.
+- Put the current-head recommendation, main reason, and next action before analysis.
+- Name model settings with their provenance; a configured model is not proof of a served model.
+- Name the user benefit, scope, and unfinished verification when they affect the decision.
+- Distinguish verified results, a recommendation to merge, and permission to merge.
+  Keep unresolved blockers visible.
+- State whether a simpler alternative revises this PR or replaces it.
+- Supporting usage and history can remain collapsed.
+- State a risk as who or what is affected and what they would see fail: “API
+  clients get a 500 until the cache warms,” not “medium blast radius.”
+- State what reverting a commit restores and what it leaves:
+  - Reverting code does not restore deleted or rewritten stored data.
+  - It does not undo outside effects such as sent email, charges, or published packages.
+  - Name each such effect and how to recover from it, or that it cannot be recovered.
 
 ## Loading repository defaults
 
