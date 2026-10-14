@@ -70,6 +70,21 @@ job. The walkthrough should explain that choice; tests should exercise the
 export behavior. You can then judge whether the approach suits the expected
 volume and whether important cases are missing.
 
+## Check the latest changes
+
+Before merging, open the PR to see how the change was checked. Tests and reviews
+should cover its latest code. For visible changes, look for results from using
+the app, including desktop and mobile where relevant. A review app should let
+you try the feature with the data and services it needs.
+
+Good checks also show that they can catch the problem. For example, a smoke test
+should pass on a healthy page and fail when required content is missing. This
+is a **negative control**.
+
+Use focused AI review for code and tests, and spend human review time on decisions
+that need your knowledge. An agent can check a billing calculation; someone who
+knows the contract must decide whether that is the right billing rule.
+
 ## See what people said
 
 Agent posts can outnumber a person's comments many times over: on one Shaka PR,
