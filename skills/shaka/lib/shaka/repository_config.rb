@@ -12,7 +12,7 @@ require_relative 'repository_config/schema'
 module Shaka
   # Loads the small, typed repository contract used by the workflow.
   class RepositoryConfig
-    DEFAULT_WIP = { 'include_locations' => true }.freeze
+    DEFAULT_WIP = { 'include_checkout_path' => true }.freeze
     DEFAULT_PR_DESCRIPTION = { 'show_shaka_credit' => true, 'show_human_comments' => true,
                                'max_human_comments' => 20 }.freeze
 
@@ -99,7 +99,7 @@ module Shaka
       @review = with_default_review_wait(@data.fetch('review'))
       merge = @data.fetch('merge')
       @merge = merge.merge('limits' => MergeLimits.new(merge.fetch('limits', {})).to_h)
-      @wip = DEFAULT_WIP.merge(@data.fetch('wip', {}))
+      @wip = WipSchema.resolve(@data.fetch('wip', {}))
       assign_presentation
     end
 

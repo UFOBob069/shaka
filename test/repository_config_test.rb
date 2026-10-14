@@ -213,21 +213,37 @@ end
 class RepositoryConfigWipTest < Minitest::Test
   include RepositoryConfigTestHelpers
 
-  def test_wip_defaults_to_publishing_locations
+  def test_wip_defaults_to_publishing_the_checkout_path
     with_repository do |root|
-      assert_equal({ 'include_locations' => true }, Shaka::RepositoryConfig.load(root:).wip)
+      assert_equal({ 'include_checkout_path' => true }, Shaka::RepositoryConfig.load(root:).wip)
     end
   end
 
   def test_the_effective_contract_includes_the_wip_default
     with_repository do |root|
-      assert_equal({ 'include_locations' => true }, Shaka::RepositoryConfig.load(root:).to_h.fetch('wip'))
+      assert_equal({ 'include_checkout_path' => true }, Shaka::RepositoryConfig.load(root:).to_h.fetch('wip'))
     end
   end
 
-  def test_a_repository_can_opt_out_of_publishing_locations
-    with_repository('wip' => { 'include_locations' => false }) do |root|
-      assert_equal({ 'include_locations' => false }, Shaka::RepositoryConfig.load(root:).wip)
+  def test_a_repository_can_hide_the_checkout_path
+    with_repository('wip' => { 'include_checkout_path' => false }) do |root|
+      assert_equal({ 'include_checkout_path' => false }, Shaka::RepositoryConfig.load(root:).wip)
+    end
+  end
+
+  def test_the_earlier_location_setting_now_sets_the_checkout_path
+    [true, false].each do |value|
+      with_repository('wip' => { 'include_locations' => value }) do |root|
+        assert_equal({ 'include_checkout_path' => value }, Shaka::RepositoryConfig.load(root:).wip)
+      end
+    end
+  end
+
+  def test_rejects_both_names_for_the_checkout_path_setting
+    with_repository('wip' => { 'include_locations' => false, 'include_checkout_path' => true }) do |root|
+      error = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
+
+      assert_includes error.message, 'set only wip.include_checkout_path'
     end
   end
 
@@ -243,7 +259,7 @@ class RepositoryConfigWipTest < Minitest::Test
     with_repository('recovery' => { 'workspace_path' => false }) do |root|
       error = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }
 
-      assert_includes error.message, 'wip.include_locations'
+      assert_includes error.message, 'wip.include_checkout_path'
     end
   end
 

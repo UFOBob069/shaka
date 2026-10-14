@@ -623,10 +623,10 @@ phases:
         as a collapsed `WIP Details` disclosure. Its workspace field carries the checkout path
         and its task field, published as Chat name, the current host title read before
         publication using that procedure; a suggested title alone is not a confirmed name.
-        Its thread field, published as Chat link, carries the host's link back to this session when the selected
-        `wip.include_locations` is `true`. Team and private setup both generate `true`. The description
-        renderer uses `REDACTED` for an explicitly false setting. Unread or unavailable settings
-        withhold both locations and explain the recovery action; ownership and the current commit remain visible. Inspect other supplied prose for private
+        Its thread field, published as Chat link, carries the host's link back to this session whatever
+        `wip.include_checkout_path` says. Team and private setup both generate `true`. The description
+        renderer uses `REDACTED` for the checkout path when the setting is explicitly false. Unread or unavailable settings
+        withhold the checkout path and explain the recovery action; the chat link, ownership, and the current commit remain visible. Inspect other supplied prose for private
         content. The chat link follows the guide's rule for the host: Codex builds it from
         `CODEX_THREAD_ID`, Claude Code asks the host for this session's metadata and publishes
         the `link` it returns, and any host the guide does not cover, or that reports no link,

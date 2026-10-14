@@ -41,7 +41,7 @@ module PrivateTrialPublicationHelpers
 
   def assert_unfinished_private(body, root)
     assert_includes body, 'UNKNOWN: rerun missing evidence'
-    assert_includes body, '| wip.include_locations | true |'
+    assert_includes body, '| wip.include_checkout_path | true |'
     assert_includes body, "| Workspace | #{CHECKOUT} |"
     assert_includes body, "| Chat link | #{SESSION} |"
     refute_includes body, PRIVATE_LINK
@@ -139,15 +139,13 @@ class PrivateTrialPublicationTest < Minitest::Test
   end
 
   def test_explicit_supported_location_choice_is_preserved
-    settings = Shaka::PublicationSettings.new(current: { 'wip.include_locations' => false })
-    spec = HandoffFixtures::WIP.merge('workspace' => '/synthetic/private-checkout', 'thread' => PRIVATE_LINK)
+    settings = Shaka::PublicationSettings.new(current: { 'wip.include_checkout_path' => false })
+    spec = HandoffFixtures::WIP.merge('workspace' => '/synthetic/private-checkout', 'thread' => SESSION)
     content = description_content.merge('wip' => spec)
     body = Shaka::Publication.description(content, nil, nil, settings)
     assert_includes body, '| Workspace | REDACTED |'
-    assert_includes body, '| Chat link | REDACTED |'
-    refute_includes body, PRIVATE_LINK
+    assert_includes body, "| Chat link | #{SESSION} |"
     refute_includes body, spec.fetch('workspace')
-    assert_equal PRIVATE_LINK, spec.fetch('thread')
   end
 
   private
@@ -157,7 +155,7 @@ class PrivateTrialPublicationTest < Minitest::Test
     assert_includes body, '| source.configuration | private/local | private/local | private/local |'
     assert_includes body, '| review.required | none | none | none |'
     assert_includes body, "| source.revision | #{([ref] * 3).join(' | ')} |"
-    assert_includes body, '| wip.include_locations | true | true | true |'
+    assert_includes body, '| wip.include_checkout_path | true | true | true |'
     assert_includes body, "| Workspace | #{CHECKOUT} |"
     assert_includes body, "| Chat link | #{SESSION} |"
     assert_includes body, 'Local files remain local'

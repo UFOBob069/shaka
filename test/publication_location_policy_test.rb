@@ -7,16 +7,22 @@ require 'shaka/publication/wip_details'
 class PublicationLocationPolicyTest < Minitest::Test
   include EvidenceFixture
 
-  def test_explicit_hidden_policy_redacts_private_locations
-    settings = Shaka::PublicationSettings.new(current: { 'wip.include_locations' => false })
+  LOCATOR = 'codex://threads/0199a213-81c0-7800-8aa1-bbab2a035a53'
+  RECOVERY = Shaka::WipDetails::FIELDS.keys.to_h { |key| [key, 'UNKNOWN'] }.merge(
+    'owner' => 'laptop · Codex · t1', 'revision' => 'a' * 40, 'state' => 'paused',
+    'next_action' => 'Resume the owning chat'
+  ).freeze
+
+  def test_hiding_the_checkout_path_keeps_what_recovery_needs
+    settings = Shaka::PublicationSettings.new(current: { 'wip.include_checkout_path' => false })
     body = location_body(settings)
-    assert_includes body, '| Chat link | REDACTED |'
     assert_includes body, '| Workspace | REDACTED |'
-    assert_locations_withheld(body)
+    assert_checkout_path_withheld(body)
+    assert_recovery_fields_kept(body)
   end
 
   def test_allowed_policy_preserves_locations_and_host_unknowns
-    settings = Shaka::PublicationSettings.new(current: { 'wip.include_locations' => true })
+    settings = Shaka::PublicationSettings.new(current: { 'wip.include_checkout_path' => true })
     assert_includes location_body(settings), '| Workspace | /private/customer/project |'
     assert_includes location_body(settings, thread: 'UNKNOWN'), '| Chat link | UNKNOWN |'
   end
@@ -26,7 +32,8 @@ class PublicationLocationPolicyTest < Minitest::Test
       body = location_body(prepare(root, nil, {}, head: ref))
       assert_includes body, 'settings not read'
       assert_includes body, 'rerun description with --ref'
-      assert_locations_withheld(body)
+      assert_checkout_path_withheld(body)
+      assert_recovery_fields_kept(body)
     end
   end
 
@@ -35,15 +42,33 @@ class PublicationLocationPolicyTest < Minitest::Test
       body = location_body(prepare(root, 'missing-policy-ref', {}, head: ref))
       assert_includes body, 'settings unavailable'
       assert_includes body, 'fix seam check --ref'
-      assert_locations_withheld(body)
+      assert_checkout_path_withheld(body)
+      assert_recovery_fields_kept(body)
       refute_includes body, 'missing-policy-ref'
     end
   end
 
+  def test_a_committed_earlier_setting_name_still_hides_the_checkout_path
+    with_checkout do |root, _ref|
+      path = Dir[File.join(root, '.agents/{agent-workflow.yml,shaka/config.yml}')].first
+      File.write(path, YAML.dump(YAML.safe_load_file(path).merge('wip' => { 'include_locations' => false })))
+      git(root, 'add', '-A')
+      commit(root)
+      body = location_body(prepare(root, git(root, 'rev-parse', 'HEAD'), {}))
+      assert_includes body, '| Workspace | REDACTED |'
+      assert_recovery_fields_kept(body)
+    end
+  end
+
+  def test_the_earlier_setting_name_no_longer_reaches_publication
+    settings = Shaka::PublicationSettings.new(current: { 'wip.include_locations' => true })
+    assert_checkout_path_withheld(location_body(settings))
+  end
+
   def test_missing_location_field_cannot_authorize_publication
     settings = Shaka::PublicationSettings.new(current: {})
-    assert_locations_withheld(location_body(settings))
-    refute_predicate settings, :include_locations?
+    assert_checkout_path_withheld(location_body(settings))
+    refute_predicate settings, :include_checkout_path?
   end
 
   def test_required_settings_load_still_refuses_failure
@@ -57,16 +82,21 @@ class PublicationLocationPolicyTest < Minitest::Test
 
   private
 
-  def location_body(settings, thread: 'https://private.example/session')
-    wip = Shaka::WipDetails::FIELDS.keys.to_h { |key| [key, 'UNKNOWN'] }
-    wip['workspace'] = '/private/customer/project'
-    wip['thread'] = thread
-    Shaka::WipDetails.new(wip, location_redaction: settings.location_redaction).detail.fetch('body')
+  def location_body(settings, thread: LOCATOR)
+    wip = RECOVERY.merge('workspace' => '/private/customer/project', 'thread' => thread)
+    Shaka::WipDetails.new(wip, path_redaction: settings.path_redaction).detail.fetch('body')
   end
 
-  def assert_locations_withheld(body)
+  def assert_checkout_path_withheld(body)
     refute_includes body, '/private/customer/project'
-    refute_includes body, 'https://private.example/session'
+  end
+
+  def assert_recovery_fields_kept(body)
+    assert_includes body, "| Chat link | #{LOCATOR} |"
+    assert_includes body, '| Owner | laptop · Codex · t1 |'
+    assert_includes body, "| Revision | #{'a' * 40} |"
+    assert_includes body, '| State | paused |'
+    assert_includes body, '| Next action | Resume the owning chat |'
   end
 
   def prepare(root, ref, options, head: ref)

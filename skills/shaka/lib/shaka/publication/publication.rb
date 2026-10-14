@@ -107,7 +107,7 @@ module Shaka
     # The note is optional because it disappears once GitHub confirms the outcome.
     def wip
       spec = @content['wip']
-      spec.nil? ? [] : [details_block(WipDetails.new(spec, location_redaction: @settings.location_redaction).detail)]
+      spec.nil? ? [] : [details_block(WipDetails.new(spec, path_redaction: @settings.path_redaction).detail)]
     end
 
     def refuse_free_form_wip(items)

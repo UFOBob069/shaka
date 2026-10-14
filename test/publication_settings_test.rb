@@ -74,7 +74,7 @@ class PublicationSettingsTest < Minitest::Test
   def test_unfinished_team_description_preserves_its_location_choice
     with_checkout do |root, ref|
       settings = prepare(root, ref, {})
-      assert_predicate settings, :include_locations?
+      assert_predicate settings, :include_checkout_path?
       assert_includes settings.detail.fetch('body'), "Current merge input (not evidence): trusted/team at #{ref}"
     end
   end

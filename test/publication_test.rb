@@ -446,16 +446,17 @@ class PublicationWipDetailsTest < Minitest::Test
     assert_equal ['| Field | Value |', '| --- | --- |'], lines.first(2)
     labels = lines.drop(2).map { |line| line.split(' | ').first.delete_prefix('| ') }
     assert_equal Shaka::WipDetails::FIELDS.values, labels
-    assert_includes lines.join("\n"), '| Chat link | Withheld: settings not read; rerun description with --ref |'
+    assert_includes lines, '| Chat link | UNKNOWN |'
+    assert_includes lines, '| Workspace | Withheld: settings not read; rerun description with --ref |'
     assert_includes lines, '| Stopped because | paused |'
   end
 
-  def test_unknown_policy_withholds_supplied_locations_without_claiming_redaction
-    wip = WIP.merge('workspace' => '/private/customer/project', 'thread' => 'https://private.example/session')
+  def test_unknown_policy_withholds_the_checkout_path_without_claiming_redaction
+    wip = WIP.merge('workspace' => '/private/customer/project', 'thread' => 'claude://claude.ai/epitaxy/local_1')
     rendered = render(wip)
-    assert_includes rendered, 'Withheld: settings not read; rerun description with --ref'
+    assert_includes rendered, '| Workspace | Withheld: settings not read; rerun description with --ref |'
     refute_includes rendered, '/private/customer/project'
-    refute_includes rendered, 'https://private.example/session'
+    assert_includes rendered, '| Chat link | claude://claude.ai/epitaxy/local_1 |'
     refute_includes rendered, 'REDACTED'
   end
 

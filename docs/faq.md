@@ -144,9 +144,9 @@ how it differs from the code walkthrough, and current report labels.
 
 ## Can I hide my checkout path while keeping the chat locator?
 
-Currently, `wip.include_locations: false` hides both. [#482](https://github.com/shakacode/shaka/issues/482)
-tracks independent checkout-path visibility. A chat locator helps resume the
-owning chat; its access rules depend on the host. See [WIP settings](settings.md#wipinclude_locations).
+Yes. Set `wip.include_checkout_path: false`. WIP Details then show `REDACTED` for
+the checkout path and keep the chat locator, which helps resume the owning chat.
+See [WIP settings](settings.md#wipinclude_checkout_path).
 
 ## What does Shaka enforce, and what relies on the agent?
 

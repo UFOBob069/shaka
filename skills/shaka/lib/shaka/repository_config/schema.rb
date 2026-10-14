@@ -120,7 +120,7 @@ module Shaka
 
       def reject_retired_root_keys
         if @data.key?('recovery')
-          raise Error, 'recovery moved to wip.include_locations; migrate the location setting before use'
+          raise Error, 'recovery moved to wip.include_checkout_path; migrate the location setting before use'
         end
 
         retired = %w[protection trusted_actions plan].find { |key| @data.key?(key) }

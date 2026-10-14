@@ -145,8 +145,8 @@ module Shaka
           @blocking << 'recovery must contain one boolean location setting'
           return
         end
-        @established['wip'] = { 'include_locations' => value.values.first }
-        @retained << 'wip.include_locations'
+        @established['wip'] = { 'include_checkout_path' => value.values.first }
+        @retained << 'wip.include_checkout_path'
       end
 
       def valid_legacy_location?(value)

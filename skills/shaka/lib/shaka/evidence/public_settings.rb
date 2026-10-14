@@ -22,7 +22,7 @@ module Shaka
         'opening_check.reviewer' => %w[anthropic/claude openai/codex xai/grok deepseek/openrouter],
         'opening_check.effort' => %w[none minimal low medium high xhigh max ultra]
       }.freeze
-      BOOLEANS = %w[wip.include_locations opening_check.enabled opening_check.external_enabled
+      BOOLEANS = %w[wip.include_checkout_path opening_check.enabled opening_check.external_enabled
                     pr_description.show_shaka_credit pr_description.show_human_comments].freeze
       NUMBERS = %w[merge.limits.max_changed_files merge.limits.max_changed_lines merge.limits.max_commits
                    prose_limits.max_sentence_words prose_limits.max_paragraph_words prose_limits.max_description_words

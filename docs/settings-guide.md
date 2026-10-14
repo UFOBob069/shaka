@@ -108,6 +108,5 @@ Individual checkpoint settings are part of [#481](https://github.com/shakacode/s
 
 **WIP Details** records the chat locator, checkout path, state, and next action.
 A locator helps you resume the owning chat when your host can reach it.
-Currently, [the location setting](settings.md#wipinclude_locations) hides both
-the locator and path together. [#482](https://github.com/shakacode/shaka/issues/482)
-tracks keeping locators while independently controlling checkout-path visibility.
+[The checkout-path setting](settings.md#wipinclude_checkout_path) hides the path
+and keeps the locator.

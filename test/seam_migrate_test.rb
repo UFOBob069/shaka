@@ -630,7 +630,7 @@ class SeamMigrateRecoveryLocationsTest < Minitest::Test
       report = migrate_report(root, sha)
 
       assert_empty report.fetch('blocking')
-      assert_equal({ 'include_locations' => false }, report.dig('established', 'wip'))
+      assert_equal({ 'include_checkout_path' => false }, report.dig('established', 'wip'))
     end
   end
 
@@ -650,7 +650,7 @@ class SeamMigrateRecoveryLocationsTest < Minitest::Test
       report = migrate_report(root, sha)
 
       assert_empty report.fetch('blocking')
-      assert_equal({ 'include_locations' => false }, report.dig('established', 'wip'))
+      assert_equal({ 'include_checkout_path' => false }, report.dig('established', 'wip'))
     end
   end
 
@@ -679,7 +679,7 @@ class SeamMigrateRecoveryLocationsTest < Minitest::Test
       migrate_report(root, sha, '--apply')
       config = YAML.safe_load_file(File.join(root, '.agents/agent-workflow.yml'))
 
-      assert_equal({ 'include_locations' => false }, config.fetch('wip'))
+      assert_equal({ 'include_checkout_path' => false }, config.fetch('wip'))
     end
   end
 

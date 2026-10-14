@@ -59,12 +59,12 @@ module Shaka
       @location_diagnostic = location_diagnostic
     end
 
-    # An unknown policy cannot authorize publishing locations, even on unfinished PRs.
-    def include_locations? = @current&.fetch('wip.include_locations', false) == true
+    # An unknown policy cannot authorize publishing the checkout path, even on unfinished PRs.
+    def include_checkout_path? = @current&.fetch('wip.include_checkout_path', false) == true
 
-    def location_redaction
-      return if include_locations?
-      return 'REDACTED' if @current&.fetch('wip.include_locations', nil) == false
+    def path_redaction
+      return if include_checkout_path?
+      return 'REDACTED' if @current&.fetch('wip.include_checkout_path', nil) == false
 
       @location_diagnostic
     end

@@ -138,7 +138,8 @@ module PrivateDeliveryFixture
   def write_private
     FileUtils.mkdir_p(File.join(@root, '.agents/shaka/bin'))
     create_new_commands(@root)
-    data = config.merge('wip' => { 'include_locations' => false }, 'opening_check' => { 'external_enabled' => false })
+    data = config.merge('wip' => { 'include_checkout_path' => false },
+                        'opening_check' => { 'external_enabled' => false })
     File.write(File.join(@root, '.agents/shaka/config.yml'), YAML.dump(data))
   end
 

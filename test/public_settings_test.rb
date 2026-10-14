@@ -18,12 +18,12 @@ class PublicSettingsTest < Minitest::Test
   end
 
   def test_typed_values_and_known_overrides_survive_but_custom_values_do_not
-    snapshot = { 'merge.preference' => 'auto', 'wip.include_locations' => false,
+    snapshot = { 'merge.preference' => 'auto', 'wip.include_checkout_path' => false,
                  'merge.limits.max_commits' => 3, 'overrides.reviewer' => 'openai/codex',
                  'overrides.effort' => 'medium', 'overrides.model' => 'private-model' }
     public = Shaka::Evidence::PublicSettings.sanitize(snapshot)
     assert_equal 'auto', public['merge.preference']
-    refute public['wip.include_locations']
+    refute public['wip.include_checkout_path']
     assert_equal 3, public['merge.limits.max_commits']
     assert_equal 'medium', public['overrides.effort']
     assert_equal 'REDACTED', public['overrides.model']

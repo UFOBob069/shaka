@@ -36,9 +36,9 @@ module Shaka
       'WIP Owner must be machine alias · host · owner tag; use UNKNOWN for unavailable information.'
     end
 
-    def initialize(spec, location_redaction: nil)
+    def initialize(spec, path_redaction: nil)
       @spec = spec
-      @location_redaction = location_redaction
+      @path_redaction = path_redaction
     end
 
     def detail
@@ -72,7 +72,7 @@ module Shaka
     end
 
     def cell(key)
-      return @location_redaction if @location_redaction && %w[workspace thread].include?(key)
+      return @path_redaction if @path_redaction && key == 'workspace'
 
       value = @spec[key]
       unless value.is_a?(String) && !value.strip.empty? && !value.match?(/[\r\n]/)

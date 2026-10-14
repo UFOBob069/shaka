@@ -28,7 +28,7 @@ class SettingsPreviewConsumersTest < Minitest::Test
       assert_equal 19, Shaka::ProseLimits.from_ref(root:, ref: trusted).to_h['max_sentence_words']
       snapshot = Shaka::PublicationSettings.current_settings(root:, ref: trusted,
                                                              repository: 'owner/repo', required: true)
-      refute_predicate Shaka::PublicationSettings.new(current: snapshot), :include_locations?
+      refute_predicate Shaka::PublicationSettings.new(current: snapshot), :include_checkout_path?
     end
   end
 
@@ -54,7 +54,7 @@ class SettingsPreviewConsumersTest < Minitest::Test
     data = settings(root)
     data['opening_check'] = { 'external_enabled' => false, 'prompt_file' => '.agents/preview-opening.md' }
     data['prose_limits'] = { 'max_sentence_words' => 19 }
-    data['wip'] = { 'include_locations' => false }
+    data['wip'] = { 'include_checkout_path' => false }
     File.write(File.join(root, '.agents/preview-opening.md'), 'Selected preview writing instructions.')
     select_preview(root, write_settings(root, data))
     File.write(File.join(root, '.agents/preview-opening.md'), 'Unselected candidate instructions.')

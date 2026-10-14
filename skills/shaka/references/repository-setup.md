@@ -19,7 +19,7 @@ Supply `--ci-review-job NAME` with a matching review policy when a real CI revie
 job exists. If the repository defers hosted CI, supply
 `--validate-local-command COMMAND` and `--trigger-hosted-ci-command COMMAND`
 together. The private generator reuses the normal new-layout wrappers and records
-Ask and `wip.include_locations: true`, matching team setup. WIP Details include the
+Ask and `wip.include_checkout_path: true`, matching team setup. WIP Details include the
 checkout path and session link by default. Local files remain local while the PR
 records permitted settings, with sensitive configuration fields marked `REDACTED`.
 A local `merge.preference` cannot establish merge authority. An explicit
@@ -184,7 +184,7 @@ required checks at all, keep merge preference `ask`.
 
 The initializer writes `.agents/shaka/config.yml`, the three required wrappers in
 `.agents/shaka/bin/`, and the `.agents/shaka.md` pointer. The YAML holds `version`,
-`review`, `merge`, the default `branches.name`, and `wip.include_locations: true`.
+`review`, `merge`, the default `branches.name`, and `wip.include_checkout_path: true`.
 Each wrapper finds the repository root with Git, so it runs the same from any
 directory and from a linked worktree; `--root` must therefore be the Git worktree
 root. The initializer refuses Shaka command names left in `.agents/bin/` without
@@ -192,8 +192,8 @@ their configuration, leaves other `.agents/bin/` tools alone, and checks write
 access before writing anything. It defaults to Ask. Add `--merge-preference auto`
 only with established authority, `--base-branch` for another base, and
 `--required-check` for seam-declared checks. Add optional reviewer entries and
-`repo_prefix` by editing the YAML afterward. Set `wip.include_locations` to
-`false` only when the user asks to hide the checkout path and session link.
+`repo_prefix` by editing the YAML afterward. Set `wip.include_checkout_path` to
+`false` only when the user asks to hide the checkout path.
 If the repository already uses `AGENTS.md`, it may point to its requirements
 there; Shaka does not require that file.
 

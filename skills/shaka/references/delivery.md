@@ -93,7 +93,7 @@ state “waiting for GitHub merge” and the expected SHA. A failed merge also r
 | Chat link | Raw host session URL, using the rules below; otherwise `UNKNOWN` |
 | Last observed activity | Date, time to the minute, and timezone of the latest observed activity, such as `2026-09-25 17:42 PDT`; otherwise `UNKNOWN` |
 | Revision | Branch and full current head as `BRANCH @ SHA`; `handoff` reads the SHA after the last ` @ ` |
-| Workspace | Checkout directory, subject to the privacy setting below |
+| Workspace | Checkout directory, subject to the checkout-path setting below |
 | Unfinished work | Uncommitted, untracked, deleted, stashed, or unpushed work; `none` only after inspection proves the branch holds everything |
 | Stopped because | `running`, `awaiting merge approval`, `awaiting answer`, `paused`, or `interrupted` |
 | Merge authority | Previously established `ask` or `auto`, or `UNKNOWN`; this field grants no authority |
@@ -139,17 +139,21 @@ session's metadata, and copy its `link` verbatim. The host session ID differs fr
 `CLAUDE_CODE_SESSION_ID`, which identifies the usage transcript. Terminal sessions,
 disabled app links, and other hosts use `UNKNOWN` until a supported locator exists.
 A link's availability depends on the owner's machine being reachable.
+Never create or publish a link that shares conversation content, such as a
+share or export URL, to fill this field.
 
-**Privacy:** both team setup and private trials default `wip.include_locations` to
-`true`. Supply the selected default-branch `--ref` to `description`.
-The renderer uses `REDACTED` only when the setting is explicitly false. Unread or
-unavailable settings withhold both locations and explain the recovery action:
+**Privacy:** both team setup and private trials default `wip.include_checkout_path`
+to `true`. Supply the selected default-branch `--ref` to `description`.
+The renderer uses `REDACTED` for Workspace only when the setting is explicitly
+false. Unread or unavailable settings
+withhold Workspace and explain the recovery action:
 rerun `description` with `--ref` when omitted, or fix `seam check --ref` before
-republishing when loading failed. Unfinished publication remains possible without
+republishing when loading failed. No setting hides Chat link; supply `UNKNOWN`
+when the user asks to keep it off the PR. Unfinished publication remains possible without
 validation/review evidence; the diagnostic establishes no readiness. Retain the
 fields and public owner alias. Inspect all other supplied prose before publication.
 A repository where even the owner alias is sensitive should not publish these notes.
-See [configuration](https://github.com/shakacode/shaka/blob/main/docs/settings.md#wipinclude_locations).
+See [configuration](https://github.com/shakacode/shaka/blob/main/docs/settings.md#wipinclude_checkout_path).
 
 **Resume as the original owner:** read the live note before writing. If it names
 another owner or tag, preserve local work without pushing, report the transfer,

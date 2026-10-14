@@ -134,8 +134,8 @@ Merging a feature PR does not by itself publish a package or deploy a release.
   switch the model. Naming either setting can trigger a pause if it is unavailable,
   unverified, or differs from Shaka's recommendation.
 - **Keep public PRs public-safe.** Tell the agent before publication if local paths
-  or chat links should be hidden. [WIP settings](settings.md#wipinclude_locations)
-  control those fields; the agent still needs to inspect all published content.
+  or chat links should be hidden. [WIP settings](settings.md#wipinclude_checkout_path)
+  hide the checkout path; the agent still needs to inspect all published content.
 
 ## Give feedback
 
