@@ -61,6 +61,7 @@ input. You can approve the approach, request revisions, or settle an open questi
 | What changes for users? | The description, preview, and visual comparisons when applicable. |
 | Why this approach? | The walkthrough, linked code, alternatives, and maintenance-cost assessment. |
 | How was it checked? | Validation results and independent review covering the current revision, including gaps. |
+| Which skills contributed? | **Skills used** lists the reported skills, their contributions, and evidence labels. |
 | What did people say? | **Human comments** in the description: each comment a person wrote, its reply, and whether it is still open. |
 | What happened to concerns? | Review findings, replies, and recorded fixes or reasons for declining a suggestion. |
 | What do I need to do? | Open decisions and steps besides merging, with their timing and owner. |
@@ -84,6 +85,17 @@ is a **negative control**.
 Use focused AI review for code and tests, and spend human review time on decisions
 that need your knowledge. An agent can check a billing calculation; someone who
 knows the contract must decide whether that is the right billing rule.
+
+## See which skills contributed
+
+Expand **Skills used** to see the skills reported during planning, implementation,
+review, and integration, with their sources and revisions when available.
+**Agent-reported** means the agent says it applied the skill. The agent selects
+**Corroborated** when it identifies a record confirming invocation or loading.
+Shaka checks metadata shape, not that record or instruction compliance.
+Contributions remain the agent's account, and completeness is unverified.
+Missing records show unknown coverage. Agents are instructed to withhold private
+skill identifiers; Ruby does not screen them.
 
 ## See what people said
 

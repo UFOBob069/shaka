@@ -8,6 +8,9 @@ phases:
   - id: intake
     title: Intake
     body: |-
+      - When using a skill, record it immediately in the existing task record through
+        [skill attribution](<{{package_root}}/skills/shaka/references/skill-attribution.md>).
+        Include planning, implementation, review, and integration use; retain the list on resume.
       - A new work item received after this chat's previous PR closes starts Intake again,
         including the current workflow, claim, and checkpoint. Recommend a new chat for the
         new task; when the user keeps this chat, record its UTC start time before work and
@@ -499,7 +502,8 @@ phases:
         do not invoke a separate rewrite skill. The helper owns identity, headings,
         spacing, tables, details, and UNKNOWN fields. Description keys are `identity`, `summary`,
         optional `checkpoint`, `walkthrough` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
-        required `table`, required `provenance`, required `usage` (`note` and `records` from
+        required `table`, required `provenance`, optional `skills_used` from the task record,
+        required `usage` (`note` and `records` from
         `shaka usage --format json`), and `wip` while the PR is unfinished. A `details` item
         whose summary names usage is refused; walkthroughs also require `head`.
         Link walkthrough code through optional `code_links`, which maps a name to `path`, `from`
