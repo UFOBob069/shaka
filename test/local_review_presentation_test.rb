@@ -47,14 +47,6 @@ class LocalReviewPresentationTest < Minitest::Test
     assert_includes body.split('<details>').first, 'returned after its fix'
   end
 
-  def test_an_earlier_comment_never_borrows_a_later_clean_outcome
-    defect = NIT.merge('class' => 'defect')
-    rounds = [round(EARLIER, findings: [defect]), clean_round]
-    body = comment(rounds, head: EARLIER).render
-    assert_includes body.split('<details>').first, 'Missing test'
-    assert_equal "REVIEWED #{EARLIER} BY openai/codex EFFORT UNKNOWN FINDINGS 1", body.lines.last.strip
-  end
-
   def test_a_clean_later_round_does_not_hide_an_earlier_defect
     defect = NIT.merge('class' => 'defect')
     body = comment([round(EARLIER, findings: [defect]), clean_round]).render
@@ -74,7 +66,7 @@ class LocalReviewPresentationTest < Minitest::Test
     ["## Coverage\n\nCould not inspect the unchanged retry caller.\n\n## Findings\n",
      "**Coverage:** Could not inspect the unchanged retry caller.\n\n"].each do |intro|
       entry = round(report: report(body: "#{intro}1. Missing test"))
-      visible = comment([entry]).render.split('<details>', 2).last.split('### Execution metadata').first
+      visible = comment([entry]).render.split('<summary>Commit ', 2).last.split('<details>').first
       assert_includes visible, 'Could not inspect the unchanged retry caller.'
       refute_includes visible, '1. Missing test'
     end
@@ -91,7 +83,7 @@ class LocalReviewPresentationTest < Minitest::Test
      "~~~~text\n## Findings inside an example\n\nNot a boundary.\n~~~~~"].each do |example|
       intro = "## Coverage\nRan:\n#{example}\n\nMissing the integration environment.\n\n## Findings\n"
       body = comment([round(report: report(body: "#{intro}1. Missing test"))]).render
-      visible = body.split('<details>', 2).last.split('### Execution metadata').first
+      visible = body.split('<summary>Commit ', 2).last.split('<details>').first
       assert_includes visible, example
       assert_includes visible, 'Missing the integration environment.'
       refute_includes visible, '1. Missing test'
@@ -108,8 +100,8 @@ class LocalReviewPresentationTest < Minitest::Test
 
   def clean_round = round(findings: [], report: report(findings: 0))
 
-  def comment(rounds, head: HEAD)
-    Shaka::LocalReviewCommitComment.new({ 'rounds' => rounds }, head:, subject: ->(_) { 'Subject' })
+  def comment(rounds)
+    Shaka::LocalReviewLoopComment.new({ 'rounds' => rounds }, subject: ->(_) { 'Subject' })
   end
 end
 
@@ -157,7 +149,7 @@ class ReviewCollationPresentationTest < Minitest::Test
   private
 
   def comment(rounds)
-    Shaka::LocalReviewCommitComment.new({ 'rounds' => rounds }, head: HEAD, subject: ->(_) { 'Subject' })
+    Shaka::LocalReviewLoopComment.new({ 'rounds' => rounds }, subject: ->(_) { 'Subject' })
   end
 end
 
@@ -168,8 +160,7 @@ class ReviewCoverageSubsectionTest < Minitest::Test
     coverage = "Inspected source: diff only.\nReviewed tests but did not run them.\nMissing context: integration suite."
     ["## coverage\n", '**coverage:** '].each do |prefix|
       entry = round(report: report(body: "#{prefix}#{coverage}\n\n## Findings\n1. Missing test"))
-      body = Shaka::LocalReviewCommitComment.new({ 'rounds' => [entry] }, head: HEAD,
-                                                                          subject: ->(_) { 'Subject' }).render
+      body = Shaka::LocalReviewLoopComment.new({ 'rounds' => [entry] }, subject: ->(_) { 'Subject' }).render
       assert_includes body.split('<details>', 2).last, coverage
     end
   end
@@ -177,9 +168,8 @@ class ReviewCoverageSubsectionTest < Minitest::Test
   def test_coverage_keeps_subsections_until_a_peer_heading
     coverage = "### Inspected source\nChanged files only.\n\n### Missing context\nIntegration suite unavailable."
     entry = round(report: report(body: "## Coverage\n#{coverage}\n\n## Findings\n1. Missing test"))
-    body = Shaka::LocalReviewCommitComment.new({ 'rounds' => [entry] }, head: HEAD,
-                                                                        subject: ->(_) { 'Subject' }).render
-    visible = body.split('<details>', 2).last.split('### Execution metadata').first
+    body = Shaka::LocalReviewLoopComment.new({ 'rounds' => [entry] }, subject: ->(_) { 'Subject' }).render
+    visible = body.split('<summary>Commit ', 2).last.split('<details>').first
     assert_includes visible, coverage
     refute_includes visible, '1. Missing test'
   end
@@ -210,8 +200,7 @@ class ReviewCoverageLiteralTest < Minitest::Test
   def test_coverage_heading_inside_html_is_not_reported_as_actual_coverage
     original = "<pre>\n## Coverage\nAll paths checked.\n## Findings\nExample only.\n</pre>"
     entry = round(report: report(body: original))
-    body = Shaka::LocalReviewCommitComment.new({ 'rounds' => [entry] }, head: HEAD,
-                                                                        subject: ->(_) { 'Subject' }).render
+    body = Shaka::LocalReviewLoopComment.new({ 'rounds' => [entry] }, subject: ->(_) { 'Subject' }).render
     visible = body.split('<details>').first
     assert_includes visible, 'UNKNOWN; see evidence.'
     refute_includes visible, 'All paths checked.'
@@ -222,7 +211,6 @@ class ReviewCoverageLiteralTest < Minitest::Test
 
   def render_coverage(coverage)
     entry = round(report: report(body: "## Coverage\n#{coverage}\n\n## Findings\n1. Missing test"))
-    Shaka::LocalReviewCommitComment.new({ 'rounds' => [entry] }, head: HEAD,
-                                                                 subject: ->(_) { 'Subject' }).render
+    Shaka::LocalReviewLoopComment.new({ 'rounds' => [entry] }, subject: ->(_) { 'Subject' }).render
   end
 end

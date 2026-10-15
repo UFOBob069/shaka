@@ -134,9 +134,13 @@ module Shaka
 
       kept = round.merge(LocalReviewBundle.store(@path, round.fetch('report')))
       write(data.merge('version' => LocalReviewBundle::VERSION, 'base' => base, 'local_max_rounds' => max_rounds,
-                       'rounds' => rounds + [kept]))
+                       'id' => identity, 'rounds' => rounds + [kept]))
       clear_running
     end
+
+    # Names this ledger's PR comment, so two ledgers never share one. A ledger begun before ids
+    # existed keeps the first-report key it already published under.
+    def identity = data['id'] || LocalReviewBundle.ledger_id(rounds)
 
     def data
       @data ||= if File.exist?(@path)

@@ -462,28 +462,34 @@ published verbatim, so before posting it asks GitHub to render the comment and r
 unclosed code fence or a stray disclosure tag in a report would hide the attestation. The
 check cannot stop two reports that together imitate a round's layout, for example a reviewer
 steered by the PR it reads. The attestation and the summary table stay authoritative, because
-the helper writes both itself. It posts one `Local Adversarial Review` comment per reviewed
-commit, in ledger order. Each opens with the reviewed revision, a compact table of
-findings needing attention, and coverage limits. Each finding lists every reviewer
-that reported its ID. Explicitly fixed, dismissed, and accepted findings move into
-evidence history; legacy documented defects and risks remain visibly unassessed.
+the helper writes both itself. It posts one `Local Adversarial Review` comment for the whole
+loop. The comment opens with the newest reviewed revision, its outcome, a compact table of
+findings needing attention, and coverage limits, each shown once. A table of reviewed commits
+gives every reviewer's finding count and what became of those findings. Each finding lists
+every reviewer that reported its ID. Explicitly fixed, dismissed, and accepted findings move
+into evidence history; legacy documented defects and risks remain visibly unassessed.
 
-The closed evidence disclosure preserves all disposition explanations, decision records,
-coverage excerpts, execution metadata, and original reports. Coverage excerpts remain
+One closed disclosure holds finding details, disposition explanations, decision records,
+preserved triage, and execution metadata. Each reviewed commit then has its own closed
+disclosure with its subject, coverage excerpts, and original reports. Coverage excerpts remain
 attributed, unverified literal text. Missing or ambiguous coverage stays UNKNOWN.
-The last reviewer's attestation closes the comment, where `merge` reads it.
+The newest round's attestation closes the comment, where `merge` reads it.
 A commit GitHub does not have, such as one a rebase replaced, is named without a link or subject.
-Each comment's key includes the full commit SHA, so republishing edits that commit's entry
-without overwriting other commits' reviews or the legacy loop comment. All comments are
-rendered and checked before any is posted; after a partial GitHub write failure, retry the
-same content file to update posted entries and finish the rest.
+
+Republishing the same ledger edits its comment in place; a fresh ledger gets its own comment
+and leaves reports it does not account for untouched. When reports would pass GitHub's
+65,536-character limit, the oldest commits' reports move into `earlier commits` continuation
+comments. One commit whose reports cannot fit any comment is refused: shorten its reports and
+publish again. All comments are rendered and checked before any is posted; after a partial
+GitHub write failure, retry the same content file to update posted entries and finish the rest.
 
 The result's `comments` lists the published entries, and `summary` gives totals across the loop
 and its outcome. Copy that summary into the PR description's review history details; native
 usage records still belong in `usage.records`.
 
 After every successful publication, `review publish` collapses older owned Shaka
-review comments just published from the ledger, using their returned comment IDs.
+review comments from the ledger: its continuation comments and any comment the earlier
+per-commit publisher posted for an earlier commit holding only the ledger's reports.
 Other reports, including legacy reports at the same revision, stay visible for explicit assessment.
 Cleanup also skips when the current PR head has no report in that publication.
 Its `cleanup` result lists confirmed edits, unavailable cleanup,
@@ -506,8 +512,8 @@ The standalone command also lists confirmed edits and unavailable cleanup. A fai
 edit returns a nonzero exit; inspect the failure before retrying.
 Without a visible owned current-head report, cleanup skips without failing. If the
 PR returns to a previously archived head, republish its report before cleanup.
-Both legacy and per-commit Shaka review keys are recognized. Cleanup works with
-the per-commit publisher and can run independently after publishing.
+Legacy, per-commit, and loop Shaka review keys are all recognized. Cleanup can run
+independently after publishing.
 
 After assessing completed CI feedback, also minimize obsolete bot review reports
 and notices with GitHub's native **outdated** disclosure. Read them with `shaka comments`

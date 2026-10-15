@@ -104,8 +104,7 @@ class OpenrouterRunnerTest < Minitest::Test
 
   def assert_publishable(result)
     round = result.merge('effort' => 'high')
-    body = Shaka::LocalReviewCommitComment.new({ 'rounds' => [round] }, head: result.fetch('head'),
-                                                                        subject: ->(*) { 'fixture' }).render
+    body = Shaka::LocalReviewLoopComment.new({ 'rounds' => [round] }, subject: ->(*) { 'fixture' }).render
     assert_includes body, MODEL
     assert_includes body, 'Supplied diff only'
     assert_equal "REVIEWED #{result.fetch('head')} BY deepseek/openrouter EFFORT high FINDINGS 0", body.lines.last.strip

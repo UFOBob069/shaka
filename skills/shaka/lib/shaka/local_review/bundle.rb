@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'digest'
+require 'securerandom'
 require 'fileutils'
 require 'tmpdir'
 require_relative '../error'
@@ -16,6 +17,12 @@ module Shaka
     DIRECTORY = 'reports'
 
     module_function
+
+    # A new ledger's random id. One begun before ids existed takes its first report's digest,
+    # matching the key its loop comment already used.
+    def ledger_id(rounds)
+      rounds.empty? ? SecureRandom.hex(6) : Digest::SHA256.file(rounds.first.fetch('report')).hexdigest[0, 12]
+    end
 
     # The round fields naming the kept copy. A failed write raises, so no round is appended without one.
     def store(ledger_path, report)

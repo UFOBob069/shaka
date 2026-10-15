@@ -11,7 +11,10 @@ module Shaka
   # A different reviewed commit is history, not proof that any concern was resolved.
   class LocalReviewHistory < CommentHistory
     MARKER = 'Earlier review — findings are not automatically resolved. Latest local review:'
-    KEY = /\A<!-- shaka:reply:(?:local-adversarial-review|local-review-[0-9a-f]{40}) -->\n/
+    KEYS = '(?:local-adversarial-review|local-review-[0-9a-f]{40}|' \
+           'local-review-loop-[0-9a-f]{12}-[0-9a-f]{12}(?:-\\d+)?)'
+    KEY = /\A<!-- shaka:reply:#{KEYS} -->\n/
+    PER_COMMIT = /\A<!-- shaka:reply:local-review-[0-9a-f]{40} -->\n/
     SUMMARY = 'Earlier local review'
     ATTESTATION = MergeReviewEvidence::ATTESTATION
 
@@ -95,7 +98,7 @@ module Shaka
     def latest_comment(comments)
       head = @github.api("repos/#{@github.repository}/pulls/#{@github.number}").dig('head', 'sha')
       comments.select { |comment| attestation(comment['body'])[1] == head && active?(comment) }
-              .max_by { |comment| order(comment) }
+              .max_by { |comment| [per_commit?(comment) ? 0 : 1, *order(comment)] }
     end
 
     # A restored head needs its previously archived report republished before it can be current.
@@ -112,6 +115,8 @@ module Shaka
     def earlier?(comment, latest)
       !active?(comment) || attestation(comment['body'])[1] != attestation(latest['body'])[1]
     end
+
+    def per_commit?(comment) = comment['body'].to_s.match?(PER_COMMIT)
 
     # Returning to a reviewed head can make its comment older than the existing pointer.
     def keep_pointer?(previous, latest) = previous == latest

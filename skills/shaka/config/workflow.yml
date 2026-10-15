@@ -423,9 +423,10 @@ phases:
         region stays in the body. When a local review ran, publish it right after that with
         `review publish OWNER/REPO NUMBER --content-file PATH`, passing the ledger, or a content
         file for a fresh host review; nothing from the loop reaches GitHub before the push, and
-        each reviewed commit gets its own timeline comment. Publishing again updates that
-        commit's comment in place. Publication then collapses older owned review comments
-        just published from its ledger; other reports stay visible for assessment.
+        the whole loop gets one comment, with a row and collapsed reports for each reviewed
+        commit. Publishing again updates that comment in place. Publication then collapses
+        older owned review comments from its ledger, including earlier per-commit comments;
+        other reports stay visible for assessment.
         Its cleanup result reports confirmed edits and failures without undoing published reports.
         Inspect reported failures before retrying. Copy the returned loop summary into the description's review
         history details; keep native usage in `usage.records`. Use trusted `gh` for authorized

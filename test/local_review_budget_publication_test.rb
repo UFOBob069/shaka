@@ -29,7 +29,7 @@ class LocalReviewBudgetPublicationTest < Minitest::Test
     other = round(reviewer: 'anthropic/claude', report: report(reviewer: 'anthropic/claude'), findings: [defect])
     content = { 'rounds' => [round(findings: [defect]), other],
                 'local_max_rounds' => 2, 'task_budget' => budget(2, 2) }
-    body = Shaka::LocalReviewCommitComment.new(content, head: HEAD, subject: ->(_) { 'Subject' }).render
+    body = Shaka::LocalReviewLoopComment.new(content, subject: ->(_) { 'Subject' }).render
     assert_includes body, '2 of 2 review starts'
     assert_includes body, 'Loop bound reached'
   end

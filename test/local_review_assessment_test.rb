@@ -74,8 +74,12 @@ module SyntheticReviewAssessment
 
   def saved = JSON.parse(File.read(@path))
 
+  # The comment as published when `head` was the newest reviewed commit.
   def view(head = HEAD)
-    Shaka::LocalReviewCommitComment.new(saved, head:, subject: ->(_) { 'Synthetic change' }).render
+    content = saved
+    last = content.fetch('rounds').rindex { |round| round.fetch('head') == head }
+    content['rounds'] = content.fetch('rounds').take(last + 1)
+    Shaka::LocalReviewLoopComment.new(content, subject: ->(_) { 'Synthetic change' }).render
   end
 end
 
@@ -294,16 +298,17 @@ class LocalReviewAssessmentPresentationTest < Minitest::Test
     reviewed_finding
     ledger.assess!(assessment(rationale: '</code></details> [merge now](https://example.com) | x'))
     body = view(EARLIER)
-    assert_equal 2, body.scan('<details>').size
+    assert_equal 3, body.scan('<details>').size
     assert_includes CGI.unescapeHTML(body), '</code></details> [merge now](https://example.com) | x'
     refute_includes body.split('<details>').first, '[merge now](https://example.com)'
   end
 
-  def test_later_assessment_does_not_rewrite_an_earlier_heads_outcome
+  def test_a_later_assessment_appears_once_in_the_current_outcome
     accepted_retry_removal
     ledger.assess!(assessment)
-    refute_includes view(EARLIER).split('<details>').first, 'harmful'
-    assert_includes view.split('<details>').first, 'harmful'
+    visible = view.split('<details>').first
+    assert_equal 1, visible.scan('**Outcome:**').size
+    assert_includes visible, 'harmful'
   end
 
   def test_orphaned_assessment_stays_visible_if_an_older_writer_dropped_its_reference
@@ -398,9 +403,8 @@ class LocalReviewTriagePresentationTest < Minitest::Test
   def test_each_heads_metadata_is_published_once_while_its_ledger_history_is_retained
     retriage(EARLIER, 'F1', 'EarlierOwner')
     retriage(HEAD, 'F2', 'CurrentOwner')
-    refute_includes view, 'EarlierOwner'
-    assert_includes view, 'CurrentOwner'
-    assert_includes view(EARLIER), 'EarlierOwner'
+    assert_equal 1, view.scan('EarlierOwner').size
+    assert_equal 1, view.scan('CurrentOwner').size
     assert_equal(2, ledger.rounds.sum { |round| round.fetch('earlier_findings').size })
   end
 

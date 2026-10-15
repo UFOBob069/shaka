@@ -27,10 +27,11 @@ class LocalReviewCommitPublishTest < Minitest::Test
     end
   end
 
-  def test_two_reviewers_per_commit_leave_two_idempotent_timeline_comments
+  def test_two_reviewers_per_commit_leave_one_idempotent_comment
     github = publish_loop
-    assert_equal [EARLIER, HEAD].map { |sha| "local-review-#{sha}" }, github.replies.map(&:first)
-    github.replies.each_with_index { |(_, body), index| assert_commit_entry(body, index) }
+    assert_equal 1, github.replies.size
+    assert_match(/\Alocal-review-loop-#{EARLIER[0, 12]}-\h{12}\z/, github.replies.first.first)
+    assert_loop_comment(github.replies.first.last)
   end
 
   def test_deepseek_report_publishes_through_the_same_exact_head_contract
@@ -83,7 +84,7 @@ class LocalReviewCommitPublishTest < Minitest::Test
     assert_includes body, '&#60;'
     assert_includes body, '&#91;'
     refute_includes body, '[link]'
-    assert_equal 2, body.scan('<details>').size
+    assert_equal 3, body.scan('<details>').size
   end
 
   def test_commit_subject_is_literal_text_including_quotes_mentions_and_urls
@@ -93,9 +94,8 @@ class LocalReviewCommitPublishTest < Minitest::Test
     end
     assert_equal 0, publish(github, 'rounds' => [clean(HEAD, 'openai/codex')]).first
 
-    literal = "Don't notify @someone https://example.test"
     rendered_subject = github.replies.first.last[%r{<code>(.*?)</code>}, 1]
-    assert_equal literal, CGI.unescapeHTML(rendered_subject)
+    assert_equal "Don't notify @someone https://example.test", CGI.unescapeHTML(rendered_subject)
   end
 
   private
@@ -112,12 +112,15 @@ class LocalReviewCommitPublishTest < Minitest::Test
     github
   end
 
-  def assert_commit_entry(body, index)
-    head = [EARLIER, HEAD][index]
-    assert_equal 3, body.scan('<details>').size
-    assert_includes CGI.unescapeHTML(body), index.zero? ? 'Add review publication' : 'Clarify review documentation'
-    refute_includes body, '**Total:**'
-    assert_equal "REVIEWED #{head} BY anthropic/claude EFFORT UNKNOWN FINDINGS 0", body.lines.last.strip
+  # One findings disclosure, then each commit's disclosure holding its two reports. The outcome and
+  # coverage appear once however many commits were reviewed.
+  def assert_loop_comment(body)
+    once = ["# Local Adversarial Review\n", '**Outcome:**', '**Coverage:**', 'Usage and attribution']
+    assert_equal([1] * once.size, once.map { |text| body.scan(text).size })
+    assert_includes body, '| openai/codex: 0 · anthropic/claude: 0 |'
+    assert_equal 7, body.scan('<details>').size
+    assert_includes CGI.unescapeHTML(body), 'Add review publication'
+    assert_equal "REVIEWED #{HEAD} BY anthropic/claude EFFORT UNKNOWN FINDINGS 0", body.lines.last.strip
   end
 
   def timeline_comments
@@ -149,38 +152,74 @@ class LocalReviewCommitPublicationKeyTest < Minitest::Test
   include GitHubHelper
 
   def test_generated_commit_key_passes_real_reply_validation
-    comment = Shaka::LocalReviewCommitComment.new({ 'rounds' => [round] }, head: HEAD, subject: ->(_) { 'Subject' })
+    comment = Shaka::LocalReviewLoopComment.new({ 'rounds' => [round] }, subject: ->(_) { 'Subject' })
     body = comment.render
     posted = "<!-- shaka:reply:#{comment.key} -->\n#{body}"
     github = client(response({ 'id' => 1, 'number' => 42, 'body' => '' }),
-                    response({ 'login' => 'agent' }), response([]), html_response('<table></table>'),
+                    response({ 'login' => 'agent' }), response([]), html_response('<table></table><table></table>'),
                     response({ 'id' => 9, 'body' => posted }))
 
     assert_equal 9, github.reply(body:, key: comment.key)['id']
   end
 end
 
-# The API limit includes the reply marker, and a later oversized report must cause no writes.
+# The API limit includes the reply marker. Reports past it move to an earlier-commits comment;
+# a single commit that cannot fit causes no writes.
 class LocalReviewCommitSizeTest < Minitest::Test
   include LocalReviewCommentFixture
 
-  def test_reply_marker_counts_toward_the_limit_before_any_timeline_write
+  def test_reply_marker_counts_toward_the_limit_and_moves_the_oldest_reports
     github = LocalReviewCommitPublishTest::Timeline.new
-    def github.api(_path) = { 'message' => 'Subject' }
     content = near_limit_content
-    assert_operator comment(content).render.length, :<=, 65_536
+    assert_operator comment(content).parts.first.body.length, :<=, 65_536
+
+    Shaka::LocalReviewPublisher.new(content, github, 'o/r').publish
+
+    (main_key, main), (earlier_key, earlier) = github.replies
+    assert_equal "#{main_key}-1", earlier_key
+    assert_includes main, 'reports in earlier comment 1'
+    assert_closes(main, HEAD, without: EARLIER)
+    assert_closes(earlier, EARLIER, without: HEAD)
+  end
+
+  def test_separate_ledgers_from_the_same_commit_keep_separate_comments
+    first = { 'rounds' => [round(EARLIER)] }
+    second = { 'rounds' => [round(EARLIER, report: report(EARLIER, body: "2. [P1] Other finding.\n"))] }
+
+    refute_equal comment(first).key, comment(second).key
+    assert_equal comment(first).key, comment(JSON.parse(JSON.generate(first))).key
+  end
+
+  def test_ledgers_with_identical_first_reports_keep_separate_comments_by_ledger_id
+    first = { 'id' => 'a' * 12, 'rounds' => [round(EARLIER)] }
+    second = { 'id' => 'b' * 12, 'rounds' => [round(EARLIER)] }
+
+    refute_equal comment(first).key, comment(second).key
+    assert_equal "local-review-loop-#{EARLIER[0, 12]}-#{'a' * 12}", comment(first).key
+  end
+
+  def test_one_commit_too_large_for_any_comment_prevents_all_writes
+    github = LocalReviewCommitPublishTest::Timeline.new
+    content = { 'rounds' => [round(EARLIER), round(report: report(body: 'x' * 65_536))] }
 
     error = assert_raises(Shaka::Error) { Shaka::LocalReviewPublisher.new(content, github, 'o/r').publish }
-    assert_includes error.message, HEAD[0, 7]
+    assert_includes error.message, '65536'
     assert_empty github.replies
   end
 
   private
 
+  def assert_closes(body, head, without:)
+    assert_includes body, "<summary>Commit #{head[0, 7]}"
+    refute_includes body, "<summary>Commit #{without[0, 7]}"
+    assert_equal "REVIEWED #{head} BY openai/codex EFFORT UNKNOWN FINDINGS 1", body.lines.last.strip
+  end
+
+  # Exactly one character over the limit with both commits' reports in the main comment.
   def near_limit_content
     last = round(report: report(body: ''))
     content = { 'rounds' => [round(EARLIER), last] }
-    marker = "<!-- shaka:reply:local-review-#{HEAD} -->\n"
+    marker = "<!-- shaka:reply:#{comment(content).key} -->\n"
     padding = 65_536 - marker.length - comment(content).render.length + 1
     last['report'] = report(body: 'x' * padding)
     content
@@ -188,7 +227,7 @@ class LocalReviewCommitSizeTest < Minitest::Test
 
   def comment(content)
     subject = ->(_) { '<code>&#83;&#117;&#98;&#106;&#101;&#99;&#116;</code>' }
-    Shaka::LocalReviewCommitComment.new(content, head: HEAD, repository: 'o/r', published: ->(_) { true }, subject:)
+    Shaka::LocalReviewLoopComment.new(content, repository: 'o/r', published: ->(_) { true }, subject:)
   end
 end
 

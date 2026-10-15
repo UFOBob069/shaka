@@ -158,9 +158,10 @@ class LocalReviewPublishTest < Minitest::Test
   ATTESTATION = "REVIEWED #{HEAD} BY openai/codex EFFORT UNKNOWN FINDINGS 1".freeze
   # GitHub's markdown API output for a well-formed one-round comment, trimmed to what the check reads.
   SUMMARY = '<summary>Round 1 · aaaaaaa · openai/codex · effort UNKNOWN · 1 finding</summary>'
-  RENDERED = "<h1>Local Adversarial Review</h1>\n<details>\n" \
-             "<summary>Review evidence and history</summary>\n<details>\n#{SUMMARY}\n<p>ok</p>\n" \
-             "<p>#{ATTESTATION}</p>\n</details>\n</details>\n<p>#{ATTESTATION}</p>".freeze
+  RENDERED = "<h1>Local Adversarial Review</h1>\n" \
+             "<details>\n<summary>Findings, assessments, and execution metadata</summary>\n</details>\n" \
+             "<details>\n<summary>Commit aaaaaaa · openai/codex · 1 finding</summary>\n<details>\n#{SUMMARY}\n" \
+             "<p>ok</p>\n<p>#{ATTESTATION}</p>\n</details>\n</details>\n<p>#{ATTESTATION}</p>".freeze
   # What GitHub returned when a report opened a four-backtick fence and closed it with three.
   SWALLOWED = "<details>\n<summary>Round 1</summary>\n<pre><code>code\n```\n\n#{ATTESTATION}\n\n" \
               "&lt;/details&gt;\n\n#{ATTESTATION}\n</code></pre></details>".freeze
@@ -223,9 +224,11 @@ class LocalReviewPublishTest < Minitest::Test
     status, = publish(github, 'rounds' => [round])
 
     assert_equal 0, status
-    assert_equal ["local-review-#{HEAD}"], github.replies.map(&:first)
-    assert github.replies.first.last.start_with?('# Local Adversarial Review')
-    assert_includes github.replies.first.last, "| 1 | [`aaaaaaa`](https://github.com/o/r/commit/#{HEAD}) |"
+    (key, body), *rest = github.replies
+    assert_empty rest
+    assert_match(/\Alocal-review-loop-#{HEAD[0, 12]}-\h{12}\z/, key)
+    assert body.start_with?('# Local Adversarial Review')
+    assert_includes body, "| 1 | [`aaaaaaa`](https://github.com/o/r/commit/#{HEAD}) |"
   end
 
   def test_publishes_a_cap_warning_and_keeps_the_attestation_last

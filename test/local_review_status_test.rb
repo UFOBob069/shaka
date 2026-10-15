@@ -50,7 +50,7 @@ class LocalReviewStatusTest < Minitest::Test
 
   def presentation(entries)
     entry = round(findings: entries, report: report(findings: entries.size))
-    Shaka::LocalReviewCommitComment.new({ 'rounds' => [entry] }, head: HEAD, subject: ->(_) { 'Subject' }).render
+    Shaka::LocalReviewLoopComment.new({ 'rounds' => [entry] }, subject: ->(_) { 'Subject' }).render
   end
 end
 

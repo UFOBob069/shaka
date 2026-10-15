@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'commit_comment'
+require_relative 'loop_comment'
 require_relative 'history'
 
 module Shaka
-  # Preflights every comment, then upserts in ledger order. A retry resumes partial publication.
+  # Preflights every comment, then upserts the main comment and any continuations. A retry resumes
+  # partial publication.
   class LocalReviewPublisher
     def initialize(content, github, repository)
       @content = content
@@ -15,34 +16,52 @@ module Shaka
 
     def publish
       summary = LocalReviewComment.new(@content).loop_summary
-      ready = @content.fetch('rounds').map { |round| round.fetch('head') }.uniq.map { |head| prepare(head) }
-      results = ready.map { |key, body| @github.reply(body:, key:) }
-      { 'comments' => results, 'summary' => summary, 'cleanup' => cleanup(results) }
+      parts = loop_comment.parts
+      parts.each { |part| part.check_rendering!(@github.verify_rendering(part.body)) }
+      results = parts.map { |part| @github.reply(body: part.body, key: part.key) }
+      { 'comments' => results, 'summary' => summary, 'cleanup' => cleanup(results, parts.size) }
     end
 
     private
 
-    def cleanup(results)
-      ids = results.map { |result| result.fetch('id') }
-      LocalReviewHistory.new(@github, ids:).collapse
+    def loop_comment
+      @loop_comment ||= LocalReviewLoopComment.new(@content, repository: @repository,
+                                                             usage_url: "https://github.com/#{@repository}/pull/#{@github.number}",
+                                                             published: ->(sha) { !commit(sha).nil? },
+                                                             subject: ->(sha) { subject(sha) })
     end
 
-    def prepare(head)
-      comment = LocalReviewCommitComment.new(@content, head:, repository: @repository,
-                                                       usage_url: "https://github.com/#{@repository}/pull/#{@github.number}",
-                                                       published: ->(sha) { !commit(sha).nil? },
-                                                       subject: ->(sha) { subject(sha) })
-      body = comment.render
-      size = "<!-- shaka:reply:#{comment.key} -->\n#{body}".length
-      raise Error, "Review comment for #{head[0, 7]} exceeds GitHub’s 65536-character limit; shorten its reports." if
-        size > 65_536
+    # Also retires comments this ledger replaced: per-commit comments of earlier commits holding only
+    # its reports, and continuations a repacking no longer writes. Like any report of the current
+    # commit, a per-commit one stays visible. A failed lookup is reported, never mistaken for nothing to retire.
+    def cleanup(results, count)
+      begin
+        replaced = replaced(count)
+      rescue Error => e
+        return { 'collapsed' => [], 'unavailable' => ["Replaced review comments could not be listed: #{e.message}"] }
+      end
+      LocalReviewHistory.new(@github, ids: results.map { |result| result.fetch('id') } + replaced).collapse
+    end
 
-      comment.check_rendering!(@github.verify_rendering(body))
-      [comment.key, body]
+    def replaced(count)
+      stale = /\A<!-- shaka:reply:#{Regexp.escape(loop_comment.key)}-(\d+) -->\n/
+      @github.issue_comments.filter_map do |comment|
+        body = comment['body'].to_s
+        comment['id'] if per_commit?(body) || body[stale, 1].to_i >= count
+      end
+    end
+
+    # Every report the comment holds, one per round disclosure, must be one of this ledger's.
+    def per_commit?(body)
+      head = body[/\A<!-- shaka:reply:local-review-(\h{40}) -->\n/, 1]
+      return false unless head
+
+      held = loop_comment.reports(head).count { |report| body.include?(report) }
+      held.positive? && held == body.scan(/<summary>Round \d+ · #{head[0, 7]} · /).size
     end
 
     # Cache both the subject and existence; a 404 names an unpushed or replaced commit.
-    # Other failures stop publication before any timeline entry is written.
+    # Other failures stop publication before any comment is written.
     def commit(sha)
       @commits.fetch(sha) do
         @commits[sha] = @github.api("repos/#{@repository}/git/commits/#{sha}")
