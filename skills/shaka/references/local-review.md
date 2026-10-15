@@ -474,7 +474,8 @@ preserved triage, and execution metadata. Each reviewed commit then has its own 
 disclosure with its subject, coverage excerpts, and original reports. Coverage excerpts remain
 attributed, unverified literal text. Missing or ambiguous coverage stays UNKNOWN.
 The newest round's attestation closes the comment, where `merge` reads it.
-A commit GitHub does not have, such as one a rebase replaced, is named without a link or subject.
+A commit GitHub does not have, such as one a rebase replaced before it was pushed, links to the pull
+request commit with the same subject, author date, and change; without one, it is named without a link or subject.
 
 Republishing the same ledger edits its comment in place; a fresh ledger gets its own comment
 and leaves reports it does not account for untouched. When reports would pass GitHub's

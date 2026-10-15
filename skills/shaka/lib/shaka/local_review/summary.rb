@@ -2,11 +2,13 @@
 
 module Shaka
   # Links a commit to GitHub only when GitHub has it. A round reviewed before a rebase names a
-  # commit that was never pushed, and a link to it would open a 404 page.
+  # commit that was never pushed, and a link to it would open a 404 page; `rebased` names the
+  # pushed copy of such a commit, if one is known, and the reviewed commit links there instead.
   class LocalReviewLinks
-    def initialize(repository, published = nil)
+    def initialize(repository, published = nil, rebased = nil)
       @repository = repository
       @published = published
+      @rebased = rebased
       @known = {}
     end
 
@@ -14,9 +16,10 @@ module Shaka
     def commit(sha)
       code = "`#{sha[0, 7]}`"
       return code unless @repository
-      return "#{code} (not on GitHub)" unless on_github?(sha)
+      return link(code, sha) if on_github?(sha)
 
-      "[#{code}](https://github.com/#{@repository}/commit/#{sha})"
+      copy = @rebased&.call(sha)
+      copy ? "#{code}, rebased as #{link("`#{copy[0, 7]}`", copy)}" : "#{code} (not on GitHub)"
     end
 
     def criteria(sha)
@@ -26,6 +29,8 @@ module Shaka
     end
 
     private
+
+    def link(code, sha) = "[#{code}](https://github.com/#{@repository}/commit/#{sha})"
 
     def on_github?(sha)
       return true unless @published

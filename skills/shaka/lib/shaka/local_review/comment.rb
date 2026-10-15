@@ -34,19 +34,19 @@ module Shaka
 
     # With the pull request's `repository`, each commit links to GitHub; `published` answers whether
     # GitHub has a commit, so one lost to a rebase is named without a broken link.
-    def initialize(content, repository: nil, published: nil)
+    def initialize(content, repository: nil, published: nil, rebased: nil)
       raise Error, 'Local review content must be an object.' unless content.is_a?(Hash)
 
       LocalReviewBundle.version!(content)
       raise Error, 'Expected a GitHub repository in OWNER/REPO form.' unless
         repository.nil? || repository.match?(%r{\A[\w-]+/[\w.-]+\z})
 
-      @links = LocalReviewLinks.new(repository, published)
+      @links = LocalReviewLinks.new(repository, published, rebased)
       @rounds = build_rounds(PublicationText.list(content['rounds'], 'rounds'))
       @fallback = content['fallback']
       @task_budget = LocalReviewBudget.record_from(content, completed: @rounds.size)
       @max_rounds = RepositoryConfig::ReviewLimit.from(content)
-      @assessment_view = LocalReviewAssessmentView.new(content)
+      @assessment_view = LocalReviewAssessmentView.new(content, links: @links)
     end
 
     def loop_summary = @assessment_view.summary(@rounds, @links, LocalReviewSummary.new(@rounds).lines.first)

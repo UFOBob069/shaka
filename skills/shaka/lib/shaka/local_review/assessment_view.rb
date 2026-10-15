@@ -9,7 +9,8 @@ require_relative 'public_triage'
 module Shaka
   # Later judgments affect attention, never the historical review attestation or merge policy.
   class LocalReviewAssessmentView
-    def initialize(content, displayed_rounds: nil)
+    def initialize(content, displayed_rounds: nil, links: nil)
+      @links = links
       @history = LocalReviewAssessments.new(content)
       @rounds = displayed_rounds || content.fetch('rounds')
     end
@@ -85,7 +86,9 @@ module Shaka
     end
 
     def earlier_triage(round, earlier)
-      "**Earlier triage · #{round.fetch('head')[0, 7]} · #{literal(round.fetch('reviewer'))}:**\n\n#{json(earlier)}"
+      head = round.fetch('head')
+      commit = @links ? @links.commit(head) : head[0, 7]
+      "**Earlier triage · #{commit} · #{literal(round.fetch('reviewer'))}:**\n\n#{json(earlier)}"
     end
 
     def actor_line(round, finding)

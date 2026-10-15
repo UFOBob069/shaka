@@ -201,6 +201,9 @@ class LocalReviewPublishTest < Minitest::Test
 
     attr_writer :outage
 
+    # No pull request commits, so a missing reviewed commit has no rebased copy.
+    def api_list(_path) = []
+
     def reply(body:, key:)
       @replies << [key, body]
       { 'id' => 1 }

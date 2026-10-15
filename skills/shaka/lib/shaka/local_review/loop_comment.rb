@@ -28,7 +28,7 @@ module Shaka
         @ledger_id.nil? || @ledger_id.to_s.match?(LEDGER_ID)
 
       @usage_url = usage_url
-      @commits = @rounds.chunk(&:head).map { |_, rounds| LocalReviewCommitSection.new(rounds, subject) }
+      @commits = @rounds.chunk(&:head).map { |_, rounds| LocalReviewCommitSection.new(rounds, subject, @links) }
       @attention = LocalReviewAttention.new(@rounds, @links, assessments: @assessment_view)
     end
 
@@ -66,10 +66,10 @@ module Shaka
        *LocalReviewBudget.notice(@task_budget, completed: @rounds.size)]
     end
 
-    # Which continuation holds each moved commit's reports, by head.
+    # Which continuation holds each moved commit section's reports.
     def continuations(moved)
-      earlier_groups(moved).each.with_index.with_object({}) do |(group, index), notes|
-        group.each { |commit| notes[commit.head] = "reports in earlier comment #{index + 1}" }
+      earlier_groups(moved).each.with_index.with_object({}.compare_by_identity) do |(group, index), notes|
+        group.each { |commit| notes[commit] = "reports in earlier comment #{index + 1}" }
       end
     end
 
@@ -106,10 +106,10 @@ module Shaka
     end
 
     def commit_table(notes)
-      rows = @rounds.chunk(&:head).map do |head, rounds|
-        findings = rounds.map { |round| "#{round.reviewer}: #{round.finding_count}" }.join(' · ')
-        findings += " · #{notes[head]}" if notes[head]
-        line([@links.commit(head), findings])
+      rows = @commits.map do |commit|
+        findings = commit.rounds.map { |round| "#{round.reviewer}: #{round.finding_count}" }.join(' · ')
+        findings += " · #{notes[commit]}" if notes.key?(commit)
+        line([@links.commit(commit.head), findings])
       end
       ['**Reviewed commits:**', [line(%w[Commit Findings]), line(%w[--- ---]), *rows].join("\n")].join("\n\n")
     end

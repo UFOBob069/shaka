@@ -2,6 +2,7 @@
 
 require_relative 'loop_comment'
 require_relative 'history'
+require_relative 'rebased_commits'
 
 module Shaka
   # Preflights every comment, then upserts the main comment and any continuations. A retry resumes
@@ -28,6 +29,7 @@ module Shaka
       @loop_comment ||= LocalReviewLoopComment.new(@content, repository: @repository,
                                                              usage_url: "https://github.com/#{@repository}/pull/#{@github.number}",
                                                              published: ->(sha) { !commit(sha).nil? },
+                                                             rebased:,
                                                              subject: ->(sha) { subject(sha) })
     end
 
@@ -60,6 +62,13 @@ module Shaka
       held.positive? && held == body.scan(/<summary>Round \d+ · #{head[0, 7]} · /).size
     end
 
+    def rebased = @rebased ||= LocalReviewRebasedCommits.new(@github, @repository)
+
+    def rebased_commit(sha)
+      copy = rebased.call(sha)
+      commit(copy) if copy
+    end
+
     # Cache both the subject and existence; a 404 names an unpushed or replaced commit.
     # Other failures stop publication before any comment is written.
     def commit(sha)
@@ -73,7 +82,7 @@ module Shaka
     end
 
     def subject(sha)
-      text = commit(sha)&.fetch('message', nil).to_s.lines.first.to_s.strip
+      text = (commit(sha) || rebased_commit(sha))&.fetch('message', nil).to_s.lines.first.to_s.strip
       return 'Commit subject unavailable.' if text.empty?
 
       # A commit subject is data, not Markdown that may hide the generated review layout.

@@ -6,18 +6,21 @@ require_relative 'triage'
 module Shaka
   # One reviewed commit's collapsed evidence: its subject, coverage excerpts, and original reports.
   class LocalReviewCommitSection
-    def initialize(rounds, subject)
+    def initialize(rounds, subject, links)
       @rounds = rounds
       @subject = subject
+      @links = links
     end
+
+    attr_reader :rounds
 
     def head = @rounds.first.head
 
     def summaries = [summary, *@rounds.map(&:summary)]
 
     def to_s
-      ["<details>\n<summary>#{summary}</summary>", "**Commit:** #{@subject.call(head)}", coverage_reports,
-       *LocalReviewTriage.details(@rounds), '</details>'].join("\n\n")
+      ["<details>\n<summary>#{summary}</summary>", "**Commit:** #{@links.commit(head)} #{@subject.call(head)}",
+       coverage_reports, *LocalReviewTriage.details(@rounds), '</details>'].join("\n\n")
     end
 
     private

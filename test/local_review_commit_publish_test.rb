@@ -119,7 +119,7 @@ class LocalReviewCommitPublishTest < Minitest::Test
     assert_equal([1] * once.size, once.map { |text| body.scan(text).size })
     assert_includes body, '| openai/codex: 0 · anthropic/claude: 0 |'
     assert_equal 7, body.scan('<details>').size
-    assert_includes CGI.unescapeHTML(body), 'Add review publication'
+    assert_includes CGI.unescapeHTML(body), "[`bbbbbbb`](https://github.com/o/r/commit/#{EARLIER}) <code>Add review"
     assert_equal "REVIEWED #{HEAD} BY anthropic/claude EFFORT UNKNOWN FINDINGS 0", body.lines.last.strip
   end
 
