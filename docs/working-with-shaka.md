@@ -364,7 +364,7 @@ Use these searches in the repository's GitHub PR list:
 
 | Search on GitHub | Why it is waiting and what to do |
 | --- | --- |
-| `is:open label:awaiting-answer` | Decision needed: answer **Decisions for the maintainer** in the description. |
+| `is:open label:awaiting-answer` | Decision needed: answer **Decisions to make** in the description. |
 | `is:open label:awaiting-merge-approval` | Ready under Ask: authorize the agent to merge that commit, or use GitHub's offered merge control. |
 | `is:open label:awaiting-resume` | Paused without a wake: paste **WIP Details → Next action** into the owning chat. |
 

@@ -12,8 +12,8 @@ class PublicationSettingsTest < Minitest::Test
       review = review_check(root, ref)
       with_results(validation, review) do |options|
         body = prepare(root, ref, options).detail.fetch('body')
-        assert_includes body, "| Before push: validation | trusted/team at #{ref} | validate |"
-        assert_includes body, "| Review | trusted/team at #{ref} | openai/codex |"
+        assert_includes body, "| Before push: validation | trusted/team at [`#{ref[0, 7]}`]("
+        assert_includes body, "| Review | trusted/team at [`#{ref[0, 7]}`]("
         refute_includes body, validation.dig('settings', 'digest')
       end
     end
@@ -50,7 +50,7 @@ class PublicationSettingsTest < Minitest::Test
       with_results(validation, review) do |options|
         body = prepare(root, ref, options).detail.fetch('body')
         assert_includes body, '| Before push: validation | UNKNOWN | UNKNOWN |'
-        assert_includes body, "Current merge input (not evidence): trusted/team at #{ref}"
+        assert_includes body, "Current merge input (not evidence): trusted/team at [`#{ref[0, 7]}`]("
       end
     end
   end
@@ -75,7 +75,8 @@ class PublicationSettingsTest < Minitest::Test
     with_checkout do |root, ref|
       settings = prepare(root, ref, {})
       assert_predicate settings, :include_checkout_path?
-      assert_includes settings.detail.fetch('body'), "Current merge input (not evidence): trusted/team at #{ref}"
+      assert_includes settings.detail.fetch('body'),
+                      "Current merge input (not evidence): trusted/team at [`#{ref[0, 7]}`]("
     end
   end
 

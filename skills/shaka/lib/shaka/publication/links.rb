@@ -2,6 +2,7 @@
 
 require 'uri'
 require_relative '../error'
+require_relative '../post_implementation_report'
 require_relative 'text'
 
 module Shaka
@@ -9,27 +10,43 @@ module Shaka
   module PublicationLinks
     WALKTHROUGH_URL = %r{\Ahttps://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/\d+#pullrequestreview-\d+\z}
     POST_IMPLEMENTATION_URL = %r{\Ahttps://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/\d+#issuecomment-\d+\z}
+    REVIEW_URL = POST_IMPLEMENTATION_URL
     UNPUBLISHED = '_Not published yet._'
     CREDIT = '_PR prepared with [Shaka](https://shaka.shakacode.com/)._'
 
     module_function
 
-    def checkpoint(content, head:)
-      return [] unless content.key?('checkpoint')
+    # The heading is the decision a maintainer acts on: the owner's recommendation, or the open decisions.
+    # The head check keeps a stale recommendation off the page, so the text need not name the commit.
+    def checkpoint(content, pull, decisions)
+      return decisions unless content.key?('checkpoint')
 
+      head = pull&.dig('head', 'sha')
       checkpoint = content['checkpoint']
       raise Error, 'Description checkpoint must be an object.' unless checkpoint.is_a?(Hash)
       raise Error, 'Description checkpoint is not for the current PR head.' unless
         head && checkpoint['head'] == head
 
-      status = PublicationText.summary_text(checkpoint['status'], 'checkpoint status')
       action = PublicationText.summary_text(checkpoint['next_action'], 'checkpoint next_action')
-      ['## Checkpoint', "**Status:** #{status}", "**Recommended next action:** #{action}", "Head: `#{head}`"]
+      [*checkpoint_heading(checkpoint['recommendation'], decisions), "**Next:** #{action}"]
+    end
+
+    # Open decisions are the heading while they last, even over a Merge checkpoint; its recommendation follows them.
+    # Without one for this head, such as while the checkpoint is pending or failed, the heading says so.
+    def checkpoint_heading(recommendation, decisions)
+      recommendations = PostImplementationReport::RECOMMENDATIONS
+      unless recommendation.nil? || recommendations.include?(recommendation)
+        raise Error, "Description checkpoint recommendation must be one of: #{recommendations.join(', ')}."
+      end
+      return decisions if decisions.any?
+
+      [recommendation ? "## Recommendation: #{recommendation}" : '## No recommendation yet']
     end
 
     # Keep both review surfaces together before an optional deployment preview.
     def top(content, settings, pull)
-      reviews = "#{walkthrough(content['walkthrough'])} · #{post_implementation(content['post_implementation'])}"
+      reviews = [walkthrough(content['walkthrough']), review(content['review']),
+                 post_implementation(content['post_implementation'])].compact.join(' · ')
       preview = deployment(content['deployment']) ||
                 deployment_not_found(content['deployment_not_found_for'], pull&.dig('head', 'sha'))
       [(CREDIT if settings.attribution?), preview ? "#{reviews} · #{preview}" : reviews].compact
@@ -44,6 +61,16 @@ module Shaka
       end
 
       "[Checkpoint](#{url})"
+    end
+
+    # Optional: the detailed local review, for a reader who wants every finding and its disposition.
+    def review(url)
+      return if url.nil?
+
+      url = PublicationText.single_line(url.is_a?(String) ? url.strip : url, 'review')
+      raise Error, 'Publication review must be a GitHub pull request comment URL.' unless url.match?(REVIEW_URL)
+
+      "[Code Review](#{url})"
     end
 
     # Required so a deployable repository cannot silently omit its preview; `none` opts out.
@@ -74,6 +101,14 @@ module Shaka
       uri.is_a?(URI::HTTPS) && !uri.host.to_s.empty? && uri.userinfo.nil?
     rescue URI::InvalidURIError
       false
+    end
+
+    # Without a repository there is no link to carry the full SHA, so the footer keeps it visible.
+    def walkthrough_footer(head, repository)
+      raise Error, 'Walkthrough requires the full commit SHA it explains.' unless head.to_s.match?(/\A[0-9a-f]{40}\z/)
+
+      commit = repository ? PublicationText.commit(head, repository) : "`#{head}`"
+      "_Walkthrough for commit #{commit}. This is a COMMENT, not an approval._"
     end
 
     def walkthrough(url)

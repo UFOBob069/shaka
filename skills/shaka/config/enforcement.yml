@@ -583,7 +583,7 @@ rules:
   - id: decisions-awaiting-answer
     phase: always
     quote: >-
-      That publication renders Decisions for the maintainer and applies `awaiting-answer`.
+      That publication renders Decisions to make and applies `awaiting-answer`.
       Publish `decisions` as an empty list once the answer is in: the section is omitted and
       `awaiting-answer` is removed.
     enforced_by: code

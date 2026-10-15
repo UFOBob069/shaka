@@ -27,7 +27,7 @@ module Shaka
       repository = github.repository
       verdict = verify(root:, ref:, repository:, pull:, options:)
       current = current_settings(root:, ref:, repository:, required: !verdict.nil?) if ref
-      new(verdict:, current:, location_diagnostic: ref ? UNAVAILABLE_SETTINGS : MISSING_REF)
+      new(verdict:, current:, location_diagnostic: ref ? UNAVAILABLE_SETTINGS : MISSING_REF, repository:)
     end
 
     def self.verify(root:, ref:, repository:, pull:, options:)
@@ -53,7 +53,8 @@ module Shaka
       nil
     end
 
-    def initialize(verdict: nil, current: nil, location_diagnostic: MISSING_REF)
+    def initialize(verdict: nil, current: nil, location_diagnostic: MISSING_REF, repository: nil)
+      @repository = repository
       @verdict = verdict
       @current = current
       @location_diagnostic = location_diagnostic
@@ -100,13 +101,15 @@ module Shaka
       settings = Evidence::PublicSettings.sanitize(@current)
       version, installation = settings.values_at('installation.version', 'installation.source')
       shaka = installation == 'UNKNOWN' ? version : "#{version} (installation: #{installation})"
-      "#{CURRENT}: #{source(settings)}; Shaka #{shaka}"
+      "#{CURRENT}: #{SettingsTable.source(settings, @repository)}; Shaka #{shaka}"
     end
 
     # One row per recorded result. Binding refuses a result whose settings differ from the
     # current ones, so a row needs only what can still vary: its revision and what it ran with.
     def operations_table
-      rows = operations.map { |title, settings| [title, source(settings), ran_with(settings)] }
+      rows = operations.map do |title, settings|
+        [title, SettingsTable.source(settings, @repository), ran_with(settings)]
+      end
       return [] if rows.empty?
 
       lines = [['Operation', 'Settings', 'Ran with'], %w[--- --- ---], *rows]
@@ -119,11 +122,6 @@ module Shaka
           [title, Evidence::PublicSettings.sanitize(entry.dig('original', 'public_settings'))]
         end
       end
-    end
-
-    def source(settings)
-      kind, revision = settings.values_at('source', 'source.revision')
-      kind == 'UNKNOWN' ? kind : "#{kind} at #{revision}"
     end
 
     def ran_with(settings)

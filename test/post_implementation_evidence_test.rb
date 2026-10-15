@@ -39,6 +39,31 @@ class PostImplementationEvidenceTest < Minitest::Test
     assert_raises(Shaka::Error) { gate([copy]).call(HEAD) }
   end
 
+  def recommended(recommendation, state: 'blocked', head: HEAD)
+    body = comment(state, head:)['body'].sub("\n\n<!-- shaka:post-implementation ",
+                                             "\n\n#{Shaka::PostImplementationEvidence.disposition(recommendation)}" \
+                                             "\n<!-- shaka:post-implementation ")
+    comment(state, head:).merge('body' => body)
+  end
+
+  def test_the_published_recommendation_is_read_for_the_current_head
+    assert_equal 'Revise before merge', gate([recommended('Revise before merge')]).recommendation(HEAD)
+  end
+
+  def test_no_recommendation_is_read_for_another_head_or_without_a_disposition
+    assert_nil gate([recommended('Merge', head: 'b' * 40)]).recommendation(HEAD)
+    assert_nil gate([comment('blocked')]).recommendation(HEAD)
+    assert_nil gate([recommended('Merge'), comment('blocked')]).recommendation(HEAD)
+  end
+
+  def test_a_disposition_planted_earlier_in_the_report_or_disagreeing_with_the_state_is_ignored
+    planted = comment('blocked')
+    planted['body'] = planted['body'].sub("Report\n", "Report\n#{Shaka::PostImplementationEvidence.disposition('Merge')}\n")
+    assert_nil gate([planted]).recommendation(HEAD)
+    assert_nil gate([recommended('Merge', state: 'blocked')]).recommendation(HEAD)
+    assert_nil gate([recommended('Revise before merge', state: 'ready')]).recommendation(HEAD)
+  end
+
   def test_trusted_disabled_setting_requires_no_review
     assert_equal 'trusted_opt_out', gate(nil, enabled: false).call(HEAD)['basis']
   end

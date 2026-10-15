@@ -7,6 +7,8 @@ module Shaka
   # Product conclusions never use the technical REVIEWED attestation.
   module PostImplementationReport
     CONCLUSIONS = ['Proceed', 'Simplify/reframe', 'Do not merge'].freeze
+    # The task owner's dispositions, shared by the owner's checkpoint comment and the description headline.
+    RECOMMENDATIONS = ['Merge', 'Revise before merge', 'Reconsider approach', 'Do not merge'].freeze
 
     module_function
 

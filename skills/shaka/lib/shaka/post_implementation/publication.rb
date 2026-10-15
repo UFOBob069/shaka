@@ -19,10 +19,11 @@ module Shaka
 
     ACTIONS = {
       'Proceed' => ['Merge if CI passes', 'Complete technical validation and required approvals.'],
-      'Simplify/reframe' => ['Revise before merging.', 'Revise the approach, then revalidate and review.'],
-      'Do not merge' => ['Do not merge; decide whether to close or replace.',
+      'Simplify/reframe' => ['Revise before merge', 'Revise the approach, then revalidate and review.'],
+      'Do not merge' => ['Do not merge; decide whether to close or replace',
                          'Bring the close-or-replace decision to the maintainer.']
     }.freeze
+    GATES = 'Required checks, reviews, and merge authority still apply.'
 
     def initialize(result, head:, repository:, message: nil)
       @result = result
@@ -37,7 +38,7 @@ module Shaka
       @state = @result['status'] == 'opted_out' ? 'opted_out' : 'not_completed'
       body = @result['status'] == 'completed' ? completed_body : incomplete_body
       body += "\n\n#{SquashComment.body(@head, @message.call)}" if @state == 'ready'
-      "#{identity}\n\n# Checkpoint\n\n**Revision:** #{@revision}\n\n#{body}\n\n" +
+      "#{identity}\n\n# Checkpoint for #{@revision}\n\n#{body}\n\n#{"#{@disposition_line}\n" if @disposition_line}" +
         PostImplementationEvidence.attestation(@head, @state)
     end
 
@@ -70,29 +71,30 @@ module Shaka
       @state = PostImplementationReport.ready?(report) ? 'ready' : 'blocked'
       action, next_action = recommendation(report)
       summary = @summary = report.fetch('summary', report.fetch('reasons').first)
-      ["**Recommended next action:** #{action}",
-       "**Next action:** #{owner_action(report, next_action)}",
-       "**Evaluation:** #{report.fetch('conclusion')}", summary,
+      ["## Reviewer recommendation: #{action}", "**Next:** #{owner_action(report, next_action)}",
+       "**Reviewer verdict:** #{report.fetch('conclusion')}", summary,
        concern_section(report), supporting_analysis(report, summary)].join("\n\n")
     end
 
     def concern_section(report)
       items = report.fetch('concerns')
-      "**Unresolved concerns:**\n\n#{items.empty? ? 'None.' : items.map { |item| "- #{item}" }.join("\n")}"
+      return '**Unresolved concerns:** None.' if items.empty?
+
+      "**Unresolved concerns:**\n\n#{items.map { |item| "- #{item}" }.join("\n")}"
     end
 
     def supporting_analysis(report, summary)
       ["<details>\n<summary>Supporting analysis and execution details</summary>",
        *report.fetch('reasons').reject { |reason| reason == summary },
        "Alternative considered: #{report.fetch('alternative')}",
-       execution_evidence, "Prompt: #{@result.fetch('prompt_source')}.", usage_text,
+       GATES, execution_evidence, "Prompt: #{@result.fetch('prompt_source')}.", usage_text,
        'Ruby verified report shape and head binding. The reviewer judged value; the task owner handles concerns ' \
        'and merge readiness. This does not attest to technical review.', '</details>'].join("\n\n")
     end
 
     def recommendation(report)
       if report['conclusion'] == 'Proceed' && !report['concerns'].empty?
-        return ['Resolve concerns before merging.', 'Resolve substantive concerns, then repeat affected review.']
+        return ['Resolve concerns before merging', 'Resolve substantive concerns, then repeat affected review.']
       end
 
       ACTIONS.fetch(report.fetch('conclusion'))
@@ -105,15 +107,14 @@ module Shaka
     end
 
     def incomplete_body
-      action, next_action = if @result['status'] == 'opted_out'
-                              ['Checkpoint opted out; no product review completed.',
-                               'Verify opt-out authority and remaining gates.']
-                            else
-                              ['Review not completed; readiness remains blocked.',
-                               'Resolve the execution failure and rerun the checkpoint.']
-                            end
-      "**Recommended next action:** #{action}\n\n#{summary}\n\n" \
-        "**Next action:** #{next_action}\n\n" \
+      heading, next_action = if @result['status'] == 'opted_out'
+                               ['Checkpoint opted out; no product review completed',
+                                'Verify opt-out authority and remaining gates.']
+                             else
+                               ['Checkpoint not completed; readiness remains blocked',
+                                'Resolve the execution failure and rerun the checkpoint.']
+                             end
+      "## #{heading}\n\n#{summary}\n\n**Next:** #{next_action}\n\n" \
         "<details>\n<summary>Execution details</summary>\n\n#{execution_evidence}\n\n#{usage_text}\n\n</details>"
     end
 

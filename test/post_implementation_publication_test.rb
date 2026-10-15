@@ -126,7 +126,7 @@ class PostImplementationPublicationTest < Minitest::Test
       github, status = publish(result, path)
 
       assert_equal 0, status
-      identity = "🤖 Claude · Anthropic · observed-model · UNKNOWN\n\n# Checkpoint\n\n"
+      identity = "🤖 Claude · Anthropic · observed-model · UNKNOWN\n\n# Checkpoint for "
       assert github.bodies.first.first.start_with?(identity)
       refute_includes github.bodies.first.first, 'PRIVATE TRANSCRIPT'
     end

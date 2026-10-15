@@ -13,10 +13,10 @@ module PostImplementationDispositionFixture
 
   def assert_owner_decision(github, result)
     body = github.bodies.first.first
-    assert_includes body, '**Evaluation:** Proceed'
-    assert_includes body, "**Recommended next action:** #{result['disposition']['recommendation']}"
+    assert_includes body, '**Reviewer verdict:** Proceed'
+    assert_includes body, "## Recommendation: #{result['disposition']['recommendation']}"
     assert_includes body, result['disposition']['reason']
-    assert_includes body, "**Next action:** #{result['disposition']['next_action']}"
+    assert_includes body, "**Next:** #{result['disposition']['next_action']}"
     assert_includes body, 'Required checks, reviews, and merge authority still apply.'
   end
 
@@ -41,6 +41,7 @@ class PostImplementationDispositionTest < Minitest::Test
         assert_equal 0, status
         assert_owner_decision(github, result)
         assert_raises(Shaka::Error) { Shaka::PostImplementationEvidence.new(github).call('a' * 40) }
+        assert_equal recommendation, Shaka::PostImplementationEvidence.new(github).recommendation('a' * 40)
       end
     end
   end
@@ -53,6 +54,7 @@ class PostImplementationDispositionTest < Minitest::Test
       assert_equal 0, status
       assert_owner_decision(github, result)
       assert_equal 'ready', Shaka::PostImplementationEvidence.new(github).call('a' * 40)['basis']
+      assert_equal 'Merge', Shaka::PostImplementationEvidence.new(github).recommendation('a' * 40)
     end
   end
 end
@@ -122,7 +124,7 @@ class PostImplementationAcceptedConcernTest < Minitest::Test
       body = github.bodies.first.first
 
       assert_equal 0, status
-      assert_includes body, "**Unresolved concerns:**\n\nNone."
+      assert_includes body, '**Unresolved concerns:** None.'
       assert_includes body, '- Frequency is unknown. — Decision: Justin accepted this in chat on 2026-10-11.'
       assert_includes body, 'not who made it'
       assert_equal 'ready', Shaka::PostImplementationEvidence.new(github).call('a' * 40)['basis']

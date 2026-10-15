@@ -429,7 +429,7 @@ class PublicationHumanCommentsSourceTest < Minitest::Test
                                                                                       'sections' => [SECTION])
     list = rendered.index("<!-- shaka:human-comments -->\n## Human comments")
 
-    assert_operator rendered.index('## Decisions for the maintainer'), :<, list
+    assert_operator rendered.index('## Decisions to make'), :<, list
     assert_operator list, :<, rendered.index('## What changed')
   end
 

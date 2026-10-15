@@ -45,6 +45,15 @@ module Shaka
       text
     end
 
+    # Readers see a short commit; the link keeps the full SHA for anyone who needs it.
+    # Anything other than a full SHA, such as UNKNOWN, is shown as given.
+    def commit(sha, repository = nil)
+      return sha unless sha.to_s.match?(/\A\h{40}\z/)
+
+      short = "`#{sha[0, 7]}`"
+      repository ? "[#{short}](https://github.com/#{repository}/commit/#{sha})" : short
+    end
+
     # Escaping a backslash before a pipe keeps a cell's own `\|` from ending the cell early.
     def table_cell(text) = text.gsub(/[\\|]/) { |character| "\\#{character}" }
 

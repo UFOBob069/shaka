@@ -34,7 +34,7 @@ module WalkthroughHistoryExamples
       #{Shaka::WalkthroughHistory::MARKER} #{CURRENT_URL}
 
       <details>
-      <summary>Walkthrough for commit `#{OLD_SHA}`</summary>
+      <summary>Walkthrough for commit `#{OLD_SHA[0, 7]}`</summary>
 
       #{body.rstrip}
 
@@ -212,7 +212,7 @@ class WalkthroughHistoryFooterTest < Minitest::Test
     publish_over(review_record(7, fenced), *collapse_responses(fenced, collapsed(fenced)))
 
     body = JSON.parse(graphql_call.last).dig('variables', 'body')
-    assert_includes body, "<summary>Walkthrough for commit `#{OLD_SHA}`</summary>"
+    assert_includes body, "<summary>Walkthrough for commit `#{OLD_SHA[0, 7]}`</summary>"
     refute_includes body, "<summary>Walkthrough for commit `#{older}`</summary>"
   end
 

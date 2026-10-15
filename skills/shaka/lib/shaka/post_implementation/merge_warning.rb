@@ -97,8 +97,8 @@ module Shaka
       "#{OPEN}\n> **⛔ Do not merge — post-implementation checkpoint blocked.**\n>\n#{reason}\n>\n" \
         '> Task owner: resolve the linked concerns and publish a new checkpoint for the current head. ' \
         "Keep this PR in draft until all required gates pass.\n>\n" \
-        "> [Blocking report](#{url}) · Head `#{head}`. Passing technical checks does not resolve this blocker.\n" \
-        "#{CLOSE}\n\n"
+        "> [Blocking report](#{url}) · Head #{PublicationText.commit(head, @github.repository)}. " \
+        "Passing technical checks does not resolve this blocker.\n#{CLOSE}\n\n"
     end
 
     def make_draft(head)

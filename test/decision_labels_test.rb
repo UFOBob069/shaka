@@ -55,7 +55,7 @@ class DecisionLabelsTest < Minitest::Test
   end
 
   def test_a_quoted_heading_is_not_an_open_decision
-    quoted = "## Decisions for the maintainer\n\n- Which base?\n"
+    quoted = "## Decisions to make\n\n- Which base?\n"
     fenced = "```\n<!-- shaka:decisions -->\n```\n"
     [quoted, fenced].each do |body|
       assert_nil Shaka::DecisionLabels.guard(client, {}, body)
@@ -64,7 +64,7 @@ class DecisionLabelsTest < Minitest::Test
   end
 
   def test_an_unclosed_fence_does_not_hide_a_published_decision
-    body = "```\nstill open\n<!-- shaka:decisions -->\n## Decisions for the maintainer\n"
+    body = "```\nstill open\n<!-- shaka:decisions -->\n## Decisions to make\n"
     error = assert_raises(Shaka::Error) { Shaka::DecisionLabels.guard(client, {}, body) }
 
     assert_includes error.message, 'empty list'
@@ -83,6 +83,7 @@ class DecisionLabelsTest < Minitest::Test
     assert_empty @calls
   end
 
+  # Bodies published before the heading was renamed still carry the old one.
   def test_omitting_decisions_is_refused_when_the_body_already_asks
     body = "<!-- shaka:decisions -->\n## Decisions for the maintainer\n\n- Which base?\n"
     error = assert_raises(Shaka::Error) { Shaka::DecisionLabels.guard(client, {}, body) }

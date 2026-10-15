@@ -39,7 +39,7 @@ class CliDescriptionDecisionsTest < Minitest::Test
         output, error, status = run_description(dir, root:)
 
         assert_predicate status, :success?, error
-        assert_includes File.read(File.join(dir, 'published.md')), '## Decisions for the maintainer'
+        assert_includes File.read(File.join(dir, 'published.md')), '## Decisions to make'
         assert_equal 'awaiting-answer', File.read(File.join(dir, 'labeled')).strip
         assert_equal ['awaiting-answer'], JSON.parse(output).dig('attention', 'labels')
       end
@@ -89,7 +89,7 @@ class CliDescriptionDecisionsTest < Minitest::Test
   end
 
   def test_description_refuses_to_drop_decisions_that_are_already_published
-    body = "<!-- shaka:decisions -->\n## Decisions for the maintainer\n\n- Which base?\n"
+    body = "<!-- shaka:decisions -->\n## Decisions to make\n\n- Which base?\n"
     with_repository do |root|
       commit(root)
       Dir.mktmpdir do |dir|

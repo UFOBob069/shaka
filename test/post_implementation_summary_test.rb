@@ -43,7 +43,7 @@ class PostImplementationModelPublicationTest < Minitest::Test
       codex_usage(result, path)
       identity = rendered(result, path)
       assert_includes identity, 'configured model: gpt-6.1-sol'
-      heading = /\A🤖 Codex · OpenAI · gpt-6\.1-sol \(configured\) · medium\n\n# Checkpoint\n\n/
+      heading = /\A🤖 Codex · OpenAI · gpt-6\.1-sol \(configured\) · medium\n\n# Checkpoint for \[`/
       assert_match heading, identity
       assert_operator identity.index('observed model:'), :>, identity.index('<details>')
       assert_includes identity, 'observed model: UNKNOWN'
@@ -78,8 +78,8 @@ class PostImplementationModelPublicationTest < Minitest::Test
       result['requested_model'] = 'chosen-model'
       body = rendered(result, path)
       assert_includes body, 'observed model: UNKNOWN; requested model: chosen-model'
-      assert_includes body, '**Recommended next action:** Merge if CI passes'
-      assert_includes body, '**Next action:** Complete technical validation and required approvals.'
+      assert_includes body, '## Reviewer recommendation: Merge if CI passes'
+      assert_includes body, '**Next:** Complete technical validation and required approvals.'
       assert_equal 1, body.scan('Useful change').size
     end
   end
@@ -93,11 +93,11 @@ class PostImplementationSummaryTest < Minitest::Test
       change_report(result, 'conclusion' => 'Simplify/reframe', 'summary' => 'Keep the safeguard; remove unused scans.',
                             'next_action' => 'Revise this PR, then revalidate.', 'reasons' => ['Maintenance evidence'])
       body = rendered(result, path)
-      assert_includes body, '**Recommended next action:** Revise before merging.'
-      assert_includes body, '**Next action:** Revise the approach, then revalidate and review.'
-      assert_includes body, "**Evaluation:** Simplify/reframe\n\nKeep the safeguard; remove unused scans."
+      assert_includes body, '## Reviewer recommendation: Revise before merge'
+      assert_includes body, '**Next:** Revise the approach, then revalidate and review.'
+      assert_includes body, "**Reviewer verdict:** Simplify/reframe\n\nKeep the safeguard; remove unused scans."
       assert_operator body.index('Keep the safeguard'), :<, body.index('Maintenance evidence')
-      assert_operator body.index('**Next action:**'), :<, body.index('Maintenance evidence')
+      assert_operator body.index('**Next:**'), :<, body.index('Maintenance evidence')
     end
   end
 
@@ -105,7 +105,7 @@ class PostImplementationSummaryTest < Minitest::Test
     with_result do |result, path|
       change_report(result, 'concerns' => ['Audience mismatch remains'])
       body = rendered(result, path)
-      assert_includes body, '**Recommended next action:** Resolve concerns before merging.'
+      assert_includes body, '## Reviewer recommendation: Resolve concerns before merging'
       assert_includes body, 'Audience mismatch remains'
     end
   end
@@ -127,7 +127,7 @@ class PostImplementationSummaryTest < Minitest::Test
      { 'conclusion' => 'Simplify/reframe' }, { 'conclusion' => 'Do not merge' }].each do |blocker|
       with_result do |result, path|
         change_report(result, blocker.merge('next_action' => 'Merge now.'))
-        refute_includes rendered(result, path), '**Next action:** Merge now.'
+        refute_includes rendered(result, path), '**Next:** Merge now.'
       end
     end
   end
@@ -135,25 +135,26 @@ class PostImplementationSummaryTest < Minitest::Test
   def test_unblocked_review_keeps_the_specific_owner_action
     with_result do |result, path|
       change_report(result, 'next_action' => 'Complete the required approval.')
-      assert_includes rendered(result, path), '**Next action:** Complete the required approval.'
+      assert_includes rendered(result, path), '**Next:** Complete the required approval.'
     end
   end
 
   def test_rejected_review_does_not_claim_readiness
     with_result do |result, path|
       change_report(result, 'conclusion' => 'Do not merge')
-      assert_includes rendered(result, path), 'Do not merge; decide whether to close or replace.'
+      assert_includes rendered(result, path),
+                      '## Reviewer recommendation: Do not merge; decide whether to close or replace'
     end
   end
 
   def test_failed_and_opted_out_reviews_do_not_claim_readiness
-    { 'not_completed' => 'Review not completed; readiness remains blocked.',
-      'opted_out' => 'Checkpoint opted out; no product review completed.' }.each do |status, recommendation|
+    { 'not_completed' => '## Checkpoint not completed; readiness remains blocked',
+      'opted_out' => '## Checkpoint opted out; no product review completed' }.each do |status, recommendation|
       with_result do |result, path|
         result['status'] = status
         result['reason'] = 'Recorded reason'
         result.delete('report')
-        assert_match(/#{Regexp.escape(recommendation)}.*\*\*Next action:\*\*/m, rendered(result, path))
+        assert_match(/#{Regexp.escape(recommendation)}.*\*\*Next:\*\*/m, rendered(result, path))
       end
     end
   end

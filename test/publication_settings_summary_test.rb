@@ -5,7 +5,7 @@ require_relative 'settings_snapshot_helper'
 class PublicationSettingsSummaryTest < Minitest::Test
   include SettingsSnapshotHelper
 
-  COMMITTED = "trusted/team at #{REVISION}".freeze
+  COMMITTED = "trusted/team at `#{REVISION[0, 7]}`".freeze
 
   def test_the_block_opens_on_its_status_then_the_current_settings
     status, _note, current = settings_block(current: snapshot).split("\n\n")
@@ -38,7 +38,7 @@ class PublicationSettingsSummaryTest < Minitest::Test
   def test_a_result_recorded_at_another_settings_revision_shows_that_revision
     earlier = snapshot(ref: 'b' * 40, command: 'validate')
     body = settings_block(current: snapshot, validation: [earlier], review: [snapshot(reviewer: 'openai/codex')])
-    assert_includes body, "| Before push: validation | trusted/team at #{'b' * 40} | validate |"
+    assert_includes body, '| Before push: validation | trusted/team at `bbbbbbb` | validate |'
     assert_includes body, "Current merge input (not evidence): #{COMMITTED}"
   end
 

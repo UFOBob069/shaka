@@ -14,11 +14,11 @@
   [the checkpoint procedure](post-implementation-validation.md#recommend-the-next-action) describes.
 - Use this example for content, not exact wording or claims:
 
-  > **Recommended next action:** {What should happen to this PR}
+  > ## Recommendation: {Merge, Revise before merge, Reconsider approach, or Do not merge}
   >
   > {Affected users} can now {specific behavior}. {Main reason for the recommendation}.
   >
-  > **Next action:** {Action and applicable dependencies, checks, or approvals}.
+  > **Next:** {Action and applicable dependencies, checks, or approvals}.
 
 - Replace every slot with concrete task facts and actual evidence.
 

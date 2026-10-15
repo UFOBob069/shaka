@@ -8,7 +8,9 @@ module Shaka
   module WalkthroughText
     HEADING = /^# Code Walkthrough$/
     IDENTITY = /\A🤖 /
-    FOOTER = /_Walkthrough for commit `([0-9a-f]{40})`\. This is a COMMENT, not an approval\._/
+    # The linked short form carries the full SHA in its URL; the bare full form is how older walkthroughs end.
+    LINKED = %r{\[`\h{7}`\]\(https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/commit/(\h{40})\)}
+    FOOTER = /_Walkthrough for commit (?:`([0-9a-f]{40})`|#{LINKED})\. This is a COMMENT, not an approval\._/
     FOOTER_LINE = /\A#{FOOTER}\z/
     RENDERED_DETAILS = %r{</?details\b[^>]*>}i
 
@@ -32,7 +34,7 @@ module Shaka
     def self.closing_footer?(lines) = lines.last&.match?(FOOTER_LINE)
 
     def self.revision(body)
-      unfenced(body).scan(FOOTER).flatten.last
+      unfenced(body).scan(FOOTER).last&.compact&.first
     end
 
     def self.unfenced(body) = body.gsub(/^```.*?^```/m, '')
@@ -177,7 +179,7 @@ module Shaka
     end
 
     def wrap(body, url)
-      summary = "<summary>Walkthrough for commit `#{WalkthroughText.revision(body)}`</summary>"
+      summary = "<summary>Walkthrough for commit `#{WalkthroughText.revision(body)&.slice(0, 7)}`</summary>"
       archived = body.rstrip
       "#{MARKER} #{url}\n\n<details>\n#{summary}\n\n#{archived}\n\n</details>\n"
     end

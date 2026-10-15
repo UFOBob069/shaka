@@ -917,6 +917,20 @@ class PublicationIdentityPresentationTest < Minitest::Test
   end
 end
 
+class PublicationWalkthroughFooterTest < Minitest::Test
+  IDENTITY = PublicationRegressionTest::IDENTITY
+
+  def test_a_walkthrough_footer_links_a_short_commit_that_still_reads_back_in_full
+    head = 'a' * 40
+    rendered = Shaka::Publication.walkthrough({ 'identity' => IDENTITY, 'summary' => 'What changed.', 'head' => head },
+                                              'acme/widgets')
+    assert_includes rendered, "_Walkthrough for commit [`aaaaaaa`](https://github.com/acme/widgets/commit/#{head})."
+    refute_includes rendered, "`#{head}`"
+    assert Shaka::WalkthroughText.rendered?(rendered)
+    assert_equal head, Shaka::WalkthroughText.revision(rendered)
+  end
+end
+
 class PublicationCheckpointTest < Minitest::Test
   HEAD = 'a' * 40
 
@@ -924,16 +938,58 @@ class PublicationCheckpointTest < Minitest::Test
     { 'identity' => PublicationRegressionTest::IDENTITY, 'summary' => 'Review the current result.',
       'table' => PublicationRegressionTest::TABLE, 'deployment' => 'none', 'steps_besides_merging' => 'none',
       'provenance' => PUBLIC_PROVENANCE, 'usage' => PublicationRegressionTest::USAGE_OBJECT,
-      'checkpoint' => { 'head' => HEAD, 'status' => 'Direction needed',
+      'checkpoint' => { 'head' => HEAD, 'recommendation' => 'Revise before merge',
                         'next_action' => 'Justin: choose the simpler parser before another review round.' } }
   end
 
-  def test_current_status_and_action_precede_supporting_evidence
-    body = Shaka::Publication.description(content, nil, { 'head' => { 'sha' => HEAD } })
-    assert_includes body, '**Status:** Direction needed'
-    assert_includes body, '**Recommended next action:** Justin: choose the simpler parser'
-    assert_operator body.index('**Recommended next action:**'), :<, body.index('| Check |')
-    assert_includes body, "Head: `#{HEAD}`"
+  PULL = { 'head' => { 'sha' => HEAD }, 'base' => { 'repo' => { 'full_name' => 'acme/widgets' } } }.freeze
+
+  def test_recommendation_heads_the_description_without_naming_the_commit
+    body = Shaka::Publication.description(content, nil, PULL)
+    assert_includes body, "## Recommendation: Revise before merge\n\n" \
+                          "**Next:** Justin: choose the simpler parser before another review round.\n"
+    assert_operator body.index('## Recommendation:'), :<, body.index('Review the current result.')
+    refute_includes body, "/commit/#{HEAD}"
+  end
+
+  def test_open_decisions_replace_the_recommendation_heading
+    data = content.merge('decisions' => ['Keep the parser?'])
+    data['checkpoint'].delete('recommendation')
+    body = Shaka::Publication.description(data, nil, PULL)
+    assert_includes body, "<!-- shaka:decisions -->\n## Decisions to make\n\n- Keep the parser?\n\n**Next:**"
+    assert_operator body.index('## Decisions to make'), :<, body.index('Review the current result.')
+    refute_includes body, '## Recommendation:'
+  end
+
+  def test_open_decisions_lead_even_over_a_published_merge
+    data = content.merge('decisions' => ['Keep the parser?'])
+    data['checkpoint']['recommendation'] = 'Merge'
+    body = Shaka::Publication.description(data, nil, PULL)
+    assert_includes body, '## Decisions to make'
+    refute_includes body, '## Recommendation:'
+  end
+
+  def test_recommendation_must_be_a_known_disposition
+    data = content
+    data['checkpoint']['recommendation'] = 'Ship it'
+    assert_raises(Shaka::Error) { Shaka::Publication.description(data, nil, PULL) }
+  end
+
+  def test_without_a_published_disposition_the_heading_says_so
+    data = content
+    data['checkpoint'].delete('recommendation')
+    body = Shaka::Publication.description(data, nil, PULL)
+    assert_includes body, "## No recommendation yet\n\n**Next:** Justin: choose the simpler parser"
+    refute_includes body, '## Recommendation:'
+  end
+
+  def test_review_link_sits_between_walkthrough_and_checkpoint
+    url = 'https://github.com/acme/widgets/pull/7#issuecomment-42'
+    body = Shaka::Publication.description(content.merge('review' => url), nil, PULL)
+    assert_includes body, "· [Code Review](#{url}) · Checkpoint:"
+    assert_raises(Shaka::Error) do
+      Shaka::Publication.description(content.merge('review' => 'https://example.com/x'), nil, PULL)
+    end
   end
 
   def test_stale_checkpoint_cannot_describe_the_current_pr
@@ -944,17 +1000,14 @@ class PublicationCheckpointTest < Minitest::Test
 
   def test_single_line_html_is_visible_text_instead_of_hiding_the_action
     data = content
-    data['checkpoint']['status'] = 'Direction needed <details>'
     data['checkpoint']['next_action'] = 'Justin: choose a direction <!-- recorded later -->'
     body = Shaka::Publication.description(data, nil, { 'head' => { 'sha' => HEAD } })
-    assert_includes body, 'Direction needed &lt;details&gt;'
     assert_includes body, 'choose a direction &lt;!-- recorded later --&gt;'
-    refute_includes body, 'Direction needed <details>'
   end
 
-  def test_status_cannot_hide_the_next_action_in_multiline_content
+  def test_next_action_cannot_hide_in_multiline_content
     data = content
-    data['checkpoint']['status'] = "Direction needed\n\n<details>"
+    data['checkpoint']['next_action'] = "Choose\n\n<details>"
     assert_raises(Shaka::Error) do
       Shaka::Publication.description(data, nil, { 'head' => { 'sha' => HEAD } })
     end

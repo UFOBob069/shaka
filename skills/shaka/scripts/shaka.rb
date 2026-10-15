@@ -19,6 +19,7 @@ require_relative '../lib/shaka/checkpoint'
 require_relative '../lib/shaka/claim'
 require_relative '../lib/shaka/decision_labels'
 require_relative '../lib/shaka/publication/deployment_link'
+require_relative '../lib/shaka/publication/checkpoint_recommendation'
 require_relative '../lib/shaka/doctor'
 require_relative '../lib/shaka/evidence/command'
 require_relative '../lib/shaka/enforcement'
@@ -208,12 +209,18 @@ rescue Shaka::Error, SystemCallError
   nil
 end
 
+# Links and the recommendation come from GitHub evidence for the head, not from the agent.
+def resolved_description(content, github)
+  Shaka::CheckpointRecommendation.resolve(Shaka::DeploymentLink.resolve(content, github), github)
+end
+
 def walkthrough_body(options, github)
   return File.read(options.fetch(:body_file), encoding: 'UTF-8') if options[:body_file]
 
   walkthrough = Shaka::PublisherAttribution.prepare(content(options.fetch(:content_file)))
   walkthrough = walkthrough.merge('head' => options.fetch(:head))
-  Shaka::Walkthrough::CodeLinks.resolve(Shaka::Publication.walkthrough(walkthrough), walkthrough, github)
+  Shaka::Walkthrough::CodeLinks.resolve(Shaka::Publication.walkthrough(walkthrough, github.repository), walkthrough,
+                                        github)
 end
 
 def usage_banner
@@ -370,7 +377,7 @@ begin
                  Open3.capture3(gh, *argv.drop(1), stdin_data:, chdir: neutral)
                end)
                attributed = Shaka::PublisherAttribution.prepare(content(options.fetch(:content_file)))
-               described = with_human_comments(Shaka::DeploymentLink.resolve(attributed, github), options[:comments])
+               described = with_human_comments(resolved_description(attributed, github), options[:comments])
                usage_records = carried = nil
                published = github.description(prose:) do |pull|
                  carried, usage_records = Shaka::UsageRecords.carry_from(described, pull)

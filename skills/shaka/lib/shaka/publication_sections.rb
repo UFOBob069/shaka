@@ -5,14 +5,15 @@ require_relative 'error'
 module Shaka
   # Renders description sections, including the decisions list that owns one heading.
   class PublicationSections
-    DECISIONS_HEADING = 'Decisions for the maintainer'
+    DECISIONS_HEADING = 'Decisions to make'
+    HEADINGS = [DECISIONS_HEADING, 'Decisions for the maintainer'].freeze
     MARKER = '<!-- shaka:decisions -->'
 
-    # following sits between the maintainer's open decisions and the agent's own sections.
+    # The open decisions render with the checkpoint, so following leads the agent's own sections.
     def self.render(content, following = [])
       listed = PublicationText.list(content['sections'], 'sections')
       refuse_heading(listed)
-      [*decisions(content['decisions']), *following, *listed.map { |section| section_block(section) }]
+      [*following, *listed.map { |section| section_block(section) }]
     end
 
     def self.decisions(items)
@@ -26,11 +27,11 @@ module Shaka
     def self.refuse_heading(sections)
       return unless sections.any? { |section| decisions_heading?(section) }
 
-      raise Error, 'Publication Decisions for the maintainer must be supplied as the decisions list, not a section.'
+      raise Error, 'Publication decisions must be supplied as the decisions list, not a section.'
     end
 
     def self.decisions_heading?(section)
-      section.is_a?(Hash) && section['heading'].to_s.strip.casecmp?(DECISIONS_HEADING)
+      section.is_a?(Hash) && HEADINGS.any? { |heading| section['heading'].to_s.strip.casecmp?(heading) }
     end
 
     def self.section_block(section)
@@ -38,6 +39,6 @@ module Shaka
       "## #{heading}\n\n#{PublicationText.required(section['body'], "section #{heading}")}"
     end
 
-    private_class_method :decisions, :refuse_heading, :decisions_heading?, :section_block
+    private_class_method :refuse_heading, :decisions_heading?, :section_block
   end
 end

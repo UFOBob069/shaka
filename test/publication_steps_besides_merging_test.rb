@@ -22,7 +22,7 @@ class PublicationStepsBesidesMergingTest < Minitest::Test
     )
   end
 
-  def test_steps_render_as_a_table_after_the_walkthrough_link_and_before_decisions
+  def test_steps_render_as_a_table_after_the_decisions_and_walkthrough_link
     rendered = render('steps_besides_merging' => [STEP, AFTER_STEP], 'decisions' => ['Which base?'])
     table = "| When | Step | Who | Where | How to verify |\n| --- | --- | --- | --- | --- |\n" \
             '| before merge | Set DOCS_DISPATCH_APP_ID and DOCS_DISPATCH_APP_KEY | Maintainer | ' \
@@ -31,8 +31,8 @@ class PublicationStepsBesidesMergingTest < Minitest::Test
     steps = rendered.index("<!-- shaka:steps-besides-merging -->\n## Before and after merge\n\n#{table}")
 
     refute_nil steps
+    assert_operator rendered.index('## Decisions to make'), :<, rendered.index('[Code Walkthrough](')
     assert_operator rendered.index('[Code Walkthrough]('), :<, steps
-    assert_operator steps, :<, rendered.index('## Decisions for the maintainer')
   end
 
   def test_an_escaped_pipe_in_a_cell_cannot_split_the_row

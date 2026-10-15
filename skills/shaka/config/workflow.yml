@@ -502,7 +502,7 @@ phases:
         calling `description`, `walkthrough`, or `reply`. Do not rewrite the rendered GitHub body, and
         do not invoke a separate rewrite skill. The helper owns identity, headings,
         spacing, tables, details, and UNKNOWN fields. Description keys are `identity`, `summary`,
-        optional `checkpoint`, `walkthrough` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
+        optional `checkpoint`, `walkthrough`, `review` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
         required `table`, required `provenance`, optional `skills_used` from the task record,
         required `usage` (`note` and `records` from
         `shaka usage --format json`), and `wip` while the PR is unfinished. A `details` item
@@ -515,12 +515,17 @@ phases:
         or unclosed text refuses publication.
         The helper always renders a Code Walkthrough link after the summary: the COMMENT review
         URL when `walkthrough` is supplied, otherwise `_Not published yet._`. Do not bury that URL
-        in the opening paragraph. Beside it, the helper renders Checkpoint,
-        using `post_implementation` for the published PR comment URL or a named placeholder
-        until publication. Supply `checkpoint` with the live full `head`, concise `status`, and
-        `next_action` naming its owner; the renderer keeps these visible near the top and rejects
-        a stale head. Summarize consequential decisions, questions or friction, and critical
-        changes in a few lines; put evidence in details. Republish when status or action changes.
+        in the opening paragraph. Beside it, the helper renders Code Review from `review`, the
+        published local review comment URL, and Checkpoint, using `post_implementation` for the
+        published PR comment URL or a named placeholder until publication. Supply `checkpoint`
+        with the live full `head` and a one-sentence `next_action`, such as
+        `Maintainer: merge on GitHub.`; the helper reads the
+        heading's recommendation from this head's published checkpoint `disposition`, and
+        non-empty `decisions` head the description instead. The renderer rejects a stale
+        head, so neither line names the commit; leave the check table without a commit
+        column unless a row covers an earlier commit. Summarize consequential decisions,
+        questions or friction, and critical changes in a few lines; put evidence in details.
+        Republish when the recommendation or action changes.
         Set `deployment` to `auto` to link the newest successful GitHub
         deployment of the PR head, falling back to the latest current-head Cloudflare Pages
         check when successful from the Cloudflare GitHub App. When neither provides a URL, the description shows `Deployment: none found` for that head.
@@ -871,7 +876,7 @@ always: |-
 
   Whenever the task has a PR and stops for a user answer, in any phase, publish `description`
   with a non-empty `decisions` list before the turn ends. That publication renders
-  Decisions for the maintainer and applies `awaiting-answer`. Publish `decisions` as an empty
+  Decisions to make and applies `awaiting-answer`. Publish `decisions` as an empty
   list once the answer is in: the section is omitted and `awaiting-answer` is removed.
   Do not publish a non-empty `decisions` list while the PR waits for merge approval: that wait
   keeps `awaiting-merge-approval` as Finish describes. Run `attention` with `--state none`

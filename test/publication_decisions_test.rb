@@ -13,26 +13,26 @@ class PublicationDecisionsTest < Minitest::Test
     )
   end
 
-  def test_decisions_render_between_the_walkthrough_link_and_other_sections
+  def test_decisions_lead_the_description_before_the_links_and_sections
     rendered = render('decisions' => ['Keep the label?', 'Which base?'],
                       'sections' => [{ 'heading' => 'Outcome', 'body' => 'What landed.' }])
-    marker = "<!-- shaka:decisions -->\n## Decisions for the maintainer\n\n- Keep the label?\n- Which base?\n"
+    marker = "<!-- shaka:decisions -->\n## Decisions to make\n\n- Keep the label?\n- Which base?\n"
     decisions = rendered.index(marker)
     walkthrough = rendered.index('[Code Walkthrough](')
     outcome = rendered.index("## Outcome\n")
 
     refute_nil decisions
-    assert_operator walkthrough, :<, decisions
-    assert_operator decisions, :<, outcome
+    assert_operator decisions, :<, walkthrough
+    assert_operator walkthrough, :<, outcome
   end
 
   def test_an_empty_decisions_list_omits_the_section
-    refute_includes render('decisions' => []), 'Decisions for the maintainer'
+    refute_includes render('decisions' => []), 'Decisions to make'
   end
 
   def test_a_hand_written_decisions_section_is_refused
     error = assert_raises(Shaka::Error) do
-      render('sections' => [{ 'heading' => 'Decisions for the maintainer', 'body' => '- One?' }])
+      render('sections' => [{ 'heading' => 'Decisions to make', 'body' => '- One?' }])
     end
     assert_includes error.message, 'decisions list'
   end

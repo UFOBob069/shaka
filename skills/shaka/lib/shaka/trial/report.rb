@@ -106,7 +106,7 @@ module Shaka
           Reported by the tester; this feedback is not an adoption or merge approval.
 
           - Shaka candidate: #{@url}
-          - Tested revision: [`#{@head}`](https://github.com/#{Reference::REPOSITORY}/commit/#{@head})
+          - Tested revision: [`#{@head[0, 7]}`](https://github.com/#{Reference::REPOSITORY}/commit/#{@head})
           - Result: #{result}
           - Verdict: **#{@verdict}**
 

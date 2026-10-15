@@ -335,7 +335,9 @@ large diff sometimes consumed the completion budget without returning a report.
 ```
 
 Set `OPENROUTER_API_KEY` in the review process environment; keep it out of repository
-files. No separate reviewer CLI is needed. The adapter supports only this explicit
+files. If you load keys on demand, for example from your keychain, say so in your personal
+agent instructions: agents often start a fresh shell for each command, so the loader must run
+in the same command as the review. No separate reviewer CLI is needed. The adapter supports only this explicit
 [OpenRouter model](https://openrouter.ai/deepseek/deepseek-v4.1-flash); it refuses other
 models and unsupported effort values before sending a request. Omitted effort uses
 the provider default and remains UNKNOWN in Shaka's attestation.

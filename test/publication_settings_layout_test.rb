@@ -6,9 +6,17 @@ require_relative 'settings_snapshot_helper'
 class PublicationSettingsLayoutTest < Minitest::Test
   include SettingsSnapshotHelper
 
+  def test_only_a_trusted_revision_links_to_the_repository
+    sha = 'a' * 40
+    trusted = Shaka::SettingsTable.source({ 'source' => 'trusted/team', 'source.revision' => sha }, 'acme/widgets')
+    local = Shaka::SettingsTable.source({ 'source' => 'private/local', 'source.revision' => sha }, 'acme/widgets')
+    assert_equal "trusted/team at [`aaaaaaa`](https://github.com/acme/widgets/commit/#{sha})", trusted
+    assert_equal 'private/local at `aaaaaaa`', local
+  end
+
   def test_settings_kept_out_of_the_repository_keep_every_value_behind_a_second_disclosure
     summary, values = bound.split('<details>', 2)
-    assert_includes summary, "| Before push: validation | private/local at #{REVISION} | validate |"
+    assert_includes summary, "| Before push: validation | private/local at `#{REVISION[0, 7]}` | validate |"
     refute_includes summary, '| merge.preference |'
     assert_includes values, '| merge.preference | ask | ask | ask |'
     assert values.end_with?('</details>'), 'the values disclosure must close inside the block'
