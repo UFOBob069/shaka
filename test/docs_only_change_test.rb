@@ -2,10 +2,12 @@
 
 require_relative 'test_helper'
 require 'fileutils'
+require 'shellwords'
 
 class DocsOnlyChangeTestSupport < Minitest::Test
   SCRIPT = File.expand_path('../bin/docs-only-change', __dir__)
   REAL_GIT = TEST_GIT
+  FAKE_RAN = '.git/fake-git-ran'
 
   def setup
     @root = Dir.mktmpdir('docs-only-change')
@@ -31,8 +33,9 @@ class DocsOnlyChangeTestSupport < Minitest::Test
 
   private
 
+  # A developer's BASH_ENV can put the real git ahead of a fake one on PATH.
   def classify(base = @base, environment = {})
-    Open3.capture2e(environment, SCRIPT, base, chdir: @root)
+    Open3.capture2e({ 'BASH_ENV' => nil }.merge(environment), SCRIPT, base, chdir: @root)
   end
 
   def commit_change(path, content, message)
@@ -63,7 +66,8 @@ class DocsOnlyChangeTestSupport < Minitest::Test
 
   def fake_git_that_fails_diff
     directory = File.join(@root, '.git/fake-bin')
-    write('.git/fake-bin/git', "#!/bin/sh\n[ \"$1\" = diff ] && exit 1\nexec \"#{REAL_GIT}\" \"$@\"\n")
+    ran = Shellwords.escape(File.join(@root, FAKE_RAN))
+    write('.git/fake-bin/git', "#!/bin/sh\n[ \"$1\" = diff ] && { : > #{ran}; exit 1; }\nexec \"#{REAL_GIT}\" \"$@\"\n")
     FileUtils.chmod(0o755, File.join(directory, 'git'))
     directory
   end
@@ -149,6 +153,7 @@ class DocsOnlyChangeBaseModeTest < DocsOnlyChangeTestSupport
     write('docs/new.md', "New\n")
     environment = { 'PATH' => "#{fake_git_that_fails_diff}:#{ENV.fetch('PATH')}" }
     _output, status = classify(@base, environment)
+    assert_path_exists File.join(@root, FAKE_RAN), 'The fake git never ran; check PATH inside the script.'
     refute_predicate status, :success?
   end
 
