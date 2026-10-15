@@ -107,6 +107,14 @@ Replace the example with a small outcome or an issue link. `Go` lets the agent
 start with its current model and effort settings. It handles routine work and
 asks when a missing choice, access problem, or consequential decision needs you.
 
+For a different outcome, choose an example:
+
+- [Plan before implementing](working-with-shaka.md#get-a-plan-before-implementing).
+- [Review an existing PR](working-with-shaka.md#review-an-existing-pr).
+- [Resume a PR](working-with-shaka.md#resume-a-pr-you-already-started) or
+  [recover unfinished work](working-with-shaka.md#resume-unfinished-work).
+- [Set up a repository for your team](working-with-shaka.md#configure-a-repository-for-your-team).
+
 Look for a PR explaining what changed, what was tested and reviewed, and any
 remaining gaps. With **Ask**, you decide whether to merge; **Auto** lets the agent
 merge after the required checks, review, and approvals.
