@@ -7,7 +7,9 @@ and unused requests do not establish applied use.
 
 Retain the complete list on resume and supply it as description `skills_used` on
 publication. The optional JSON key keeps older callers compatible; missing records
-leave coverage unknown. Use the resolved name, public source and available revision
+leave coverage unknown. Keep Shaka's own entries, named `shaka` with source
+`ShakaCode/shaka`; the table omits them, and a Shaka-only record then reports no
+other skills. Use the resolved name, public source and available revision
 (otherwise `UNKNOWN`), phase, and one-line contribution:
 
 ```json

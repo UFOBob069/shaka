@@ -23,12 +23,24 @@ module Shaka
     end
 
     def detail
-      rows = @records.map { |record| row(record) }.uniq
-      body = rows.empty? ? 'No skill use recorded; coverage is UNKNOWN.' : table(rows)
-      { 'summary' => SUMMARY, 'body' => "#{body}\n\n#{NOTE}" }
+      rows = @records.map { |record| row(record) }
+      # Every managed PR uses Shaka, and provenance already names the workflow version that ran.
+      listed = rows.zip(@records).reject { |_, record| shaka?(record) }.map(&:first).uniq
+      { 'summary' => SUMMARY, 'body' => "#{body(rows, listed)}\n\n#{NOTE}" }
     end
 
     private
+
+    def shaka?(record)
+      record['name'].casecmp?('shaka') && record['source'].casecmp?('ShakaCode/shaka')
+    end
+
+    def body(rows, listed)
+      return table(listed) if listed.any?
+      return 'No skills besides Shaka were reported.' if rows.any?
+
+      'No skill use recorded; coverage is UNKNOWN.'
+    end
 
     def table(rows)
       header = %w[Skill Source Revision Phase Contribution Evidence Corroboration]
