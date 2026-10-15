@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Runs Minitest files in several worker processes. Every worker loads every file,
+# then keeps every Nth test class, so each test runs exactly once. Set
+# SHAKA_TEST_WORKERS to choose the count; 1 runs the suite in one process.
+require 'etc'
+require 'tempfile'
+
+workers = Integer(ENV.fetch('SHAKA_TEST_WORKERS', [Etc.nprocessors, 4].min))
+abort 'SHAKA_TEST_WORKERS must be at least 1' if workers < 1
+files = (ARGV.empty? ? Dir.glob('test/**/*_test.rb') : ARGV).map { |path| File.expand_path(path) }
+
+runs = Array.new(workers) do |index|
+  code = <<~RUBY
+    #{files.inspect}.each { |path| require path }
+    classes = Minitest::Runnable.runnables
+    named, anonymous = classes.partition(&:name)
+    kept = named.sort_by(&:name).select.with_index { |_, i| i % #{workers} == #{index} }
+    classes.replace(#{index}.zero? ? kept + anonymous : kept)
+  RUBY
+  log = Tempfile.new("run-tests-#{index}")
+  { log:, pid: Process.spawn(RbConfig.ruby, '-Itest', '-e', code, out: log.path, err: %i[child out]) }
+end
+
+totals = Hash.new(0)
+results = runs.map do |run|
+  status = Process.wait2(run[:pid]).last
+  output = File.read(run[:log].path)
+  run[:log].close!
+  puts output
+  counts = output.scan(/(\d+) (runs|assertions|failures|errors|skips)\b/).last(5)
+  counts.each { |count, name| totals[name] += count.to_i } if counts.size == 5
+  status.success? && counts.size == 5
+end
+
+counted = %w[runs assertions failures errors skips].to_h { |name| [name.to_sym, totals[name]] }
+puts format('Total: %<runs>d runs, %<assertions>d assertions, %<failures>d failures, %<errors>d errors, ' \
+            '%<skips>d skips across %<workers>d workers', **counted, workers:)
+exit(results.all?)
