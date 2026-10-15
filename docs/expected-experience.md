@@ -47,6 +47,13 @@ If a project has no usable checks, decide with the agent whether to add them or
 report limited verification. Routine tasks should not require editing configuration
 or PATH by hand.
 
+## Multiple reviewers per commit
+
+Start with one reviewer. For broader coverage, configure
+[multiple reviewers](settings.md#reviewlocal_review_count), such as Claude, Codex,
+or DeepSeek. Additional reviews cost more. The agent combines reviews before
+deciding how to respond, so overlapping findings are handled once.
+
 ## Understand the PR's settings and evidence
 
 Expand the settings block to see whether the validation and review results match
