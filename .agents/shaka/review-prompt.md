@@ -4,6 +4,9 @@ Review the change against the supplied trusted AGENTS.md criteria.
   and regression coverage. Identify the triggering state and actual evidence.
 - For agent instructions, apply **Skill architecture and review**, using the
   instruction-growth report and the actual loading conditions.
+- For a new user-invoked procedure, check that the documented entry point routes
+  to it, and that any behavior trial started from that entry point rather than
+  naming the procedure file.
 
 Start with `## Coverage`: inspected files, executed checks, and missing context.
 Use `## Findings`, with each finding anchored to file:line and classed under the
