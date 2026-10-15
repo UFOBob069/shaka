@@ -366,40 +366,16 @@ phases:
         `reviewer`, adding `--unavailable` for any reviewer that has since failed with qualifying
         evidence.
       - For UI changes, meaning anything a person sees on screen other than command-line output,
-        use the change by hand on the head you will push, and capture before and after screenshots
-        on desktop and mobile, adding a short video when interaction or timing matters. Inspect each capture
-        for the intended state and compare the whole affected view for unexpected changes.
-        Present an annotated after capture with a few numbered boxes, highlights, or arrows
-        explaining meaningful changes, following the [visual-evidence procedure](<{{package_root}}/skills/shaka/references/visual-diff.md>).
-        Keep the original before and after captures available, label intended and unexpected
-        changes, and explain any alignment limits. Exact pixel differences are optional
-        diagnostic evidence; put them in collapsed details when useful.
-        After a later commit that changes runtime behavior, repeat the manual pass and refresh
-        the affected captures and annotations, including any diagnostic differences.
-        Captures complement tests; they do not replace them. Read the current public
-        [verification guide](https://github.com/shakacode/shaka/blob/main/docs/pr-verification.md) for examples when deciding what evidence a
-        change needs. Follow this installed workflow if the current public guide differs.
+        follow [UI verification](<{{package_root}}/skills/shaka/references/ui-verification.md#ui-changes>)
+        before review. It covers manual use, desktop/mobile captures, annotations, and refresh after
+        runtime changes. Publish that evidence before the Finish checkpoint.
+        Captures complement tests; they do not replace them.
       - When a change aims to speed up page load, rendering, or bundle size, likely slows them,
-        or changes what a page loads or how it is cached or streamed, measure it against the base.
-        Copy and styling tweaks with no speed aim or likely speed cost fall outside this step.
-        When the repository has its own base-versus-change benchmark, use it; otherwise use
-        ShakaPerf. For ShakaPerf, first check `command -v shaka-perf`. If it is missing, suggest
-        [ShakaPerf](https://github.com/shakacode/shakaperf#usage) to the user. If it is installed
-        but the repository has no `abtests.config.ts`, the ShakaPerf config that names the pages
-        to compare, offer to run `shaka-perf init` and its twin-server setup, which runs the base
-        and the change as two local servers side by side. Once both are in place, run
-        `shaka-perf compare` with the base as control and the change as experiment.
-        For either comparison, include pages or scenarios, and metrics, that reach the changed
-        behavior; a result that covers none of them counts as unmeasured. Record the verdict for
-        the PR as improvement, wash, regression, or ambiguous with the pages covered, metrics,
-        sample count, and the control and experiment revisions. A single page load is not
-        evidence. Any regression or ambiguous result, and a wash for a change meant to speed
-        things up, go back to Implement, or to the maintainer to accept it, before the PR is
-        called ready; record that acceptance for the PR.
-        A result stays valid across commits that leave runtime behavior and the comparison setup
-        unchanged; after one that changes either, rerun the comparison or mark its result stale.
-        When no comparison could run or reach the changed behavior, record for the PR that the
-        speed claim was not measured.
+        or changes what a page loads or how it is cached or streamed, follow
+        [speed verification](<{{package_root}}/skills/shaka/references/performance-verification.md>)
+        before review. Copy and styling tweaks with no speed aim or likely speed cost fall outside
+        this step. The procedure owns comparison coverage, result validity, and the repair or
+        maintainer-acceptance path for regressions, ambiguous results, and unsuccessful speedups.
     done_when: >-
       The change is committed; validation passed on that exact head or the verified base-failure
       procedure permits a blocked draft only; a UI change was used by hand and captured on that head; a speed-affecting change has either a current comparison
@@ -433,15 +409,10 @@ phases:
         issue and PR reads and for publication. Publish only within the task's scope; without a PR,
         put supporting tables and checks in the final report, and link from chats that cannot
         collapse details.
-      - Check a UI change's captures for credentials and private content, then publish
-        them on its PR with `gh pr comment NUMBER --body-file BODY_FILE --attach 'CAPTURE#ALT TEXT'` (GitHub CLI 2.99 or
-        later; a video uses `--attach CAPTURE`, since video has no alt text). The body file starts
-        with the writer identifier above, followed by the verification note. Label captures with the
-        tested revision, and read the comment back to confirm each capture became an uploaded
-        URL; a local path is not evidence. When a capture cannot be published, record
-        `uploader_absent`, `uploader_denied`, or `upload_failed: DETAIL` on the PR in its place.
-        Once you resolve a preview for the description, whether through `deployment: auto` or a
-        URL you supply, repeat the manual pass against it, or record on the PR why not.
+      - For a UI change, follow [UI evidence publication](<{{package_root}}/skills/shaka/references/ui-verification.md#publish-ui-evidence>)
+        to inspect captures for private content, then publish them on its PR before the Finish
+        checkpoint. When a capture cannot be published, record `uploader_absent`, `uploader_denied`,
+        or `upload_failed: DETAIL` on the PR in its place.
       - Publish a speed-affecting change's comparison result, any maintainer acceptance, or its
         unmeasured note on its PR. Label a result with the revisions it compared, and an
         unmeasured note with the head it covers, marked as not measured.
