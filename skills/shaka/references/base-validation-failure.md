@@ -50,7 +50,7 @@ are supplied. Its UNKNOWN settings columns remain UNKNOWN. Publish the completed
 review separately through the normal review publication command.
 
 Lead the description with the blocked status and reason. Record the failed check
-in its check table and put the comparison evidence in details. Keep WIP Details
+in its verification and put the comparison evidence in details. Keep WIP Details
 current, naming the repair dependency and next action. Report the PR as a blocked
 draft, not merge-ready. At a stopping point, arrange the normal monitor or
 `awaiting-resume` handoff; a requested maintainer decision uses `decisions` instead.

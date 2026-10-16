@@ -69,6 +69,7 @@ module HandoffFixtures
     Shaka::Publication.description(
       'identity' => IDENTITY, 'summary' => 'A summary.', 'table' => TABLE, 'deployment' => 'none',
       'steps_besides_merging' => 'none',
+      'intent' => INTENT, 'verification' => VERIFICATION,
       'provenance' => PROVENANCE, 'usage' => USAGE, 'details' => [], 'wip' => wip
     )
   end

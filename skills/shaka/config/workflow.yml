@@ -428,8 +428,8 @@ phases:
         or the verified base-failure procedure requires a blocked draft.
       - Write plain English: the outcome and why, in established project terms, following user and
         repository writing preferences. Keep decisions, risks, and evidence gaps visible. Name
-        specific things in summaries and sections. Keep blockers visible; put supporting checks,
-        review history, and rollback in `details`, and usage in the `usage` object. Avoid repeated status updates. Store useful
+        specific things in summaries and sections. Keep blockers visible; put checks beyond
+        `verification`, review history, and rollback in `details`, and usage in the `usage` object. Avoid repeated status updates. Store useful
         evidence once and retrieve it as needed; collapsing does not save tokens.
       - Point reviewers to the code instead of retelling it: the description links the walkthrough,
         and the walkthrough links each step to its lines. Keep the text in proportion to the change.
@@ -468,10 +468,19 @@ phases:
         do not invoke a separate rewrite skill. The helper owns identity, headings,
         spacing, tables, details, and UNKNOWN fields. Description keys are `identity`, `summary`,
         optional `checkpoint`, `walkthrough`, `review` and `post_implementation`, required `deployment`, required `steps_besides_merging`, optional `decisions`, optional `sections`,
-        required `table`, required `provenance`, optional `skills_used` from the task record,
+        required `intent` and `verification`, optional `table`, required `provenance`, optional `skills_used` from the task record,
         required `usage` (`note` and `records` from
         `shaka usage --format json`), and `wip` while the PR is unfinished. A `details` item
         whose summary names usage is refused; walkthroughs also require `head`.
+        `intent` holds one line each for `why`, `scope`, `leaves_out`, and `safe_because`: the
+        problem, what the PR covers, what it deliberately leaves out, and the fact its safety rests
+        on. Its `review_effort`, 1 to 5, tells the reviewer how hard to look given that blast radius:
+        1 for docs a reader can trust from the description, 5 for irreversible or security changes.
+        `verification` lists 1 to 3 `checks`, each what was run and its outcome, citing a link
+        or the command, and a `not_verified` line naming what went unproven and why that is
+        acceptable, or `Nothing.` when every claim was proved. An unfinished PR may list no checks
+        yet. The helper renders both after the links and refuses a check with neither a Markdown
+        link nor a code span; it cannot tell whether the check ran.
         Link walkthrough code through optional `code_links`, which maps a name to `path`, `from`
         text, and either `to` text or `block: true`; write `[label](code:NAME)` in the prose.
         The helper finds `from` on exactly one line of the file at the head. It ends the range
@@ -487,9 +496,9 @@ phases:
         `Maintainer: merge on GitHub.`; the helper reads the
         heading's recommendation from this head's published checkpoint `disposition`, and
         non-empty `decisions` head the description instead. The renderer rejects a stale
-        head, so neither line names the commit; leave the check table without a commit
-        column unless a row covers an earlier commit. Summarize consequential decisions,
-        questions or friction, and critical changes in a few lines; put evidence in details.
+        head, so neither line names the commit; leave checks and any table without a commit
+        unless one covers an earlier commit. Summarize consequential decisions,
+        questions or friction, and critical changes in a few lines; put further evidence in details.
         Republish when the recommendation or action changes.
         Set `deployment` to `auto` to link the newest successful GitHub
         deployment of the PR head, falling back to the latest current-head Cloudflare Pages
@@ -576,9 +585,9 @@ phases:
         and the result names the limitation.
       - Divide the two by what each reader needs. The description serves someone deciding whether to
         merge, so it carries the outcome headline, the delivery decisions and blockers a
-        maintainer must act on, missing required review, the check table, provenance, usage, the
-        WIP Details note while the PR is unfinished, and the links to the current walkthrough and review
-        result. The walkthrough serves someone reading the code, so it carries the implementation
+        maintainer must act on, missing required review, the intent and verification, and the links
+        to the current walkthrough and review result. Provenance, usage, and the WIP Details note
+        are audit material the helper keeps collapsed. The walkthrough serves someone reading the code, so it carries the implementation
         choices and the alternatives they rejected. Where a subject serves both readers, as purpose,
         risk, rollback, and validation do, give each the resolution its reader needs: share the
         subject, never the sentences. Every summary leads with what its own reader notices, which for

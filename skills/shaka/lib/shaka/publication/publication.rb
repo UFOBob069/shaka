@@ -11,6 +11,7 @@ require_relative 'settings'
 require_relative 'steps_besides_merging'
 require_relative 'human_comments'
 require_relative 'skills_used'
+require_relative 'intent_verification'
 require_relative '../publication_sections'
 
 module Shaka
@@ -18,8 +19,9 @@ module Shaka
   class Publication
     # With the pull request being replaced, the provenance history carries forward from its body.
     def self.description(content, workflow_version = nil, pull = nil, settings = nil)
-      new(content, require_tables: true, workflow_version:, pull:, settings:)
-        .render(%i[top_links sections table provenance skills_used details wip], lead: %i[checkpoint])
+      new(content, description: true, workflow_version:, pull:, settings:)
+        .render(%i[top_links intent_verification sections table provenance skills_used details wip],
+                lead: %i[checkpoint])
     end
 
     def self.comment(content) = new(content).render([])
@@ -29,11 +31,11 @@ module Shaka
         "#{PublicationLinks.walkthrough_footer(content['head'], repository)}\n"
     end
 
-    def initialize(content, require_tables: false, workflow_version: nil, pull: nil, settings: nil)
+    def initialize(content, description: false, workflow_version: nil, pull: nil, settings: nil)
       raise Error, 'Publication content must be an object.' unless content.is_a?(Hash)
 
       @content = content
-      @require_tables = require_tables
+      @description = description
       @workflow_version = workflow_version
       @pull = pull
       @settings = settings || PublicationSettings.new
@@ -59,13 +61,13 @@ module Shaka
     # The steps besides merging sit under the headline links so a reader cannot miss them.
     def top_links = [*PublicationLinks.top(@content, @settings, @pull), *StepsBesidesMerging.render(@content)]
 
+    # Intent and verification answer whether to trust the merge, so they come before any section.
+    def intent_verification = IntentVerification.render(@content)
+
+    # Verification carries the proof, so a table only adds facts that fit no check.
     def table
       spec = @content['table']
-      if spec.nil?
-        raise Error, 'Publication description requires a table.' if @require_tables
-
-        return []
-      end
+      return [] if spec.nil?
 
       columns = table_columns(spec)
       [[table_line(columns), table_line(['---'] * columns.size), *table_data_rows(spec, columns.size)].join("\n")]
@@ -96,10 +98,10 @@ module Shaka
 
     def details
       items = PublicationText.list(@content['details'], 'details')
-      validate_details(items) if @require_tables
-      items = [@settings.detail, *items] if @require_tables
+      validate_details(items) if @description
+      items = [@settings.detail, *items] if @description
       rendered = items.map { |detail| details_block(detail) }
-      rendered.unshift(details_block(UsageDetails.new(@content['usage']).detail)) if @require_tables
+      rendered.unshift(details_block(UsageDetails.new(@content['usage']).detail)) if @description
       rendered
     end
 

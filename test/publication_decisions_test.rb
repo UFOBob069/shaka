@@ -8,6 +8,7 @@ class PublicationDecisionsTest < Minitest::Test
       { 'identity' => PublicationRegressionTest::IDENTITY, 'summary' => 'A summary.',
         'walkthrough' => PublicationRegressionTest::WALKTHROUGH, 'deployment' => 'none',
         'steps_besides_merging' => 'none',
+        'intent' => INTENT, 'verification' => VERIFICATION,
         'table' => PublicationRegressionTest::TABLE, 'provenance' => PUBLIC_PROVENANCE,
         'usage' => PublicationRegressionTest::USAGE_OBJECT, 'details' => [] }.merge(changes)
     )

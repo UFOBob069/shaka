@@ -270,7 +270,9 @@ identifier from `identity`.
 Write for someone deciding whether to merge. State the outcome and why it
 matters, then send them to the walkthrough and the code rather than retelling
 the diff. Show blockers, decisions, and missing required review.
-Include the check table, provenance, usage tables, and WIP Details note while unfinished.
+Show what the change is for and what was proved in `intent` and `verification`,
+as the Explain step defines them. Provenance, usage, and the WIP Details note are
+audit material the helper keeps collapsed.
 Keep optional review history and routine rollback detail collapsed.
 
 Supply the current COMMENT review URL in the `walkthrough` field. The helper

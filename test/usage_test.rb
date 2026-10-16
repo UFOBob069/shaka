@@ -535,6 +535,7 @@ class UsageIdentityTest < Minitest::Test
     [[context('current'), usage('r1', 'current', 100)], [context('current')]].each do |records|
       content = { 'identity' => { 'agent' => 'Codex' }, 'summary' => 'A summary.', 'deployment' => 'none',
                   'steps_besides_merging' => 'none',
+                  'intent' => INTENT, 'verification' => VERIFICATION,
                   'table' => { 'columns' => %w[Check], 'rows' => [%w[pass]] }, 'provenance' => provenance,
                   'details' => [{ 'summary' => 'Usage and cost', 'body' => run_report(records) }] }
       error = assert_raises(Shaka::Error) { Shaka::Publication.description(content) }
