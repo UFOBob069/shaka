@@ -71,6 +71,29 @@ job. The walkthrough should explain that choice; tests should exercise the
 export behavior. You can then judge whether the approach suits the expected
 volume and whether important cases are missing.
 
+## See a current PR
+
+These captures show real public PRs on October 14, 2026 (Hawaii time).
+Open each source to read the full record; its live state may have changed.
+
+### Start with the recommendation
+
+![PR description opening with Recommendation: Merge, a short Next action, and links to Code Walkthrough, Code Review, and Checkpoint.](img/pr-recommendation.webp)
+
+[PR #527](https://github.com/shakacode/shaka/pull/527) shows the recommendation
+above the summary and links to its supporting evidence. Open **Checkpoint**
+before acting on the recommendation; the screenshot is a historical example,
+not approval to merge another commit.
+
+### Follow the review history
+
+![One Local Adversarial Review comment showing the reviewed revision, coverage limits, a table of four reviewed commits and finding dispositions, and collapsed reports.](img/pr-review-history.webp)
+
+[The review record on PR #539](https://github.com/shakacode/shaka/pull/539#issuecomment-6186181367)
+gathers several reviewed commits in one comment. The table shows findings and
+their dispositions; expandable sections keep the reports available. Read the
+coverage limits even when the outcome says no open findings.
+
 ## Check the latest changes
 
 Before merging, open the PR to see how the change was checked. Tests and reviews
@@ -272,6 +295,12 @@ A checkpoint that recommends merging comes after the code walkthrough and any
 screenshots for the same commit, so you read the evidence before the recommendation
 and merge text. Shaka refuses to publish it until the walkthrough for that
 commit exists; your agent publishes the screenshots first.
+
+![Checkpoint for commit 1198b62 showing Recommendation: Merge, the next action, Reviewer verdict: Proceed, no unresolved concerns, and a copyable squash commit title.](img/pr-checkpoint.webp)
+
+[The checkpoint on PR #527](https://github.com/shakacode/shaka/pull/527#issuecomment-6184807134),
+captured October 14, 2026 (Hawaii time), separates the owner's recommendation
+from the reviewer's verdict and provides the squash message below it.
 
 The checkpoint explains one conclusion:
 **Proceed**, **Simplify/reframe**, or **Do not merge**. Substantive unresolved concerns
