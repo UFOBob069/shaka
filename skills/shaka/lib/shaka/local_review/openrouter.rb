@@ -4,6 +4,7 @@ require 'json'
 require 'net/http'
 require 'timeout'
 require 'securerandom'
+require_relative '../defaults'
 require_relative '../usage/openrouter_usage'
 require_relative '../usage/value_token'
 
@@ -11,7 +12,7 @@ module Shaka
   # One fixed model, one bounded request, no tools or automatic model fallback.
   class OpenrouterReview
     MODEL = 'deepseek/deepseek-v4.1-flash'
-    DEFAULT_TIMEOUT_SECONDS = 600
+    DEFAULT_TIMEOUT_SECONDS = Defaults.fetch('runtime', 'review_timeout_seconds', 'deepseek/openrouter')
     EFFORTS = %w[low high max].freeze
     ENDPOINT = URI('https://openrouter.ai/api/v1/chat/completions')
 

@@ -22,6 +22,7 @@ contract and grants no authority.
 | --- | --- | --- |
 | [`workflow.yml`](../skills/shaka/config/workflow.yml) | `shaka workflow` | Validate and render the ordered agent procedure |
 | [`enforcement.yml`](../skills/shaka/config/enforcement.yml) | `shaka enforcement` | Report which rules are enforced by code, GitHub, or the agent |
+| [`defaults.yml`](../skills/shaka/config/defaults.yml) | Loaded by `defaults.rb` | Hold every built-in default for settings a repository omits, and command-line defaults |
 
 The enforcement loader checks that quoted rules still exist and that strong-rule
 phrases are classified. It cannot detect a new clause inside an already quoted
@@ -44,7 +45,7 @@ allowlist source selection; its former require path is a compatibility shim.
 The boundary covers repository-facing settings, allowlists, executable discovery,
 and seam initialization and migration. `configuration/generated_files.rb` restricts
 generated-file reads and writes to the known destinations. Packaged `workflow.yml`, `enforcement.yml`,
-and usage rate data have separate loaders; the install-local repository catalog
+`defaults.yml`, and usage rate data have separate loaders; the install-local repository catalog
 and GitHub metadata are also separate. Generated pointer text and error messages
 may show concrete paths as explanations. The merge-review classifier names
 `.agents/` as an instruction directory, not a configuration source. The architectural

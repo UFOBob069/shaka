@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'defaults'
 require_relative 'error'
 require_relative 'ci_review_wait'
 require_relative 'pr_watch/review_gate'
@@ -13,9 +14,9 @@ module Shaka
     include ReviewGate
     include Feedback
 
-    DEFAULT_INTERVAL = 60
-    DEFAULT_TIMEOUT = 3600
-    DEFAULT_SETTLE = 15
+    DEFAULT_INTERVAL = Defaults.fetch('runtime', 'pr_watch', 'interval_seconds')
+    DEFAULT_TIMEOUT = Defaults.fetch('runtime', 'pr_watch', 'timeout_seconds')
+    DEFAULT_SETTLE = Defaults.fetch('runtime', 'pr_watch', 'settle_seconds')
     TERMINAL_BUCKETS = %w[pass fail skipping cancel].freeze
     PENDING_STATES = %w[PENDING QUEUED IN_PROGRESS].freeze
     COMMENT_KINDS = %w[issue_comments review_summaries inline_comments].freeze

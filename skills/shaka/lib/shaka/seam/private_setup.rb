@@ -33,7 +33,7 @@ module Shaka
         Error.new("Private setup interrupted at #{error.message}#{guidance}")
       end
 
-      def merge_policy = { 'preference' => 'ask' }
+      def merge_policy = { 'preference' => Defaults.fetch('merge', 'preference') }
 
       def validate_policies
         RepositoryConfig::ReviewSchema.new(review_policy).validate

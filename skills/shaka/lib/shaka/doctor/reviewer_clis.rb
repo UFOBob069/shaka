@@ -50,7 +50,8 @@ module Shaka
         return ['Repository configuration unavailable; reviewer readiness is not assessed.'] unless review
 
         configured = entries.select { |entry| entry[:configured] }
-        lines = warnings(configured, review.fetch('local_review_count', 1))
+        key = RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT
+        lines = warnings(configured, review.fetch(key) { Defaults.fetch('review', key) })
         lines.concat(CliInventory.setup_notices(configured).map { |notice| notice.fetch('summary') })
         lines << 'Some CLI lookups could not be checked.' if entries.any? { |entry| entry[:unchecked] }
         lines

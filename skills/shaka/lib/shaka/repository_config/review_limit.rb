@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../defaults'
 require_relative '../error'
 
 module Shaka
@@ -7,7 +8,7 @@ module Shaka
     # Shared by seam validation, the runner's trusted read, and ledger publication.
     module ReviewLimit
       KEY = 'local_max_rounds'
-      DEFAULT = 5
+      DEFAULT = Defaults.fetch('review', KEY)
 
       def self.from(review)
         value = review.fetch(KEY, DEFAULT)

@@ -47,7 +47,8 @@ module Shaka
 
     # A task's --count wins; otherwise use the selected configuration's count.
     def count(review)
-      review.fetch(RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT, 1)
+      key = RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT
+      review.fetch(key) { Defaults.fetch('review', key) }
     end
 
     def identities(key, required: false)

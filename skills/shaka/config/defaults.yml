@@ -1,0 +1,50 @@
+# Shaka's built-in defaults, applied when a repository's .agents/shaka/config.yml omits a value.
+# Keys mirror that file, so a repository's choices can be compared with these line by line.
+# Reference: docs/settings.md. Editing this file changes Shaka's behavior for every repository.
+---
+review:
+  ci_review_wait: one # Wait for one configured hosted review report before merge.
+  local_max_rounds: 5 # Committed heads one local review ledger may review.
+  local_review_count: 1 # Local reviewers run on each committed head.
+  post_implementation: # The finished-result checkpoint before merge readiness.
+    enabled: true
+    reviewer: openai/codex
+    model: gpt-6.1-sol # Applies only while the reviewer above is selected.
+    effort: medium
+
+merge:
+  preference: ask # Setup writes this; config.yml must state a preference.
+  limits: # A merge past any limit needs confirmation of the exact head.
+    max_changed_files: 29
+    max_changed_lines: 999 # Additions plus deletions.
+    max_commits: 9
+
+branches:
+  name: '{login}-{host}/{issue}-{description}' # Feature branch-name template.
+
+wip:
+  include_checkout_path: true # Publish the checkout path in WIP Details.
+
+pr_description:
+  show_shaka_credit: true # Show a quiet Shaka website credit below the PR summary.
+  show_human_comments: true # List the comments people wrote on the PR.
+  max_human_comments: 20 # Rows that list shows, open comments first.
+  opening_check:
+    enabled: true # Check the PR opening before publication.
+    effort: low # Independent of the code-review effort.
+
+prose_limits: # Visible PR description and walkthrough prose.
+  max_sentence_words: 35
+  max_paragraph_words: 100
+  max_description_words: 300
+  words_per_changed_line: 4 # Proportional budget: 150 words plus this many per changed line.
+
+# Command-line defaults; config.yml does not set these, but the flags override them per run.
+runtime:
+  review_timeout_seconds: # shaka review run --timeout-seconds, by reviewer.
+    default: 300
+    deepseek/openrouter: 600
+  pr_watch: # shaka pr watch --interval, --timeout, and --settle.
+    interval_seconds: 60
+    timeout_seconds: 3600
+    settle_seconds: 15

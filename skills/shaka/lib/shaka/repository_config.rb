@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require 'yaml'
+require_relative 'defaults'
 require_relative 'error'
+require_relative 'ci_review_wait'
 require_relative 'merge_limits'
 require_relative 'prose_limits'
 require_relative 'configuration/paths'
@@ -12,9 +14,8 @@ require_relative 'repository_config/schema'
 module Shaka
   # Loads the small, typed repository contract used by the workflow.
   class RepositoryConfig
-    DEFAULT_WIP = { 'include_checkout_path' => true }.freeze
-    DEFAULT_PR_DESCRIPTION = { 'show_shaka_credit' => true, 'show_human_comments' => true,
-                               'max_human_comments' => 20 }.freeze
+    DEFAULT_WIP = Defaults.fetch('wip')
+    DEFAULT_PR_DESCRIPTION = Defaults.fetch('pr_description').except('opening_check').freeze
 
     # base_branch is nil when the seam omits it, meaning the repository's default branch.
     attr_reader :base_branch, :commands, :review, :merge, :wip, :pr_description,
@@ -109,7 +110,7 @@ module Shaka
     end
 
     def with_default_review_wait(review)
-      { 'ci_review_wait' => 'one', 'local_max_rounds' => ReviewLimit::DEFAULT }.merge(review)
+      { 'ci_review_wait' => CiReviewWait::DEFAULT, 'local_max_rounds' => ReviewLimit::DEFAULT }.merge(review)
     end
   end
 end

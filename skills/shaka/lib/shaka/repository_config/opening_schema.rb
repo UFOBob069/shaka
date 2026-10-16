@@ -3,6 +3,7 @@
 # Validates the optional opening-check settings in the repository contract.
 
 require_relative 'validation'
+require_relative '../defaults'
 require_relative '../local_review/openrouter'
 
 module Shaka
@@ -11,7 +12,7 @@ module Shaka
     class OpeningSchema
       include Validation
 
-      DEFAULTS = { 'enabled' => true, 'effort' => 'low' }.freeze
+      DEFAULTS = Defaults.fetch('pr_description', 'opening_check')
 
       def self.effective(settings)
         DEFAULTS.merge(settings)

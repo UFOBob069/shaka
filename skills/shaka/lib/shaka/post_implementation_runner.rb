@@ -26,7 +26,7 @@ module Shaka
 
       settings = (effective_review || {}).fetch('post_implementation', {})
       RepositoryConfig::PostImplementationSchema.new(settings).validate
-      @disabled = settings['enabled'] == false
+      @disabled = !settings.fetch('enabled') { RepositoryConfig::PostImplementationSchema::DEFAULTS.fetch('enabled') }
       choices = execution_choices(settings)
       validate_choices!(choices)
 

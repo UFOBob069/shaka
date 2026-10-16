@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'validation'
+require_relative '../defaults'
 require_relative '../reviewer_selection'
 
 module Shaka
@@ -14,7 +15,7 @@ module Shaka
       EFFORTS = { 'openai/codex' => %w[low medium high xhigh max],
                   'anthropic/claude' => %w[low medium high xhigh max],
                   'xai/grok' => %w[low medium high] }.freeze
-      DEFAULTS = { 'reviewer' => 'openai/codex', 'model' => 'gpt-6.1-sol', 'effort' => 'medium' }.freeze
+      DEFAULTS = Defaults.fetch('review', KEY)
 
       def self.reviewer(identity) = ReviewerSelection.parse(identity).values.map(&:downcase).join('/')
 

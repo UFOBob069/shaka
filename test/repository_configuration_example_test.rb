@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
+require 'shaka/defaults'
 require 'shaka/repository_config'
 require 'shaka/local_review/runner'
 
@@ -35,15 +36,26 @@ class RepositoryConfigurationExampleTest < Minitest::Test
   end
 
   def test_example_post_implementation_defaults_match
-    defaults = Shaka::RepositoryConfig::PostImplementationSchema::DEFAULTS.merge('enabled' => true)
-    assert_equal defaults, @example.fetch('review').fetch('post_implementation').except('prompt_file')
+    assert_equal Shaka::Defaults.fetch('review', 'post_implementation'),
+                 @example.fetch('review').fetch('post_implementation').except('prompt_file')
+  end
+
+  def test_example_matches_packaged_defaults_without_changing_repository_choices
+    Shaka::Defaults.data.except('runtime').each do |section, defaults|
+      defaults.each do |key, value|
+        next if POLICY_KEYS.include?(key) || key == 'preference'
+
+        assert_equal value, @example.fetch(section).fetch(key), "Update the #{section}.#{key} example"
+      end
+    end
   end
 
   def test_review_deadline_defaults_applied_outside_repository_config
     %w[anthropic/claude openai/codex xai/grok deepseek/openrouter].each do |reviewer|
       options = { reviewer: }
       Shaka::LocalReviewRunner.new(options).send(:validate_timeout!)
-      assert_equal reviewer == 'deepseek/openrouter' ? 600 : 300, options.fetch(:timeout_seconds)
+      timeouts = Shaka::Defaults.fetch('runtime', 'review_timeout_seconds')
+      assert_equal timeouts.fetch(reviewer) { timeouts.fetch('default') }, options.fetch(:timeout_seconds)
     end
   end
 

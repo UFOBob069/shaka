@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
+require_relative 'defaults'
 require_relative 'error'
 
 module Shaka
   # CI review waiting policy, ordered from least to most restrictive.
   class CiReviewWait
     VALUES = %w[none one all].freeze
-    DEFAULT = 'one'
+    DEFAULT = Defaults.fetch('review', 'ci_review_wait')
 
     def self.normalize(value)
       return DEFAULT if value.nil?

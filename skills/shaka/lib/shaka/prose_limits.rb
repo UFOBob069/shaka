@@ -2,14 +2,14 @@
 
 # Refuses a description or walkthrough whose rendered, visible prose is shaped as a wall of text.
 
+require_relative 'defaults'
 require_relative 'error'
 require_relative 'visible_prose'
 
 module Shaka
   # Keeps visible prose short enough that the reader reviews the code instead of reading about it.
   class ProseLimits
-    DEFAULTS = { 'max_sentence_words' => 35, 'max_paragraph_words' => 100,
-                 'max_description_words' => 300, 'words_per_changed_line' => 4 }.freeze
+    DEFAULTS = Defaults.fetch('prose_limits')
     # Room for a short summary however small the change is.
     BASE_WORDS = 150
     QUOTED_WORDS = 8

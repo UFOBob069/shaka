@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
+require_relative 'defaults'
 require_relative 'error'
 
 module Shaka
   # Size limits past which an agent merge needs a human to confirm the exact head.
   class MergeLimits
     # Inclusive maxima: the next value needs confirmation.
-    DEFAULTS = { 'max_changed_files' => 29, 'max_changed_lines' => 999, 'max_commits' => 9 }.freeze
+    DEFAULTS = Defaults.fetch('merge', 'limits')
 
     def self.validate!(limits)
       raise Error, 'merge.limits must be a mapping' unless limits.is_a?(Hash) && limits.keys.all?(String)

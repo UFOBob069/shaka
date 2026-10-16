@@ -5,6 +5,7 @@ require 'securerandom'
 require 'tempfile'
 require 'tmpdir'
 require_relative 'timing'
+require_relative '../defaults'
 require_relative '../reviewer_selection'
 require_relative '../reviewer_settings'
 require_relative 'cli'
@@ -90,13 +91,17 @@ module Shaka
     end
 
     def validate_timeout!
-      identity = @options[:reviewer].to_s.split('/').map { |part| part.strip.downcase }.join('/')
-      default = identity == 'deepseek/openrouter' ? OpenrouterReview::DEFAULT_TIMEOUT_SECONDS : 300
-      timeout = @options.fetch(:timeout_seconds, default).to_s
+      timeout = @options.fetch(:timeout_seconds) { default_timeout_seconds }.to_s
       valid = timeout.match?(/\A[1-9]\d*\z/) && timeout.to_i <= 3600
       raise Shaka::Error, '--timeout-seconds must be 1..3600' unless valid
 
       @validated_timeout_seconds = @options[:timeout_seconds] = timeout.to_i
+    end
+
+    def default_timeout_seconds
+      identity = @options[:reviewer].to_s.split('/').map { |part| part.strip.downcase }.join('/')
+      timeouts = Defaults.fetch('runtime', 'review_timeout_seconds')
+      timeouts.fetch(identity) { timeouts.fetch('default') }
     end
 
     def validate_criteria_ref!

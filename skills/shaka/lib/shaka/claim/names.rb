@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
+require_relative '../defaults'
+
 module Shaka
   class Claim
     # Compiles a repository branch-name template, or the tracker's branch name, into a matcher for remote heads.
     class Names
-      DEFAULT = '{login}-{host}/{issue}-{description}'
+      DEFAULT = Defaults.fetch('branches', 'name')
       WILDCARDS = { 'login' => '[^/]+', 'host' => '[^/]+', 'description' => '.+' }.freeze
 
       def initialize(query:, template:, exact: nil)

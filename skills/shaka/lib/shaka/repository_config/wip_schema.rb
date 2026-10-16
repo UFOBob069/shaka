@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../defaults'
 require_relative '../error'
 require_relative 'validation'
 
@@ -15,7 +16,7 @@ module Shaka
       KEYS = [KEY, LEGACY_KEY].freeze
 
       def self.resolve(wip)
-        { KEY => wip.fetch(KEY) { wip.fetch(LEGACY_KEY, true) } }
+        { KEY => wip.fetch(KEY) { wip.fetch(LEGACY_KEY) { Defaults.fetch('wip', KEY) } } }
       end
 
       def initialize(wip)

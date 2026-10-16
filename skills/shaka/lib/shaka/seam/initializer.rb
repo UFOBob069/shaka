@@ -102,13 +102,13 @@ module Shaka
           'base_branch' => base_branch,
           'review' => review_policy,
           'merge' => merge_policy,
-          'branches' => { 'name' => '{login}-{host}/{issue}-{description}' },
+          'branches' => { 'name' => Defaults.fetch('branches', 'name') },
           'wip' => RepositoryConfig::DEFAULT_WIP
         }.compact
       end
 
       def merge_policy
-        { 'preference' => @options.fetch(:merge_preference, 'ask'),
+        { 'preference' => @options.fetch(:merge_preference) { Defaults.fetch('merge', 'preference') },
           RepositoryConfig::MergeSchema::REQUIRED_CHECKS => @options[:required_checks] }.compact
       end
 
