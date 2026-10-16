@@ -10,9 +10,10 @@ class PostImplementationCompactTest < Minitest::Test
 
     assert_includes visible, '## Reviewer recommendation: Merge if CI passes'
     assert_match(%r{# Checkpoint for \[`aaaaaaa`\]\(https://github.com/example/test/commit/a{40}\)}, visible)
-    assert_includes visible, '**Unresolved concerns:** None.'
+    assert_includes visible, '**Reviewer verdict:** Proceed, no unresolved concerns. ' \
+                             'The label is clearer and older notes remain readable.'
+    refute_includes visible, 'Unresolved concerns:'
     refute_includes visible, 'after required checks and approvals'
-    assert_includes visible, 'The label is clearer and older notes remain readable.'
     assert_includes visible, 'Complete the required approval.'
     assert_equal 1, routine_report.scan('Reviewer verdict:').size
   end
@@ -37,7 +38,7 @@ class PostImplementationCompactTest < Minitest::Test
 
         assert_includes visible, "**Unresolved concerns:**\n\n- Notes cannot be recovered.\n- Recovery is unverified."
         refute_includes visible, '## Reviewer recommendation: Merge if CI passes'
-        assert_includes visible, "**Reviewer verdict:** #{conclusion}\n\nThe approach needs attention."
+        assert_includes visible, "**Reviewer verdict:** #{conclusion}. The approach needs attention."
       end
     end
   end

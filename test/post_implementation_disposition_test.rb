@@ -57,6 +57,20 @@ class PostImplementationDispositionTest < Minitest::Test
       assert_equal 'Merge', Shaka::PostImplementationEvidence.new(github).recommendation('a' * 40)
     end
   end
+
+  def test_ready_checkpoint_collapses_the_squash_message
+    with_result do |result, path|
+      result['disposition'] = disposition('Merge')
+      github, = publish(result, path)
+      body = github.bodies.first.first
+      visible = body.split('<details>', 2).first
+
+      refute_includes visible, '```'
+      assert_includes body, "<details>\n<summary>Squash commit message</summary>\n\n" \
+                            "#{Shaka::SquashComment::SQUASH_MARK}\n"
+      assert_match(%r{<summary>Squash commit message</summary>.*```\n\n</details>}m, body)
+    end
+  end
 end
 
 class PostImplementationDispositionValidationTest < Minitest::Test
@@ -124,7 +138,7 @@ class PostImplementationAcceptedConcernTest < Minitest::Test
       body = github.bodies.first.first
 
       assert_equal 0, status
-      assert_includes body, '**Unresolved concerns:** None.'
+      assert_includes body, '**Reviewer verdict:** Proceed, no unresolved concerns.'
       assert_includes body, '- Frequency is unknown. — Decision: Justin accepted this in chat on 2026-10-11.'
       assert_includes body, 'not who made it'
       assert_equal 'ready', Shaka::PostImplementationEvidence.new(github).call('a' * 40)['basis']

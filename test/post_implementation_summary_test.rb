@@ -95,7 +95,7 @@ class PostImplementationSummaryTest < Minitest::Test
       body = rendered(result, path)
       assert_includes body, '## Reviewer recommendation: Revise before merge'
       assert_includes body, '**Next:** Revise the approach, then revalidate and review.'
-      assert_includes body, "**Reviewer verdict:** Simplify/reframe\n\nKeep the safeguard; remove unused scans."
+      assert_includes body, '**Reviewer verdict:** Simplify/reframe. Keep the safeguard; remove unused scans.'
       assert_operator body.index('Keep the safeguard'), :<, body.index('Maintenance evidence')
       assert_operator body.index('**Next:**'), :<, body.index('Maintenance evidence')
     end

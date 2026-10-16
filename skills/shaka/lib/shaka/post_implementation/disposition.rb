@@ -73,16 +73,15 @@ module Shaka
       verification = report.fetch('summary', report.fetch('reasons').first)
       ["## Recommendation: #{disposition.fetch('recommendation')}", @summary,
        "**Next:** #{disposition.fetch('next_action')}",
-       "**Reviewer verdict:** #{report.fetch('conclusion')}", verification,
-       evidence_lines(report, disposition), supporting_analysis(report, verification)].join("\n\n")
+       evidence_lines(report, disposition, verification), supporting_analysis(report, verification)].join("\n\n")
     end
 
     # The hidden disposition line, rendered above the attestation, lets a description read this recommendation.
-    def evidence_lines(report, disposition)
+    def evidence_lines(report, disposition, verification)
       accepted = disposition.fetch('accepted_concerns')
       @disposition_line = PostImplementationEvidence.disposition(disposition.fetch('recommendation'))
       open = report.merge('concerns' => PostImplementationDisposition.unresolved(report, accepted))
-      [concern_section(open), *accepted_section(accepted)].join("\n\n")
+      [verdict(open, verification), *accepted_section(accepted)].join("\n\n")
     end
 
     def accepted_section(accepted)

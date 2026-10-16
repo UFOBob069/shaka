@@ -37,7 +37,7 @@ module Shaka
     def render
       @state = @result['status'] == 'opted_out' ? 'opted_out' : 'not_completed'
       body = @result['status'] == 'completed' ? completed_body : incomplete_body
-      body += "\n\n#{SquashComment.body(@head, @message.call)}" if @state == 'ready'
+      body += "\n\n#{squash_details}" if @state == 'ready'
       "#{identity}\n\n# Checkpoint for #{@revision}\n\n#{body}\n\n#{"#{@disposition_line}\n" if @disposition_line}" +
         PostImplementationEvidence.attestation(@head, @state)
     end
@@ -72,15 +72,20 @@ module Shaka
       action, next_action = recommendation(report)
       summary = @summary = report.fetch('summary', report.fetch('reasons').first)
       ["## Reviewer recommendation: #{action}", "**Next:** #{owner_action(report, next_action)}",
-       "**Reviewer verdict:** #{report.fetch('conclusion')}", summary,
-       concern_section(report), supporting_analysis(report, summary)].join("\n\n")
+       verdict(report, summary), supporting_analysis(report, summary)].join("\n\n")
     end
 
-    def concern_section(report)
+    # One paragraph states the verdict and its evidence; the concern list follows only when there is one.
+    # Only a ready verdict says no concerns remain, so a blocking verdict never reads as clear to merge.
+    def verdict(report, summary)
+      verdict = PostImplementationReport.ready?(report) ? 'Proceed, no unresolved concerns' : report.fetch('conclusion')
       items = report.fetch('concerns')
-      return '**Unresolved concerns:** None.' if items.empty?
+      list = "\n\n**Unresolved concerns:**\n\n#{items.map { |item| "- #{item}" }.join("\n")}" unless items.empty?
+      "**Reviewer verdict:** #{verdict}. #{summary}#{list}"
+    end
 
-      "**Unresolved concerns:**\n\n#{items.map { |item| "- #{item}" }.join("\n")}"
+    def squash_details
+      "<details>\n<summary>Squash commit message</summary>\n\n#{SquashComment.body(@head, @message.call)}\n</details>"
     end
 
     def supporting_analysis(report, summary)

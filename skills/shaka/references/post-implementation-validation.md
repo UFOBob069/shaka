@@ -224,10 +224,8 @@ the useful summary is:
 >
 > **Next:** Revise this PR, then revalidate and review.
 >
-> **Reviewer verdict:** Simplify/reframe
->
-> Keep the missing-configuration safeguard; remove unused scans from watching and
-> repeated check verification.
+> **Reviewer verdict:** Simplify/reframe. Keep the missing-configuration safeguard;
+> remove unused scans from watching and repeated check verification.
 
 The watcher discards configuration results, so removing that dependency preserves
 its demonstrated guarantees. Keep fresh checks for explicit status, Ask handoff,
