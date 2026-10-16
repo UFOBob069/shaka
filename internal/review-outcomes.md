@@ -268,13 +268,14 @@ Retried and concurrent `assess` calls must neither lose nor duplicate an entry.
 
 ## Export
 
-`shaka review export --ledger PATH` has shipped as described below, private only. It
-copies every ledger field, renames `version` to `ledger_version`, adds `export_version`,
-and gives each round `report_text` or `report_unavailable`. Its tests export S1 and the
-S2 to S6 judgments, a missing and a changed report, and a legacy ledger. The public variant is not built: Ruby can strip report text and local
-paths, but it cannot recognize a private link inside a rationale, note, or evidence
-URL, so a public export needs a screening decision first.
-
+`shaka review export --ledger PATH` has shipped in the shape the next paragraph
+proposed, private only. It copies every ledger field, renames `version` to
+`ledger_version`, adds `export_version`, and gives each round `report_text` or
+`report_unavailable`. Its tests export S1, a superseded excessive-then-supported
+chain, a declined wrong claim, missing, changed, and non-UTF-8 reports, and a legacy
+ledger. The public variant is not built: Ruby can strip report text and local paths,
+but it cannot recognize a private link inside a rationale, note, or evidence URL, so
+a public export needs a screening decision first.
 
 One JSON document per ledger: an export version, the ledger's base commit, the
 rounds with their bundled report text, the findings with any earlier triage,

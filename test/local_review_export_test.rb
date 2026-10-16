@@ -54,6 +54,14 @@ class LocalReviewExportTest < Minitest::Test
     end
   end
 
+  def test_a_report_that_is_not_utf8_is_marked_unavailable
+    accepted_retry_removal
+    report = ledger.rounds.first.fetch('report')
+    File.binwrite(report, "\xFF".b)
+    rewrite_round_hash(report)
+    assert_match(/not valid UTF-8/, exported_round['report_unavailable'])
+  end
+
   def test_legacy_ledger_exports_without_a_version_or_invented_attribution
     reviewed_finding
     make_legacy
@@ -82,6 +90,12 @@ class LocalReviewExportTest < Minitest::Test
     record([NIT.merge('reported_as' => '1', 'disposition' => 'dismissed', 'note' => 'Refuted by the guard.')])
     ledger.assess!(assessment(problem: 'refuted', remedy: 'incorrect', action: { 'taken' => 'not_attempted' },
                               attention: 'none'))
+  end
+
+  def rewrite_round_hash(report)
+    changed = saved
+    changed['rounds'].first['report_sha256'] = Digest::SHA256.file(report).hexdigest
+    File.write(@path, JSON.generate(changed))
   end
 
   def damage_kept_reports

@@ -39,7 +39,10 @@ module Shaka
       file, reason = LocalReviewBundle.kept(round, directory)
       return round.merge('report_unavailable' => reason) if reason
 
-      round.merge('report_text' => File.read(file, encoding: 'UTF-8'))
+      text = File.read(file, encoding: 'UTF-8')
+      return round.merge('report_unavailable' => "#{file} is not valid UTF-8") unless text.valid_encoding?
+
+      round.merge('report_text' => text)
     end
 
     private_class_method :with_report
