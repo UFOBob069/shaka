@@ -260,7 +260,8 @@ overall task is finished.
 
 The current pre-merge checkpoint evaluates whether the result solves the original
 problem for its users and earns its maintenance cost. It considers actual scope,
-complexity, and simpler alternatives. Unexpected growth or repeated repairs can
+complexity, simpler alternatives, and whether the testing matches what a failure
+would reach. Unexpected growth or repeated repairs can
 prompt this review earlier. The code walkthrough explains what changed and how it works.
 
 The checkpoint recommends the next action for the PR and includes copyable

@@ -8,6 +8,9 @@ outcome, and project constraints. Evaluate the finished change as a whole.
   with what the plan expected. Mark missing impact or frequency evidence unknown.
 - Is the benefit proportional to dependencies, configuration, abstractions,
   coupling, failure paths, tests, and future maintenance?
+- Is the reported verification proportionate to what a failure would reach and
+  to whether a revert undoes it? Weigh the evidence as given rather than
+  re-reviewing code, and name paths that were not exercised.
 - Does repeated review churn reveal an approach problem rather than isolated bugs?
 - Could a simpler formulation, existing capability, or no change deliver the
   outcome? Name any guarantees lost and evidence that losing them is acceptable.
