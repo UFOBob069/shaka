@@ -37,6 +37,7 @@ module Shaka
         preflight_files(files)
         write_files(files)
         report_legacy_readme
+        report_auto_without_required_checks
         Configuration.worktree(root: @root)
       end
 

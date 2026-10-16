@@ -620,8 +620,8 @@ rules:
     quote: Never accept missing, failed, pending, or stale required checks
     enforced_by: code
     detector: >-
-      `Merge#verify_checks` refuses an empty required-check list and any check that is not
-      passing, and `Merge#verify_snapshot` refuses a head that moved since verification. That
+      `Merge#verify_checks` refuses any check that is not passing, and an empty list unless
+      `--empty-checks-confirmed-head` names the merged head, and `Merge#verify_snapshot` refuses a head that moved since verification. That
       covers the path where the helper submits the merge. When no required check has reported
       and `GitHub#configured_required_checks` finds none configured in classic protection or
       rulesets, `RequiredChecks` substitutes the trusted seam's `merge.required_checks`, read
@@ -666,6 +666,17 @@ rules:
       maintainer authorized, so `merge --head` on a later head succeeds. Carrying the authorized
       SHA, and judging whether a rebase changed behavior, is the agent's alone. The scan does not reach this rule, which restricts with
       "only for".
+  - id: empty-checks-confirmation
+    phase: finish
+    quote: >-
+      Pass `--empty-checks-confirmed-head SHA`
+      only for a head the user asked you to merge, or approved under Ask, in this task
+    enforced_by: agent
+    note: >-
+      `Merge#verify_checks` accepts an empty required-check set only when the flag names the head
+      being merged, and the flag never excuses unknown, failing, pending, or missing checks. It cannot
+      tell whether a user asked for or approved that merge, so passing the flag honestly is the agent's alone.
+      The scan does not reach this rule, which restricts with "only for".
   - id: merge-limits-confirmation
     phase: finish
     quote: >-

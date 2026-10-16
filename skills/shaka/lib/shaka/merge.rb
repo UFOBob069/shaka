@@ -14,6 +14,9 @@ module Shaka
   class Merge
     include MergeRequiredChecks
 
+    # The head a user told the agent to merge although no required check gates it.
+    attr_writer :empty_checks_confirmed_head
+
     # `review` takes MergeReviewEvidence's technical settings and final product checkpoint.
     def initialize(github, ci_review_wait: nil, seam_wait: nil, review: {}, seam_required_checks: nil)
       @github = github
@@ -27,9 +30,11 @@ module Shaka
     def call(head:, base:, walkthrough:, limits: MergeLimits.new, squash_message: nil)
       @target = MergeTarget.required!(head, base, limits)
       @submission.message = squash_message
+      @head = head
       initial = @github.snapshot
       verify_snapshot(initial, head, @target)
-      evidence = verify_reviews(head, base, walkthrough, verify_gate)
+      gate = verify_gate
+      evidence = verify_reviews(head, base, walkthrough, gate).merge(excused_checks(gate, head))
       current = @github.snapshot
       return reconcile_queued_replay(initial, current, head).merge(evidence) if initial['isInMergeQueue']
 
@@ -47,7 +52,7 @@ module Shaka
 
     def verify_gate
       gate = RequiredChecks.new(@github, seam_names: @seam_required_checks).call
-      verify_checks(gate.fetch('checks'))
+      verify_checks(gate.fetch('checks'), head: @head, confirmed_head: @empty_checks_confirmed_head)
       gate
     end
 

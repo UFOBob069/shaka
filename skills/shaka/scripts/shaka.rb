@@ -235,6 +235,9 @@ end
 def merge_flags(flags, options)
   flags.on('--review-waiver REASON', 'Merge without review evidence') { |value| options[:review_waiver] = value }
   flags.on('--limits-confirmed-head SHA', 'Head confirmed past limits') { |sha| options[:confirmed_head] = sha }
+  flags.on('--empty-checks-confirmed-head SHA', 'Head the user told you to merge with no required checks') do |sha|
+    options[:empty_checks_confirmed_head] = sha
+  end
   flags.on('--squash-message PATH', 'Squash commit title and body as JSON') { |path| options[:squash_message] = path }
   flags.on('--woken-by WHAT', 'For handoff: what will wake this session') { |value| options[:woken_by] = value }
   flags.on('--codex-wake PATH', 'For handoff: native Codex registration evidence as JSON') do |path|
@@ -310,6 +313,9 @@ begin
   end
   if options[:review_waiver] && command != 'merge'
     raise OptionParser::InvalidArgument, '--review-waiver is only for merge'
+  end
+  if options[:empty_checks_confirmed_head] && command != 'merge'
+    raise OptionParser::InvalidArgument, '--empty-checks-confirmed-head is only for merge'
   end
   if options[:squash_message] && command != 'merge'
     raise OptionParser::InvalidArgument, '--squash-message is only for merge'
@@ -417,14 +423,12 @@ begin
                         checkpoint: Shaka::PostImplementationEvidence.new(github, **checkpoint) }
              squash_message = options[:squash_message] &&
                               Shaka::SquashMessage.for(github, content(options[:squash_message]))
-             Shaka::Merge.new(github, ci_review_wait: options[:ci_review_wait],
-                                      seam_wait: seam&.review&.fetch('ci_review_wait'), review:,
-                                      seam_required_checks:).call(
-                                        head:,
-                                        base: options.fetch(:base),
-                                        walkthrough: options.fetch(:walkthrough),
-                                        limits: merge_limits(options), squash_message:
-                                      )
+             merge = Shaka::Merge.new(github, ci_review_wait: options[:ci_review_wait],
+                                              seam_wait: seam&.review&.fetch('ci_review_wait'), review:,
+                                              seam_required_checks:)
+             merge.empty_checks_confirmed_head = options[:empty_checks_confirmed_head]
+             merge.call(head:, base: options.fetch(:base), walkthrough: options.fetch(:walkthrough),
+                        limits: merge_limits(options), squash_message:)
            when 'attention' then Shaka::Attention.new(github).call(state: options.fetch(:state))
            when 'squash-message'
              message = Shaka::SquashMessage.for(github, content(options.fetch(:content_file)))

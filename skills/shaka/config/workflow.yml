@@ -523,7 +523,7 @@ phases:
         squash-message OWNER/REPO NUMBER --head SHA --content-file PATH --root DIR --ref SHA
         merge OWNER/REPO NUMBER --head SHA --base BRANCH --walkthrough REVIEW_ID --root DIR
           --ref SHA --squash-message PATH [--ci-review-wait MODE] [--limits-confirmed-head SHA]
-          [--review-waiver REASON]
+          [--empty-checks-confirmed-head SHA] [--review-waiver REASON]
         usage --commit SHA --contribution CATEGORY [--since-time TASK_START_UTC]
         ```
 
@@ -749,7 +749,9 @@ phases:
         Never describe failed validation as passing, including after acceptance.
       - Refresh `pr` and inspect required check states. Never accept missing, failed, pending, or stale
         required checks, and never bypass protection. An empty required set is acceptable only in Ask
-        mode; say in the handoff that no check gates the PR. Wait when independent review is not yet
+        mode; say in the handoff that no check gates the PR. Pass `--empty-checks-confirmed-head SHA`
+        only for a head the user asked you to merge, or approved under Ask, in this task; the limits
+        confirmation's rebase rule applies to it. Wait when independent review is not yet
         satisfied, and follow the configured CI review wait. Wait for any user-requested review gate
         whether or not a local review already ran. With `ci_review_wait: none` or `one`, do not wait for optional checks to make
         merge state CLEAN; `merge` accepts UNSTABLE once required checks pass. With `ci_review_wait: all`, wait

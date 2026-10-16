@@ -30,6 +30,11 @@ class CliMergeAdminActorTest < Minitest::Test
         result = { 'repository' => { 'pullRequest' => pull } }
       end
       puts JSON.generate('data' => result)
+    elsif ARGV[0, 2] == ['pr', 'checks'] && ENV['NO_REQUIRED_CHECKS'] && ARGV.include?('--required')
+      warn "no required checks reported on the 'main' branch"
+      exit 1
+    elsif ARGV[0] == 'api' && ARGV[1].start_with?('repos/owner/repo/rules/branches/main')
+      puts '[]'
     elsif ARGV[0, 2] == ['pr', 'checks']
       puts JSON.generate([{ 'name' => 'checks', 'state' => 'SUCCESS', 'bucket' => 'pass' }])
     elsif ARGV[0, 2] == ['api', 'repos/owner/repo/pulls/1/reviews/17']
@@ -50,6 +55,27 @@ class CliMergeAdminActorTest < Minitest::Test
       assert_equal 'MERGED', JSON.parse(output)['state']
       assert_path_exists mutation
       assert_equal 'Reason.', JSON.parse(File.read(mutation)).dig('variables', 'body')
+    end
+  end
+
+  def test_unprotected_branch_refuses_an_unconfirmed_merge
+    with_merge_repository do |root, ref, mutation|
+      _, error, status = run_merge(root, ref, mutation, env: { 'NO_REQUIRED_CHECKS' => '1' })
+
+      refute_predicate status, :success?
+      assert_match(/--empty-checks-confirmed-head/, error)
+      refute_path_exists mutation
+    end
+  end
+
+  def test_unprotected_branch_merges_the_head_the_user_confirmed
+    with_merge_repository do |root, ref, mutation|
+      output, error, status = run_merge(root, ref, mutation, '--empty-checks-confirmed-head', HEAD,
+                                        env: { 'NO_REQUIRED_CHECKS' => '1' })
+
+      assert_predicate status, :success?, error
+      assert_equal HEAD, JSON.parse(output)['empty_required_checks_confirmed_head']
+      assert_path_exists mutation
     end
   end
 
@@ -82,10 +108,10 @@ class CliMergeAdminActorTest < Minitest::Test
     File.chmod(0o755, fake)
   end
 
-  def run_merge(root, ref, mutation)
-    Open3.capture3({ 'PATH' => "#{root}/fake-bin:#{ENV.fetch('PATH')}", 'MUTATION_FILE' => mutation },
+  def run_merge(root, ref, mutation, *extra, env: {})
+    Open3.capture3({ 'PATH' => "#{root}/fake-bin:#{ENV.fetch('PATH')}", 'MUTATION_FILE' => mutation }.merge(env),
                    COMMAND, 'merge', 'owner/repo', '1', '--root', root, '--ref', ref,
                    '--head', HEAD, '--base', 'main', '--walkthrough', '17',
-                   '--squash-message', File.join(root, 'message.json'))
+                   '--squash-message', File.join(root, 'message.json'), *extra)
   end
 end

@@ -726,4 +726,32 @@ class SeamInitializerRequiredCheckTest < Minitest::Test
       refute_path_exists File.join(root, '.agents')
     end
   end
+
+  def test_warns_when_auto_lists_no_required_check
+    with_repository do |root|
+      _output, error, status = Open3.capture3(*init_arguments(root), '--merge-preference', 'auto')
+
+      assert_predicate status, :success?, error
+      assert_match(/Auto.*no required check.*recommend ask/i, error)
+    end
+  end
+
+  def test_auto_with_a_required_check_does_not_warn
+    with_repository do |root|
+      arguments = init_arguments(root) + ['--merge-preference', 'auto', '--required-check', 'checks']
+      _output, error, status = Open3.capture3(*arguments)
+
+      assert_predicate status, :success?, error
+      refute_match(/no required check/i, error)
+    end
+  end
+
+  def test_ask_does_not_warn_about_required_checks
+    with_repository do |root|
+      _output, error, status = init(root)
+
+      assert_predicate status, :success?, error
+      refute_match(/no required check/i, error)
+    end
+  end
 end

@@ -13,6 +13,15 @@ module Shaka
 
       private
 
+      # Init cannot read GitHub's native checks, so Auto without a seam list warns rather than refuses.
+      def report_auto_without_required_checks
+        return unless @options[:merge_preference] == 'auto' && !@options[:required_checks]
+
+        warn 'shaka: merge preference Auto with no required check listed. If GitHub requires no checks on the ' \
+             'base branch, nothing gates an unattended merge; the agent confirms a head only under Ask, so ' \
+             'recommend ask, or add --required-check.'
+      end
+
       def command_arguments(command, name)
         raise Error, "#{name} command must be a non-empty single line" unless
           command.is_a?(String) && !command.strip.empty? && !command.match?(/[\0\r\n]/)

@@ -34,8 +34,9 @@ If none, which check names appear on recent PRs?
 ```
 
 A repository with no required checks can still use Shaka in Ask mode: the agent runs
-local validation and review, and you merge on GitHub. Auto merge needs at least one
-required check.
+local validation and review, then you merge on GitHub or tell the agent to merge
+that commit. Auto merge needs at least one required check, because nothing else
+would gate an unattended merge.
 
 ## Set up
 
