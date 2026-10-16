@@ -2,17 +2,16 @@
 
 **Work effectively with your coding agent, from task to human-readable PR.**
 
-Shaka guides your coding agent through implementation, testing, independent
+Shaka guides your coding agent through implementation, verification, independent
 review, and PR delivery. Get a clear handoff: what changed, what was checked,
 and what needs your decision—with the context to approve the change, request
 revisions, or resolve an open question.
 
-![A sandwich surrounds an agent loop for building, testing, and review. A human checkpoint routes the result toward revision or proceeding.](docs/img/checkpoint-switchback.webp)
+![You give a task. The agent builds, verifies, and reviews. You review one clear PR with a walkthrough, check and review results, and the decisions left for you.](docs/img/task-to-pr.svg)
 
-Humans steer the outer loop. Agents build, test, and review inside it.
-At the [checkpoint](docs/pr-verification.md#checkpoint), evaluate the result and decide what happens next.
-
-[View the full-size diagram](docs/img/checkpoint-switchback.webp).
+The agent builds, verifies, and reviews, fixing what it can. Then you review one clear
+PR: what changed, how it was checked, and what is still open. At the
+[checkpoint](docs/pr-verification.md#checkpoint), decide what happens next.
 
 [Read the Shaka documentation](https://shaka.shakacode.com/).
 
