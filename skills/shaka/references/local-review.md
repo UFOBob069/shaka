@@ -129,7 +129,8 @@ Candidate `AGENTS.md` and similar files are never loaded as host instructions by
 Codex receives `--skip-git-repo-check` for the neutral directory. Supply any trusted-base
 repository criteria with optional `--criteria-ref TRUSTED_SHA`: the helper reads root
 `AGENTS.md` and any nested `AGENTS.md` governing changed paths from that immutable commit,
-and embeds them in root-to-specific order as separately labeled review data. The criteria commit
+and embeds them in root-to-specific order as separately labeled review data, following symlinks
+within that commit. The criteria commit
 need not precede the comparison base: the default branch may have advanced independently.
 Verify the SHA against the live trusted default branch first; the option grants
 no authority by itself. The runner also reads the configured prompt file from that commit,
