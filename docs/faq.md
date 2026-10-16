@@ -44,6 +44,17 @@ past the [size limits](settings.md#mergelimits), or one that changes trust,
 authentication, releases, or other consequential areas, still comes back to you.
 See [choose a merge policy](working-with-shaka.md#choose-a-merge-policy).
 
+## Can I make sure the agent never merges?
+
+Under **Ask**, the agent merges only after you approve that PR's commit. To have
+a task end at the PR, say so in your prompt, for example `Open a PR and stop`.
+Ask relies on the agent following its instructions, and the agent acts with your
+GitHub permissions. To have GitHub block the merge, protect the base branch:
+require an approving review, and give no bypass to administrators or to any role,
+team, or app that includes your account. The agent opens PRs as you, so someone
+else then has to approve each one. An administrator can still change these rules,
+so the block holds only when the agent's account is not an administrator.
+
 ## Does a green review job mean the PR was reviewed?
 
 No. A job can pass without producing a review. The agent reads the report and
