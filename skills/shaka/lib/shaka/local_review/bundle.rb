@@ -39,12 +39,16 @@ module Shaka
     # A ledger this Shaka can read, with each kept report found where the ledger is now. A newer
     # format is refused, never rewritten as an older one.
     def ledger!(parsed, path)
+      checked!(parsed, path).merge('rounds' => parsed['rounds'].map { |round| relocated(round, File.dirname(path)) })
+    end
+
+    # The ledger at `path` as recorded: checked like `ledger!`, with each round's report path unchanged.
+    def load(path) = checked!(JSON.parse(File.read(path, encoding: 'UTF-8')), path)
+
+    def checked!(parsed, path)
       raise Error, "#{path} is not a review ledger." unless parsed.is_a?(Hash) && parsed['rounds'].is_a?(Array)
 
-      version!(parsed)
-
-      directory = File.dirname(path)
-      parsed.merge('rounds' => parsed['rounds'].map { |round| relocated(round, directory) })
+      parsed.tap { version!(parsed) }
     end
 
     # The content with every report as a readable absolute path, or an error naming the round whose
@@ -94,9 +98,6 @@ module Shaka
       roots.uniq.any? { |root| directory == root || directory.start_with?("#{root}/") }
     end
 
-    # The ledger at `path`, read as `ledger!` reads parsed content.
-    def load(path) = ledger!(JSON.parse(File.read(path, encoding: 'UTF-8')), path)
-
     # A round's report text and nil, or nil and the reason the report cannot be read as text.
     def kept_text(round, directory)
       file, reason = kept(round, directory)
@@ -104,6 +105,8 @@ module Shaka
 
       text = File.read(file, encoding: 'UTF-8')
       text.valid_encoding? ? [text, nil] : [nil, "#{file} is not valid UTF-8"]
+    rescue SystemCallError => e
+      [nil, "#{file || round['report']} could not be read (#{e.message})"]
     end
 
     # A round's readable report and nil, or the reason its report is gone or no longer matches its hash.
@@ -154,6 +157,6 @@ module Shaka
       File.rename(temporary, target)
     end
 
-    private_class_method :temporary?, :relocated, :resolved, :located, :matches?, :unavailable!, :write
+    private_class_method :checked!, :temporary?, :relocated, :resolved, :located, :matches?, :unavailable!, :write
   end
 end

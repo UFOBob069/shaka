@@ -64,4 +64,4 @@ taught to record.
 For evaluation, `shaka review export --ledger PATH` prints the ledger as one JSON
 document with each round's kept report text, or `report_unavailable` and its reason.
 It contains unpublished reports, so keep it as private as the ledger; it grants no
-publication. A public-safe export and real-use learning acceptance remain open on #395.
+publication.

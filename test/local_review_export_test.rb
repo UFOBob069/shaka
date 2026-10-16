@@ -2,9 +2,25 @@
 
 require_relative 'local_review_assessment_test'
 
+# Runs `shaka review export` on the test ledger.
+module LocalReviewExportSteps
+  include SyntheticReviewAssessment
+
+  private
+
+  def export_text
+    output, = capture_io { assert_equal 0, Shaka::LocalReview.run(['export', '--ledger', @path]) }
+    output
+  end
+
+  def exported = JSON.parse(export_text)
+  def exported_round = exported['rounds'].first
+  def exported_judgments(key) = exported['assessments'].map { |entry| entry.values_at('id', key) }
+end
+
 # The synthetic chains of internal/review-outcomes.md, read back through the export.
 class LocalReviewExportTest < Minitest::Test
-  include SyntheticReviewAssessment
+  include LocalReviewExportSteps
 
   def test_accepted_harmful_removal_exports_every_step_of_its_chain
     accepted_retry_removal
@@ -43,6 +59,42 @@ class LocalReviewExportTest < Minitest::Test
     assert_equal JSON.generate(saved).scan('recorded_at').size, first.scan('recorded_at').size
   end
 
+  def test_legacy_ledger_exports_without_a_version_or_invented_attribution
+    reviewed_finding
+    make_legacy
+    document = exported
+    assert_equal [1, nil], document.values_at('export_version', 'ledger_version')
+    refute document['rounds'].first['findings'].first.key?('by')
+  end
+
+  def test_a_newer_ledger_is_refused
+    reviewed_finding
+    File.write(@path, JSON.generate(saved.merge('version' => 99)))
+    _, error = capture_io { assert_equal 1, Shaka::LocalReview.run(['export', '--ledger', @path]) }
+    assert_match(/newer Shaka/, error)
+  end
+
+  private
+
+  def decline_wrong_claim
+    record([NIT.merge('reported_as' => '1', 'disposition' => 'dismissed', 'note' => 'Refuted by the guard.')])
+    ledger.assess!(assessment(problem: 'refuted', remedy: 'incorrect', action: { 'taken' => 'not_attempted' },
+                              attention: 'none'))
+  end
+
+  def assess_harmful_then_reverted
+    harmful = assessment(problem: 'refuted', implementation: 'correct', revision: HEAD,
+                         action: { 'taken' => 'as_proposed', 'commits' => [HEAD], 'attribution' => 'direct' })
+    ledger.assess!(harmful)
+    ledger.assess!(harmful.merge('id' => 'A2', 'supersedes' => ['A1'], 'attention' => 'none',
+                                 'action' => { 'taken' => 'reverted', 'commits' => [FIX], 'attribution' => 'direct' }))
+  end
+end
+
+# A report the export cannot read is marked in its round, and every other round still exports.
+class LocalReviewExportReportTest < Minitest::Test
+  include LocalReviewExportSteps
+
   def test_a_missing_or_changed_report_is_marked_and_the_rest_still_exports
     accepted_retry_removal
     damage_kept_reports
@@ -62,35 +114,24 @@ class LocalReviewExportTest < Minitest::Test
     assert_match(/not valid UTF-8/, exported_round['report_unavailable'])
   end
 
-  def test_legacy_ledger_exports_without_a_version_or_invented_attribution
-    reviewed_finding
-    make_legacy
-    document = exported
-    assert_equal [1, nil], document.values_at('export_version', 'ledger_version')
-    refute document['rounds'].first['findings'].first.key?('by')
-  end
-
   def test_relocated_ledger_finds_its_kept_reports
     accepted_retry_removal
-    Array(@reports).each { |path| FileUtils.rm_f(path) }
-    relocate_bundle
-    assert(exported['rounds'].all? { |round| round.key?('report_text') })
+    recorded = ledger.rounds.map { |round| round.fetch('report') }
+    move_ledger_alone
+    rounds = exported['rounds']
+    assert(rounds.all? { |round| round.key?('report_text') })
+    assert_equal(recorded, rounds.map { |round| round['report'] })
   end
 
-  def test_a_newer_ledger_is_refused
-    reviewed_finding
-    File.write(@path, JSON.generate(saved.merge('version' => 99)))
-    _, error = capture_io { assert_equal 1, Shaka::LocalReview.run(['export', '--ledger', @path]) }
-    assert_match(/newer Shaka/, error)
+  def test_an_unreadable_report_is_marked_and_the_rest_still_exports
+    accepted_retry_removal
+    File.chmod(0o000, ledger.rounds.first.fetch('report'))
+    rounds = exported['rounds']
+    assert_match(/could not be read/, rounds.first['report_unavailable'])
+    assert rounds.last.key?('report_text')
   end
 
   private
-
-  def decline_wrong_claim
-    record([NIT.merge('reported_as' => '1', 'disposition' => 'dismissed', 'note' => 'Refuted by the guard.')])
-    ledger.assess!(assessment(problem: 'refuted', remedy: 'incorrect', action: { 'taken' => 'not_attempted' },
-                              attention: 'none'))
-  end
 
   def rewrite_round_hash(report)
     changed = saved
@@ -98,25 +139,15 @@ class LocalReviewExportTest < Minitest::Test
     File.write(@path, JSON.generate(changed))
   end
 
+  # Leaves the kept copies beside the moved ledger as the only ones.
+  def move_ledger_alone
+    Array(@reports).each { |path| FileUtils.rm_f(path) }
+    relocate_bundle
+    FileUtils.rm_rf(File.join(@directory, 'reports'))
+  end
+
   def damage_kept_reports
     FileUtils.rm_f(ledger.rounds.first.fetch('report'))
     File.write(ledger.rounds.last.fetch('report'), 'edited')
   end
-
-  def assess_harmful_then_reverted
-    harmful = assessment(problem: 'refuted', implementation: 'correct', revision: HEAD,
-                         action: { 'taken' => 'as_proposed', 'commits' => [HEAD], 'attribution' => 'direct' })
-    ledger.assess!(harmful)
-    ledger.assess!(harmful.merge('id' => 'A2', 'supersedes' => ['A1'], 'attention' => 'none',
-                                 'action' => { 'taken' => 'reverted', 'commits' => [FIX], 'attribution' => 'direct' }))
-  end
-
-  def export_text
-    output, = capture_io { assert_equal 0, Shaka::LocalReview.run(['export', '--ledger', @path]) }
-    output
-  end
-
-  def exported = JSON.parse(export_text)
-  def exported_round = exported['rounds'].first
-  def exported_judgments(key) = exported['assessments'].map { |entry| entry.values_at('id', key) }
 end
