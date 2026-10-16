@@ -19,7 +19,7 @@ module Shaka
                   workflow].freeze
     # Commands whose second word selects the operation; any other second word is an argument.
     OPERATIONS = { 'evidence' => %w[run bind verify guard], 'post-implementation' => %w[run publish],
-                   'pr' => %w[watch], 'review' => %w[run check record publish collapse],
+                   'pr' => %w[watch], 'review' => %w[run check record export publish collapse],
                    'seam' => %w[check init pointer preview private upgrade], 'trial' => %w[prepare] }.freeze
     # The fixed commands `evidence run` accepts; any other `--command` value is not recorded.
     CHECKS = %w[setup test validate validate_local trigger_hosted_ci].freeze

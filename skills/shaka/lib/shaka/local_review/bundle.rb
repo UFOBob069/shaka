@@ -93,6 +93,16 @@ module Shaka
       roots.uniq.any? { |root| directory == root || directory.start_with?("#{root}/") }
     end
 
+    # A round's readable report and nil, or the reason its report is gone or no longer matches its hash.
+    def kept(round, directory)
+      expected = round['report_sha256']
+      file = located(round['report'], expected, directory)
+      return [nil, "#{round['report']} is missing"] unless file
+      return [file, "#{file} changed after it was kept"] if expected && !matches?(file, expected)
+
+      [file, nil]
+    end
+
     # A round whose recorded copy is gone or changed names the matching copy beside this ledger.
     def relocated(round, directory)
       return round unless round.is_a?(Hash) && round['report'].is_a?(String) && round['report_sha256']
@@ -104,10 +114,8 @@ module Shaka
     def resolved(round, directory, number)
       return round unless round.is_a?(Hash) && round['report'].is_a?(String)
 
-      expected = round['report_sha256']
-      file = located(round['report'], expected, directory)
-      unavailable!(number, "#{round['report']} is missing") unless file
-      unavailable!(number, "#{file} changed after it was kept") if expected && !matches?(file, expected)
+      file, reason = kept(round, directory)
+      unavailable!(number, reason) if reason
 
       round.merge('report' => file)
     end

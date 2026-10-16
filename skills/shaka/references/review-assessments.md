@@ -61,4 +61,7 @@ but their publishers can omit later assessments. Current readers refuse newer
 formats. Older unversioned writers cannot preserve triage history they were never
 taught to record.
 
-Export and real-use learning acceptance remain separate work on #395.
+For evaluation, `shaka review export --ledger PATH` prints the ledger as one JSON
+document with each round's kept report text, or `report_unavailable` and its reason.
+It contains unpublished reports, so keep it as private as the ledger; it grants no
+publication. A public-safe export and real-use learning acceptance remain open on #395.

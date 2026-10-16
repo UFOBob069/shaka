@@ -5,6 +5,7 @@ require 'optparse'
 require_relative 'error'
 require_relative 'github'
 require_relative 'local_review/publisher'
+require_relative 'local_review/export'
 require_relative 'local_review/history'
 require_relative 'local_review/ledger'
 require_relative 'local_review/runner'
@@ -12,10 +13,13 @@ require_relative 'local_review/report_check'
 require_relative 'evidence/review'
 
 module Shaka
+  # `shaka review` operations that parse their own arguments.
+  REVIEW_OPERATIONS = { 'collapse' => LocalReviewHistory, 'export' => LocalReviewExport }.freeze
+
   # Entry point for process-verified reviews and explicitly weaker host reports.
   class LocalReview
     def self.run(arguments, github: nil)
-      return LocalReviewHistory.run(arguments.drop(1), github:) if arguments.first == 'collapse'
+      return REVIEW_OPERATIONS[arguments[0]].run(arguments.drop(1), github:) if REVIEW_OPERATIONS[arguments[0]]
 
       new(arguments, github:).run
     rescue OptionParser::ParseError, SystemCallError, JSON::ParserError, Shaka::Error => e
@@ -29,7 +33,7 @@ module Shaka
       @github = github
     end
 
-    ACTIONS = %w[run check record assess publish collapse].freeze
+    ACTIONS = %w[run check record assess export publish collapse].freeze
 
     def run
       action = @arguments.shift

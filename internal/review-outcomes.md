@@ -1,7 +1,8 @@
 # Preserve review decisions and later outcomes
 
 Design proposal for the remaining work on [issue #395](https://github.com/shakacode/shaka/issues/395).
-Retention and assessments have shipped; export and real-use evaluation remain open. [Requirements](requirements.md) owns pilot scope;
+Retention, assessments, and the private export have shipped; a public-safe export and
+real-use evaluation remain open. [Requirements](requirements.md) owns pilot scope;
 issue #395 owns this extension's acceptance checklist.
 
 A maintainer should be able to ask, months after a merge, "which reviewer
@@ -265,7 +266,15 @@ the chain after A2. The owner's `fixed` record and A1 are both still readable.
 Each case also runs with a missing report and with `attribution: uncertain`.
 Retried and concurrent `assess` calls must neither lose nor duplicate an entry.
 
-## Export, later
+## Export
+
+`shaka review export --ledger PATH` has shipped as described below, private only. It
+copies every ledger field, renames `version` to `ledger_version`, adds `export_version`,
+and gives each round `report_text` or `report_unavailable`. Its tests export S1 and the
+S2 to S6 judgments, a missing and a changed report, and a legacy ledger. The public variant is not built: Ruby can strip report text and local
+paths, but it cannot recognize a private link inside a rationale, note, or evidence
+URL, so a public export needs a screening decision first.
+
 
 One JSON document per ledger: an export version, the ledger's base commit, the
 rounds with their bundled report text, the findings with any earlier triage,
@@ -285,6 +294,7 @@ reward, training upload, or provider integration is part of this work.
 2. **Assessments.** The finding stamps, the `earlier_findings` list, `review assess`, the comment change,
    compatibility, and chains S1 through S6 as tests.
 3. **Export.** The deterministic document and the same chains as export fixtures.
+   The private document has shipped; the public variant waits on a screening decision.
 4. **Real-use evaluation, on the issue.** Recheck the presentation checklist on
    real records and record a reconsidered recommendation when one genuinely occurs.
 
