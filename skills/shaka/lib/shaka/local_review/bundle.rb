@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'digest'
+require 'json'
 require 'securerandom'
 require 'fileutils'
 require 'tmpdir'
@@ -91,6 +92,18 @@ module Shaka
       listed = [Dir.tmpdir, '/tmp', '/var/tmp']
       roots = listed + listed.select { |root| File.directory?(root) }.map { |root| File.realpath(root) }
       roots.uniq.any? { |root| directory == root || directory.start_with?("#{root}/") }
+    end
+
+    # The ledger at `path`, read as `ledger!` reads parsed content.
+    def load(path) = ledger!(JSON.parse(File.read(path, encoding: 'UTF-8')), path)
+
+    # A round's report text and nil, or nil and the reason the report cannot be read as text.
+    def kept_text(round, directory)
+      file, reason = kept(round, directory)
+      return [nil, reason] if reason
+
+      text = File.read(file, encoding: 'UTF-8')
+      text.valid_encoding? ? [text, nil] : [nil, "#{file} is not valid UTF-8"]
     end
 
     # A round's readable report and nil, or the reason its report is gone or no longer matches its hash.
