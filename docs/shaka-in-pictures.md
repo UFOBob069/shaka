@@ -1,7 +1,8 @@
 # Shaka in pictures
 
 Do you build apps by chatting with an AI? This page shows what Shaka adds, using
-pictures and plain words. You do not need to know Git or GitHub yet.
+pictures and plain words. You do not need to know Git or GitHub. If you have used
+suggesting mode in Google Docs, you already know the main idea.
 
 Your **coding agent** is the AI tool you chat with, such as Claude Code, Codex, or
 Cursor. This page calls it **the agent**.
@@ -10,7 +11,7 @@ Cursor. This page calls it **the agent**.
 
 After reading, you will know:
 
-- what a **branch**, a **commit**, and a **pull request** are;
+- what a **pull request** and a **merge** are;
 - what Shaka does while you wait;
 - when Shaka needs your “yes.”
 
@@ -24,63 +25,48 @@ After the tutorial, you will have:
 
 When you vibe code, the AI changes your project right away. That is fast, but
 nobody checks the work unless you ask. Shaka gives the AI a careful routine. It
-works on a practice copy, tests its work, gets a second opinion, and hands you
-proof before anything goes in.
+tests its work, gets a second opinion, and shows you its changes as suggestions,
+with proof, before anything goes in.
 
-![Without Shaka, the AI edits your project directly, tests run only if you ask, nobody double-checks, and bugs can slip through. With Shaka, the AI works on a practice copy, your tests run first, a second AI looks for mistakes, you get a permission slip with proof, and by default the agent waits for your yes.](img/without-and-with-shaka.svg)
+![Without Shaka, the AI edits your project directly, tests run only if you ask, nobody double-checks, and bugs can slip through. With Shaka, the AI's edits come as suggestions, your tests run first, a second AI looks for mistakes, you see every change with proof, and by default the agent waits for your yes.](img/without-and-with-shaka.svg)
 
 **The goal: changes you can trust, while you stay in charge of what goes in.**
 
-## Eight words to start with
+## It works like suggesting mode
 
-Programmers use these words every day. Each one has a simple meaning.
-**GitHub** is the website where your project and its changes live.
+In Google Docs suggesting mode, edits show as suggestions: removed text is
+crossed out, and new text appears in color. Nothing changes until someone clicks
+**Accept all**. The agent hands you its work the same way, on **GitHub**, the
+website where your project lives.
 
-![Repo: your project on GitHub. Commit: a save point. main: the real version of your project. Branch: a practice copy. Pull request: a permission slip asking whether changes may join main. Check: a robot test that passes or fails. Review: a second AI looks for mistakes. Merge: the changes join main; with Ask, that waits for your yes.](img/coding-words.svg)
+![Google Docs crosses out 8 am and adds 7 am as a colored suggestion, with an Accept all button. A GitHub pull request shows the same edit as a red line and a green line under Files changed, with a Merge pull request button instead.](img/suggesting-mode.svg)
 
-People often shorten pull request to **PR**.
+- A **pull request**, or **PR**, is the agent's suggestions, waiting for you. Its
+  **Files changed** tab shows removed lines in red and new lines in green.
+- To **merge** a PR is to click Accept all: the changes join your project.
 
-## How a change travels
-
-This picture puts the words together. Follow the numbers.
-
-![main is the real version. The agent makes a branch, a practice copy, and saves commits as it works. A pull request asks whether the changes may join main and shows the tests and review. When you say yes, the branch merges into main. main stays untouched while the agent works.](img/branch-and-merge.svg)
-
-The most important part: **main stays the same while the agent works.** If you
-do not like the result, ask for changes, or do not merge it. Your real project
-stays as it was.
+Until you merge, your project stays as it was. The agent works on its own copy,
+called a branch, and saves each step as a commit, like an entry in version
+history. Shaka handles both.
 
 ## What Shaka does while you wait
 
 ![You give a task. The agent builds, verifies, and reviews. You review one clear PR with a walkthrough, check and review results, and the decisions left for you.](img/task-to-pr.svg)
 
-You give the task as a sentence or as a GitHub **issue**, which is a to-do note
-on GitHub. Then the agent does the gray box:
+You give the task as a sentence or as a GitHub issue, a to-do note on GitHub.
+Then the agent does the gray box:
 
-1. **Build.** It makes the change on a branch.
+1. **Build.** It makes the change on its own copy.
 2. **Test.** It runs your project's tests. If the change shows on screen, it also
    takes before and after pictures when it can.
 3. **Review.** A second AI reads the change and looks for mistakes. The agent
-   fixes what it finds, then tests and reviews again.
+   fixes real problems, then tests and reviews again.
 
 Then it hands you the green box: a pull request with everything you need to decide.
 
 Shaka gives the agent rules. A program checks some of them, and the agent follows
 the others on its own. The PR lists what was checked, and also what could not be
 checked. See [which rules a program checks](workflow.md#what-is-enforced).
-
-## Read the permission slip
-
-Shaka's PRs use the same layout every time, so you always know where to look.
-
-![A pull request page marked Open with the label awaiting-merge-approval. One: the summary says what changed and why. Two: the checkpoint is a final look at whether it is ready and what happens next. Three: the Code Walkthrough link tours the changed code. Four: a table shows what ran on this exact version. Five: usage and cost. Six: the merge button; with Ask, the agent waits for your yes.](img/pr-permission-slip.svg)
-
-A green ✓ means a check ran and passed. Letters and numbers such as `a1b2c3d`
-name the exact commit it ran on. A ✓ is strong proof, but it does not promise
-zero bugs.
-
-Near the top of the PR page, the **Files changed** tab shows every line the agent
-changed. Red lines were removed, and green lines were added.
 
 ## Who says yes?
 
@@ -94,7 +80,7 @@ Shaka has two merge choices. **Ask** is the default.
   changes still come back to you.
 
 This page uses Ask. With Ask, Shaka's rules tell the agent to wait for your yes
-before anything joins main. See [choose a merge policy](working-with-shaka.md#choose-a-merge-policy).
+before anything joins your project. See [choose a merge policy](working-with-shaka.md#choose-a-merge-policy).
 
 ## Tutorial: your first Shaka task
 
@@ -138,11 +124,12 @@ This step is ordinary work for your coding agent. It is not a Shaka task yet.
 
 ```text
 Create a private GitHub repository named shaka-playground. Give it a
-one-page website with a button and one automated test. Push it to main.
+one-page website with a button and one automated test. Upload it to GitHub.
 ```
 
-**Push** means upload your saved work to GitHub. The test matters: Shaka runs
-your project's tests, so without one it has less to check and less to show you.
+A **repository**, or repo, is your project's home on GitHub. The test matters:
+Shaka runs your project's tests, so without one it has less to check and less to
+show you.
 
 **Success looks like:** the agent gives you a link to the new repository. Open it
 to see your project's files on GitHub.
@@ -158,12 +145,14 @@ The agent told you where it saved the folder; ask again if you missed it.
 /shaka doctor
 ```
 
-**Success looks like:** everything Shaka needs shows as ready. If something is
-missing, ask the agent to help you install it.
+**Success looks like:** the tools Shaka needs show HEALTHY. Expect one FAILED
+row, **Repository seam**, and a few DEGRADED rows: Shaka is not set up in this
+project until step 4, so skip their advice for now. If a tool is missing, ask the
+agent to help you install it.
 
-The report also lists AI reviewer tools. Shaka likes a reviewer from another AI
-company. One AI tool is fine too: Shaka then uses a fresh copy of it that has
-not seen your chat, so the second look stays separate.
+In this tutorial, the second look comes from a fresh copy of the same AI that has
+not seen your chat. A reviewer from another AI company is optional; see
+[add a second reviewer](settings.md#add-a-second-reviewer).
 
 ### Step 4: Give Shaka a task
 
@@ -181,41 +170,43 @@ Set up Shaka just for me. Go.
 
 ### Step 5: Watch it work
 
-This takes longer than a normal chat, because the agent tests and reviews its own
-work. Its messages use the words from this page.
+This takes about 10 minutes, because the agent tests and reviews its own work.
+Its messages use the words from this page.
 
 | The agent… | It means… |
 | --- | --- |
 | Shows its plan: value, scope, risk, model, and effort | Why the work matters, how big and risky it is, and how hard the AI will think. |
-| Names a branch | It made the practice copy. |
+| Names a branch | It made its own copy to work in. Your real version, called **main**, stays as it was. |
 | Runs your tests | The robot checks are running. |
-| Reports review findings | The second AI found something. The agent fixes it and checks again. |
-| Pushes the branch | It uploaded the practice copy to GitHub. |
-| Opens a pull request | Your permission slip is ready. |
+| Reports review findings | The second AI found something. The agent fixes real problems and checks again; small suggestions are only noted. |
+| Pushes the branch | It uploaded its copy to GitHub. |
+| Opens a pull request | Its suggestions are ready for you. |
 | Publishes a walkthrough | A guided tour of the changed code. |
 | Publishes a checkpoint | Its final look: did it build the right thing, and is it ready? |
 | Adds the `awaiting-merge-approval` label | A tag on the PR that means: your turn to decide. |
 
 **If it stops to ask you something,** answer in your own words. If a question is
-confusing, reply “Explain that in simple words.” Your first run may pause for a
-few questions while Shaka learns your project. Your coding agent may also ask
-before it runs some commands. For this playground project, saying yes is fine.
+confusing, reply “Explain that in simple words.” On this first run, your coding
+agent may ask your permission many times before it runs commands such as `git`,
+`gh`, and `ruby`. For this playground project, saying yes is fine.
 
 **Success looks like:** the agent gives you a PR link and says the PR is ready
 for your decision.
 
 ### Step 6: Read the pull request
 
-**Do:** open the PR link. Then go on a treasure hunt:
+**Do:** open the PR link. Shaka's PRs use the same layout every time:
 
-- [ ] The summary: what changed and why.
-- [ ] The check table: did the tests pass?
-- [ ] The review: what did the second AI find, and what was fixed?
-- [ ] Before and after pictures of the button, in a comment below the summary.
-  They appear when your agent could open a browser.
-- [ ] **Code Walkthrough:** a tour of the changed code.
-- [ ] The **Files changed** tab: every changed line.
-- [ ] **Usage and cost:** what the AI work cost, when your agent reports it.
+![A pull request page with the label awaiting-merge-approval and a Files changed tab. One: Recommendation: Merge, with the next step. Two: the summary. Three: links to the Code Walkthrough, Code Review, and Checkpoint. Four: a table of checks, results, and evidence. Five: usage and cost, an estimate. Six: the merge button, like Accept all; with Ask, the agent waits for your yes.](img/pr-parts.svg)
+
+Find each numbered part on your PR. **Code Review** opens the second AI's
+findings, in a comment titled Local Adversarial Review. Then open the **Files
+changed** tab to see every changed line. If your agent could open a browser, a
+comment below the summary also shows before and after pictures of the button.
+
+The PR and its comments show your own GitHub account. A 🤖 line marks text the
+AI wrote. A green ✓ means a check ran and passed. That is strong proof, but it
+does not promise zero bugs.
 
 **Success looks like:** you can say what changed and how it was checked, without
 reading every line of code. If a check failed or something is missing, the PR
@@ -229,10 +220,12 @@ says so. Ask the agent about it.
 Make the counter number bigger.
 ```
 
-**You will see:** the agent updates the same PR. It saves a new commit, then tests
-and reviews again. Reload the PR page to see the changes.
+**You will see:** the agent updates the same PR. It saves a new commit, like a new
+entry in version history, then tests and reviews again. Reload the PR page to see
+the changes.
 
-**What it means:** you can steer as often as you like. main still has not changed.
+**What it means:** you can steer as often as you like, and main still has not
+changed.
 
 ### Step 8: Merge
 
@@ -241,8 +234,8 @@ and reviews again. Reload the PR page to see the changes.
 - Tell the agent `Merge this PR.` It merges the exact version it showed you.
 - Or press the green merge button on the GitHub PR page.
 
-**Success looks like:** the PR turns purple and says **Merged**. main now has the
-counter.
+**Success looks like:** the PR turns purple and says **Merged**, and main now has
+the counter.
 
 Your playground repository has no GitHub rules that block merging, and the agent
 may mention that. It is fine for practice.
@@ -270,7 +263,7 @@ Then look back at what happened:
 - **A check failed.** That is the safety net working. The agent fixes the problem
   or tells you why it cannot.
 - **You do not like the result.** Tell the agent what to change. Or close the PR
-  on GitHub without merging; main stays as it was.
+  on GitHub without merging, like Reject all; main stays as it was.
 - **You closed the chat.** Open the PR page and expand **WIP Details** (WIP means
   work in progress). Copy its **Next action** into a new chat. See
   [resume unfinished work](working-with-shaka.md#resume-unfinished-work).

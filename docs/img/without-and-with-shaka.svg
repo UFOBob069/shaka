@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 404" width="360" role="img" aria-labelledby="t d">
 <title id="t">Vibe coding without and with Shaka</title>
-<desc id="d">Without Shaka, the AI edits your project directly. Tests run only if you remember to ask, nobody double-checks the work, it is hard to see what changed and why, and bugs can slip through. With Shaka, the AI works on a practice copy. Your tests run before you see the result, a second AI looks for mistakes, you get a permission slip with proof, called a pull request, and by default the agent waits for your yes.</desc>
+<desc id="d">Without Shaka, the AI edits your project directly. Tests run only if you remember to ask, nobody double-checks the work, it is hard to see what changed and why, and bugs can slip through. With Shaka, the AI's edits come as suggestions, like suggesting mode in Google Docs. Your tests run before you see the result, a second AI looks for mistakes, you see every change with proof in a pull request, and by default the agent waits for your yes.</desc>
 <style>
 .bg{fill:#fff;stroke:#d9e0e7}
 text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
@@ -34,9 +34,9 @@ text{fill:#e6edf5}
 <text class="h m c" x="180" y="206">vs</text>
 <g class="yes"><rect x="20" y="222" width="320" height="162" rx="8"/>
 <text class="l m" x="38" y="246">WITH SHAKA</text>
-<text class="h" x="38" y="268">The AI works on a practice copy</text>
+<text class="h" x="38" y="268">The AI's edits come as suggestions</text>
 <text class="s" x="38" y="294"><tspan class="ok">✓</tspan> Your tests run before you see the result</text>
 <text class="s" x="38" y="316"><tspan class="ok">✓</tspan> A second AI looks for mistakes</text>
-<text class="s" x="38" y="338"><tspan class="ok">✓</tspan> You get a permission slip with proof</text>
+<text class="s" x="38" y="338"><tspan class="ok">✓</tspan> You see every change, with proof</text>
 <text class="s" x="38" y="360"><tspan class="ok">✓</tspan> By default, the agent waits for your yes</text></g>
 </svg>
