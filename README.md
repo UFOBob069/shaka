@@ -34,6 +34,9 @@ finds your existing checks, and defaults to Ask.
 [Working with Shaka](docs/working-with-shaka.md) covers practical prompts,
 merge choices, feedback, and resuming work.
 
+New to branches and pull requests? [Shaka in pictures](docs/shaka-in-pictures.md)
+explains them and walks you through a practice task.
+
 ## Why use it?
 
 - **Catch problems before hitting CI.** Test and review locally, including

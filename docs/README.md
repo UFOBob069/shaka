@@ -12,6 +12,9 @@ PR: what changed, how it was checked, and what is still open. At the
 
 ## Start here
 
+New to branches and pull requests? [Shaka in pictures](shaka-in-pictures.md)
+explains them and walks you through a practice task.
+
 1. [Install Shaka, configure your repository, and run a first task](getting-started.md).
 2. [Work with Shaka](working-with-shaka.md): choose a merge policy, give feedback,
    and resume unfinished work.

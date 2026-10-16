@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 440" width="360" role="img" aria-labelledby="t d">
+<title id="t">How a change travels from a branch into main</title>
+<desc id="d">One: main is the real version of your project. Two: the agent makes a branch, a practice copy, and works there. Three: each step gets a save point called a commit. Four: a pull request asks whether these changes may join main, and shows the tests and review. Five: when you say yes, the branch merges and main has the change. main stays untouched while the agent works.</desc>
+<style>
+.bg{fill:#fff;stroke:#d9e0e7}
+text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
+.h{font-size:15px;font-weight:600}
+.s{font-size:13px}
+.l{font-size:11px;letter-spacing:.08em}
+.m{fill:#516074}
+.c{text-anchor:middle}
+.mn{fill:none;stroke:#128a5e;stroke-width:4;stroke-linecap:round}
+.br{fill:none;stroke:#2f6fd1;stroke-width:4;stroke-linecap:round}
+.dm{fill:#128a5e}
+.db{fill:#2f6fd1}
+.pr{fill:#e3f5ec;stroke:#128a5e;stroke-width:2}
+.ok{fill:#128a5e;font-weight:700}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0f1724;stroke:#2a3648}
+text{fill:#e6edf5}
+.m{fill:#9fb0c3}
+.mn{stroke:#3ccf92}
+.br{stroke:#6ea2ff}
+.dm{fill:#3ccf92}
+.db{fill:#6ea2ff}
+.pr{fill:#0e3d2c;stroke:#3ccf92}
+.ok{fill:#3ccf92}
+}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="dm" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="bg" x="0.5" y="0.5" width="359" height="439" rx="10"/>
+<path class="mn" d="M44 30V414" marker-end="url(#ar)"/>
+<path class="br" d="M44 82C44 112 104 106 104 136V318C104 348 44 342 44 372"/>
+<text class="l m c" x="28" y="226" transform="rotate(-90 28 226)">UNTOUCHED WHILE THE AGENT WORKS</text>
+<circle class="dm" cx="44" cy="56" r="7"/>
+<text class="h" x="66" y="52">① main: the real version</text>
+<text class="s m" x="66" y="70">The project people use.</text>
+<circle class="db" cx="104" cy="152" r="7"/>
+<text class="h" x="124" y="148">② Branch: a practice copy</text>
+<text class="s m" x="124" y="166">The agent works here.</text>
+<circle class="db" cx="104" cy="204" r="7"/>
+<circle class="db" cx="104" cy="240" r="7"/>
+<text class="h" x="124" y="218">③ Commits: save points</text>
+<text class="s m" x="124" y="236">Saved as the agent works.</text>
+<circle class="db" cx="104" cy="298" r="7"/>
+<path class="br" d="M110 298H124"/>
+<rect class="pr" x="124" y="262" width="216" height="72" rx="8"/>
+<text class="h" x="138" y="284">④ Pull request</text>
+<text class="s" x="138" y="304">May these changes join main?</text>
+<text class="s" x="138" y="324"><tspan class="ok">✓</tspan> Tests   <tspan class="ok">✓</tspan> Review</text>
+<circle class="dm" cx="44" cy="372" r="8"/>
+<text class="h" x="70" y="380">⑤ Merge: you said yes</text>
+<text class="s m" x="70" y="398">main now has the change.</text>
+</svg>

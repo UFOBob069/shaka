@@ -3,6 +3,11 @@
     "README",
     {
       "type": "doc",
+      "id": "shaka-in-pictures",
+      "label": "Shaka in pictures"
+    },
+    {
+      "type": "doc",
       "id": "getting-started",
       "label": "Start here"
     },

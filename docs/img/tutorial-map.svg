@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 574" width="360" role="img" aria-labelledby="t d">
+<title id="t">The tutorial in five stages</title>
+<desc id="d">Get ready: you install Shaka, make a playground project, and run a health check. Start: you give Shaka a task. Work: you watch the agent build, test, review, and open a pull request. Decide: you read the pull request and can ask for a change, which sends the work back to the agent. Finish: you merge and see what you gained.</desc>
+<style>
+.bg{fill:#fff;stroke:#d9e0e7}
+text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
+.h{font-size:15px;font-weight:600}
+.s{font-size:13px}
+.l{font-size:11px;letter-spacing:.08em}
+.m{fill:#516074}
+.you rect{fill:#fdf3df;stroke:#b87514;stroke-width:1}
+.agent rect{fill:#f1f4f8;stroke:#8a99ad;stroke-width:1}
+.pr rect{fill:#e3f5ec;stroke:#128a5e;stroke-width:2}
+.a{stroke:#516074;stroke-width:1.5;fill:none}
+.ah{fill:#516074}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0f1724;stroke:#2a3648}
+text{fill:#e6edf5}
+.m{fill:#9fb0c3}
+.you rect{fill:#40300f;stroke:#e0a13a}
+.agent rect{fill:#1a2535;stroke:#6b7c93}
+.pr rect{fill:#0e3d2c;stroke:#3ccf92}
+.a{stroke:#9fb0c3}
+.ah{fill:#9fb0c3}
+}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="bg" x="0.5" y="0.5" width="359" height="573" rx="10"/>
+<g class="you"><rect x="20" y="20" width="308" height="86" rx="8"/>
+<text class="l m" x="38" y="44">YOU</text>
+<text class="h" x="38" y="66">Get ready</text>
+<text class="s m" x="38" y="88">① Install Shaka  ② Playground repo  ③ Doctor</text></g>
+<path class="a" d="M174 108V130" marker-end="url(#ar)"/>
+<g class="you"><rect x="20" y="132" width="308" height="86" rx="8"/>
+<text class="l m" x="38" y="156">YOU</text>
+<text class="h" x="38" y="178">Start</text>
+<text class="s m" x="38" y="200">④ Give Shaka a task</text></g>
+<path class="a" d="M174 220V242" marker-end="url(#ar)"/>
+<g class="agent"><rect x="20" y="244" width="308" height="86" rx="8"/>
+<text class="l m" x="38" y="268">AGENT</text>
+<text class="h" x="38" y="290">Work</text>
+<text class="s m" x="38" y="312">⑤ Watch it build, test, review, open a PR</text></g>
+<path class="a" d="M174 332V354" marker-end="url(#ar)"/>
+<g class="you"><rect x="20" y="356" width="308" height="86" rx="8"/>
+<text class="l m" x="38" y="380">YOU</text>
+<text class="h" x="38" y="402">Decide</text>
+<text class="s m" x="38" y="424">⑥ Read the PR  ⑦ Ask for a change</text></g>
+<path class="a" d="M328 399H346V287H332" marker-end="url(#ar)"/>
+<path class="a" d="M174 444V466" marker-end="url(#ar)"/>
+<g class="pr"><rect x="20" y="468" width="308" height="86" rx="8"/>
+<text class="l m" x="38" y="492">YOU</text>
+<text class="h" x="38" y="514">Finish</text>
+<text class="s m" x="38" y="536">⑧ Merge  ⑨ See what you gained</text></g>
+</svg>

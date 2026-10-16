@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 404" width="360" role="img" aria-labelledby="t d">
+<title id="t">Vibe coding without and with Shaka</title>
+<desc id="d">Without Shaka, the AI edits your project directly. Tests run only if you remember to ask, nobody double-checks the work, it is hard to see what changed and why, and bugs can slip through. With Shaka, the AI works on a practice copy. Your tests run before you see the result, a second AI looks for mistakes, you get a permission slip with proof, called a pull request, and by default the agent waits for your yes.</desc>
+<style>
+.bg{fill:#fff;stroke:#d9e0e7}
+text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
+.h{font-size:15px;font-weight:600}
+.s{font-size:13px}
+.l{font-size:11px;letter-spacing:.08em}
+.m{fill:#516074}
+.c{text-anchor:middle}
+.no rect{fill:#fdecea;stroke:#c2412d;stroke-width:1}
+.yes rect{fill:#e3f5ec;stroke:#128a5e;stroke-width:2}
+.x{fill:#c2412d;font-weight:700}
+.ok{fill:#128a5e;font-weight:700}
+@media (prefers-color-scheme:dark){
+.bg{fill:#0f1724;stroke:#2a3648}
+text{fill:#e6edf5}
+.m{fill:#9fb0c3}
+.no rect{fill:#3d1712;stroke:#f07a62}
+.yes rect{fill:#0e3d2c;stroke:#3ccf92}
+.x{fill:#f07a62}
+.ok{fill:#3ccf92}
+}
+</style>
+<rect class="bg" x="0.5" y="0.5" width="359" height="403" rx="10"/>
+<g class="no"><rect x="20" y="20" width="320" height="162" rx="8"/>
+<text class="l m" x="38" y="44">WITHOUT SHAKA</text>
+<text class="h" x="38" y="66">The AI edits your project directly</text>
+<text class="s" x="38" y="92"><tspan class="x">✗</tspan> Tests run only if you remember to ask</text>
+<text class="s" x="38" y="114"><tspan class="x">✗</tspan> Nobody double-checks the work</text>
+<text class="s" x="38" y="136"><tspan class="x">✗</tspan> Hard to see what changed and why</text>
+<text class="s" x="38" y="158"><tspan class="x">✗</tspan> Bugs can slip through unnoticed</text></g>
+<text class="h m c" x="180" y="206">vs</text>
+<g class="yes"><rect x="20" y="222" width="320" height="162" rx="8"/>
+<text class="l m" x="38" y="246">WITH SHAKA</text>
+<text class="h" x="38" y="268">The AI works on a practice copy</text>
+<text class="s" x="38" y="294"><tspan class="ok">✓</tspan> Your tests run before you see the result</text>
+<text class="s" x="38" y="316"><tspan class="ok">✓</tspan> A second AI looks for mistakes</text>
+<text class="s" x="38" y="338"><tspan class="ok">✓</tspan> You get a permission slip with proof</text>
+<text class="s" x="38" y="360"><tspan class="ok">✓</tspan> By default, the agent waits for your yes</text></g>
+</svg>
