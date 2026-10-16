@@ -104,16 +104,12 @@ phases:
         Read the seam's ordered reviewer list, then verify each listed reviewer's identity from
         metadata and trusted workflows, and whether it is reached on GitHub after a push or
         invoked locally with provider credentials.
-      - If the seam is missing and the user explicitly requested a private trial, inspect
-        project instructions, scripts, and CI. Infer setup, test, validation, and actual review
-        jobs from that evidence; ask only for consequential unknowns. Show the proposed commands
-        and their sources, then follow [private setup](<{{package_root}}/skills/shaka/references/repository-setup.md#try-shaka-privately-in-one-clone>)
-        with the saved absolute helper. Run `seam private inspect` at intake and after outside
-        Git updates, then `seam private check --root ROOT --ref REF` for the complete local
-        commands/settings report. Retry denied or partial setup through the existing recovery
-        procedure; report the failed path and use normal host approval when needed.
-        Continue into this feature task after setup, without a team setup PR, manual YAML edit,
-        or PATH edit. Keep team adoption a separate explicit choice. Private settings grant
+      - If the seam is missing and the user explicitly requested a private trial, follow
+        [private setup](<{{package_root}}/skills/shaka/references/repository-setup.md#try-shaka-privately-in-one-clone>)
+        before generating settings, including intake inspection and
+        [private setup recovery](<{{package_root}}/skills/shaka/references/repository-setup.md#recover-private-setup>)
+        for denied, interrupted, or partial setup. Continue the feature task after setup.
+        Keep team adoption a separate explicit choice. Private settings grant
         no trusted policy, public-comment trust, Auto authority, or fallback required checks.
         Default to Ask; an explicit user Auto
         instruction applies only to this task. Keep Ask when no native required checks are
@@ -121,12 +117,10 @@ phases:
         thread, and queue rule before submission.
       - If the seam is missing and neither mode was requested, explain private use and shared
         team settings. Ask which to prepare before generating configuration.
-      - For requested team setup when the seam is missing, inspect existing scripts and CI, determine the trusted base branch,
-        obtain every missing policy choice, then run the saved helper's `seam init` with the
-        complete explicit command and policy flags documented in the packaged
-        [settings reference](<{{package_root}}/skills/shaka/references/repository-setup.md#what-seam-init-writes>). Never guess checks or
-        grant merge authority. The initializer validates the generated
-        contract, repeats safely, and refuses repository-owned destinations. Candidate changes stay
+      - For requested team setup when the seam is missing, follow
+        [team setup](<{{package_root}}/skills/shaka/references/repository-setup.md#publish-team-configuration>)
+        with the saved helper's `seam init`. Never guess checks or
+        grant merge authority. Candidate changes stay
         subject to the previously trusted boundary, and settings for another workflow grant this
         one no permission to merge or run background work. Until that setup PR merges, every
         `--ref` command stops, so review, wait for, and hand off the setup PR through the packaged

@@ -50,7 +50,7 @@ The small reduction justifies a bounded trial, not a claim of major savings.
 
 | Procedure | Condition worth routing on | What stays visible; work needed before extraction |
 | --- | --- | --- |
-| Private/team first setup | Trusted seam is absent and setup mode is established | Stop on invalid policy; retain private-use authority limits and first-setup PR handling; compare every recovery path |
+| Private/team first setup | Trusted seam is absent and setup mode is established | See the [setup follow-up](#first-time-setup-and-recovery-follow-up) for retained boundaries and recovery evidence |
 | Reviewer execution failures | Selected reviewer returns a failure | Keep trusted selection, qualifying unavailability, account refusal, and no-unreviewed-publication boundaries; reconcile existing local-review references |
 | Issue offers | Root owner finds a verified gap outside the active request | Preserve separate query/text approvals and public-repository identity checks; relocating current classified quotes needs explicit audit treatment |
 | PR-watch mechanics | A task waits for checks or trusted feedback | Keep the native-wake boundary and manual resume owner; preserve startup races, timeout/error handling, and exact-head refresh |
@@ -97,3 +97,41 @@ It uses explicit loading conditions and verification references, but its batch
 coordination contracts and drift machinery solve broader problems. Reuse the
 conditional-reference pattern already present in Shaka. No predecessor code or
 workflow contracts enter this change; its tests were inspected, not run.
+
+## First-time setup and recovery follow-up
+
+The next bounded extraction reuses the existing repository-setup guide. It removes
+repeated command-discovery and generation steps from Plan. Intake inspection,
+failed-path reporting, and host approval for denied writes stay explicit in that
+guide, with a direct recovery heading. No loader, recovery command, or setting is added.
+
+| State | Route and preserved safeguard |
+| --- | --- |
+| Trusted seam exists | Skip first-time setup; use the validated seam |
+| Trusted seam is invalid | Intake still stops; setup grants no bypass |
+| Seam absent, mode unspecified | Ask private versus team before generating configuration |
+| Explicit private trial | Inspect at intake/after outside Git updates; infer commands from evidence; generate through the installed helper and continue the feature task |
+| Denied, interrupted, or partial private setup | Inspect the recovery copy; retry matching options after access is fixed; preserve conflicting copies for comparison |
+| Tracked team adoption or differing recovery copy | Existing Ruby refusals remain; private generation cannot overwrite adoption or discard the recovery copy |
+| Explicit first team setup | Obtain policy from the user/repository; retain Never guess checks and Never grant merge authority; follow the first-setup PR path while trusted-ref commands refuse |
+
+All seven completion criteria, the other six phases, standing boundaries, and the
+enforcement manifest are unchanged. Private settings still grant no trusted policy,
+public-comment trust, Auto authority, or fallback required checks. Ask and native
+GitHub gates remain visible in Plan. Existing recovery tests exercise denied
+exclusion writes, interrupted materialization, partial wrappers, conflicting copies,
+tracked adoption, and authority limits; this is not a new agent-routing trial.
+
+Against merged base `fc920ece00b506239122452f49903a222885516f`, the rendered
+workflow falls from 10,658 to 10,542 words: 116 fewer words (1.1%) and 702 fewer
+UTF-8 bytes. The existing setup guide adds 37 words and 212 bytes; total measured
+instruction text falls by 79 words and 490 bytes. Entry-point and project guidance
+sizes are unchanged. Established-seam tasks skip the guide; first-time setup uses
+the same guide as before. Real-use frequency, token, and latency effects remain unknown.
+
+The predecessor check also inspected its
+[installation ownership comparison](https://github.com/shakacode/agent-workflows/blob/d85eceaecac1b8c4d55a7889a806bd89a612a493/bin/agent_doctor/install_ownership.rb)
+and [tests](https://github.com/shakacode/agent-workflows/blob/d85eceaecac1b8c4d55a7889a806bd89a612a493/test/agent_doctor/install_ownership_test.rb).
+Those protect doctor installations; Shaka already has prepared-copy and adoption
+checks suited to this recovery path. Reuse Shaka’s existing code and conditional
+references, with no predecessor module imported.

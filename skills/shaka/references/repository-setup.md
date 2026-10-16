@@ -3,7 +3,8 @@
 ## Try Shaka privately in one clone
 
 When the user explicitly requests a private trial and the trusted default branch
-has no Shaka seam, infer commands from project instructions, scripts, and CI.
+has no Shaka seam, run `seam private inspect --root DIR` at intake and after
+outside Git updates. Infer commands from project instructions, scripts, and CI.
 Show each proposed command with its source; ask only for consequential unknowns.
 Use the saved absolute installed helper path throughout, with no PATH edit.
 Generate local settings:
@@ -33,7 +34,8 @@ After setup, run `seam private inspect --root DIR` and
 `seam private check --root DIR --ref DEFAULT_BRANCH_SHA`. The latter reports
 complete local commands with `mode: private/local`, `grants_policy: false`, and
 `grants_merge_authority: false`; ordinary `seam check --ref` stays trusted-only.
-Continue into the feature task with the project's existing commands. Run the
+Continue into the feature task with the project's existing commands, without a
+team setup PR or manual YAML edit. Run the
 existing feature guard before staging and publication, and retain settings-bound
 validation and review evidence. Default to Ask and preserve GitHub's required
 checks, approvals, review threads, and queue rules. Private settings cannot supply
@@ -54,7 +56,10 @@ default restore uses `previous` and reports that source. Each worktree gets an a
 re-creating a deleted worktree at the same path starts a new copy without replacing
 the old one.
 
-If setup is denied or interrupted, the error names the failed path. Inspect the
+## Recover private setup
+
+If setup is denied or interrupted, report the failed path the error names and
+use normal host approval when needed to fix access. Inspect the
 copy and retry setup with the same options after fixing access; a matching partial
 installation resumes. Changed options leave a differing prepared copy, so setup
 refuses to replace it. Compare that copy and move it to a safe location before
