@@ -5,12 +5,14 @@ require 'open3'
 require 'optparse'
 require_relative 'branch_name'
 require_relative 'error'
+require_relative 'claim/description'
 require_relative 'claim/names'
 require_relative 'claim/pull_requests'
 require_relative 'configuration'
 
 module Shaka
-  # Lists open pull requests and remote branches that already cover a work item.
+  # Lists open pull requests and remote branches that already cover a work item, or, for a task
+  # given as a sentence, the same description slug.
   class Claim
     def self.run(arguments, runner: nil)
       query, root, tracker_branch = parse(arguments)
@@ -31,18 +33,26 @@ module Shaka
       parser = option_parser(options)
       parser.parse!(arguments)
       return help(parser) if options[:help]
-      raise OptionParser::InvalidArgument, parser.to_s unless arguments.length == 1
 
-      [arguments.first, File.realpath(options.fetch(:root, Dir.pwd)), options[:branch]]
+      [query(arguments, options, parser), File.realpath(options.fetch(:root, Dir.pwd)), options[:branch]]
+    end
+
+    def self.query(arguments, options, parser)
+      return arguments.first if arguments.length == 1 && !options[:description]
+      raise OptionParser::InvalidArgument, parser.to_s unless arguments.empty? && options[:description]
+      raise OptionParser::InvalidArgument, '--branch needs a work item' if options[:branch]
+
+      Description.new(slug: options[:description])
     end
 
     def self.option_parser(options)
       OptionParser.new do |flags|
-        flags.banner = 'Usage: shaka claim QUERY [--root DIR] [--branch NAME]'
+        flags.banner = 'Usage: shaka claim QUERY|--description SLUG [--root DIR] [--branch NAME]'
         flags.on('--root DIR', 'Repository root (default: current directory)') { |value| options[:root] = value }
         flags.on('--branch NAME', 'Branch name the tracker supplies for this work item') do |value|
           options[:branch] = value
         end
+        flags.on('--description SLUG', 'Slug for a task with no work item') { |value| options[:description] = value }
         flags.on('-h', '--help', 'Show usage') { options[:help] = true }
       end
     end
@@ -63,13 +73,14 @@ module Shaka
       Configuration.worktree(root: root).to_h.dig('branches', 'name')
     end
 
-    private_class_method :parse, :option_parser, :help, :branch_name_for
+    private_class_method :parse, :query, :option_parser, :help, :branch_name_for
 
     def initialize(query:, root:, runner: nil, branch_name: nil, tracker_branch: nil)
-      @query = work_item(query)
+      @description = query.slug if query.is_a?(Description)
+      @query = work_item(query) unless @description
       @root = root
       @runner = runner || ->(argv, stdin_data: '') { Open3.capture3(*argv, stdin_data: stdin_data, chdir: @root) }
-      @names = Names.new(query: @query, template: branch_name, exact: tracker_branch)
+      @names = Names.new(query: @query, description: @description, template: branch_name, exact: tracker_branch)
     end
 
     def result
@@ -77,6 +88,7 @@ module Shaka
       matching = matching_branches
       {
         'query' => @query,
+        **(@description ? { 'description' => @description } : {}),
         'branch_name' => @names.reported,
         'pull_requests' => listed,
         'branches' => matching,

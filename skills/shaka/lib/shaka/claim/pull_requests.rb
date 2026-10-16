@@ -17,6 +17,8 @@ module Shaka
       end
 
       def call
+        return by_branch_name unless @query
+
         inventory = pull_requests([], PR_JSON)
         searched = search_numbers
         raise Error, 'GitHub PR inventory changed during ownership search.' unless
@@ -26,6 +28,9 @@ module Shaka
       end
 
       private
+
+      # A task without a work item has no number for text, references, or comments to mention.
+      def by_branch_name = pull_requests([], PR_FIELDS.join(',')).filter { |pr| @names.cover?(pr.fetch('headRefName')) }
 
       def inventory_numbers(inventory)
         inventory.map do |pr|

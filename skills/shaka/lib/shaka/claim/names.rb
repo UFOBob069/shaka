@@ -1,23 +1,37 @@
 # frozen_string_literal: true
 
 require_relative '../defaults'
+require_relative '../error'
 
 module Shaka
   class Claim
     # Compiles a repository branch-name template, or the tracker's branch name, into a matcher for remote heads.
     class Names
       DEFAULT = Defaults.fetch('branches', 'name')
+      # Stands in for {issue} when a task has no work item. Fixed rather than a setting because
+      # the collision matcher below parses it out of other sessions' branch names.
+      AD_HOC = 'ad-hoc'
       WILDCARDS = { 'login' => '[^/]+', 'host' => '[^/]+', 'description' => '.+' }.freeze
 
-      def initialize(query:, template:, exact: nil)
+      def initialize(query:, template:, description: nil, exact: nil)
         @query = query
+        @description = description
         @template = template
         @exact = exact
+        return unless description && !(template || DEFAULT).include?('{description}')
+
+        raise Error, 'branches.name needs {description} to name a task without a work item.'
       end
 
-      def reported = @exact || @template || DEFAULT
+      def reported
+        return @exact || @template || DEFAULT unless @description
+
+        (@template || DEFAULT).gsub('{issue}', AD_HOC).gsub('{description}', @description)
+      end
 
       def cover?(name)
+        return name.match?(template_pattern) if @description
+
         name == @exact || name.match?(issue_token_pattern) || template_match?(name)
       end
 
@@ -34,14 +48,17 @@ module Shaka
 
       def template_pattern
         @template_pattern ||= begin
-          pieces = @template.split(/\{(login|host|issue|description)\}/)
+          pieces = (@template || DEFAULT).split(/\{(login|host|issue|description)\}/)
           regex = pieces.each_with_index.map { |piece, index| index.even? ? Regexp.escape(piece) : token_regex(piece) }
           Regexp.new("\\A#{regex.join}\\z")
         end
       end
 
       def token_regex(token)
-        token == 'issue' ? "(?i:#{Regexp.escape(@query)})" : WILDCARDS.fetch(token)
+        return "(?i:#{Regexp.escape(@description ? AD_HOC : @query)})" if token == 'issue'
+        return Regexp.escape(@description) if @description && token == 'description'
+
+        WILDCARDS.fetch(token)
       end
     end
   end

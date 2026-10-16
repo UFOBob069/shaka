@@ -73,7 +73,7 @@ class SkillTest < Minitest::Test
 
     assert_includes body, 'Immediately before the first edit'
     assert_match(/fixed,\s+duplicate, or superseded/, body)
-    assert_includes body, "rerun the saved helper's `claim QUERY`"
+    assert_includes body, "rerun the saved helper's `claim` with the same query or `--description`"
     assert_match(/PR and branch this task already recorded as its own\s+continuation/, body)
     assert_includes body, 'live native task registry'
     assert_match(/explicitly\s+transferred ownership to this task/, body)

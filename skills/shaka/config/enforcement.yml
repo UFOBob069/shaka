@@ -166,14 +166,17 @@ rules:
       `claim QUERY` sets `collision` from an unqualified `gh pr list --search`, which reads
       titles, bodies, and comments, and from branch names on `origin`. It misses a fork branch
       that never names the work item, and it matches any PR whose text happens to contain the
-      number. Nothing then stops the second PR: acting on the collision is the agent's.
+      number. `claim --description SLUG` matches only branch names built from the template with
+      `ad-hoc` and that slug, so a differently worded slug for the same task is missed. Nothing
+      then stops the second PR: acting on the collision is the agent's.
   - id: seam-branch-name
     phase: intake
     quote: do not invent a personal prefix
     enforced_by: agent
     note: >-
-      `claim` returns the seam's `branches.name`, or the tracker's branch name passed with
-      `--branch` after Git accepts it, but nothing compares the branch actually created against
+      `claim` returns the seam's `branches.name`, with `ad-hoc` and the slug filled in for
+      `--description`, or the tracker's branch name passed with `--branch` after Git accepts it,
+      but nothing compares the branch actually created against
       that name or template, including its `{host}` slug.
   - id: no-invented-edits
     phase: intake

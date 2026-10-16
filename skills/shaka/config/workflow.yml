@@ -52,7 +52,9 @@ phases:
       - For the issue, PR, or review thread the task answers, run the saved helper's `claim QUERY`
         with that number or tracker key, such as `ENG-123`. When the task comes from a tracker
         that offers a branch name for the work item, such as Linear's copy-branch-name action,
-        pass it as `--branch NAME` so the tracker links the pull request. On a hit, report the
+        pass it as `--branch NAME` so the tracker links the pull request. For a task given as a
+        sentence, run `claim --description SLUG` with a short lowercase slug of the task, such
+        as `add-button-counter`; it checks for the same slug. On a hit, report the
         open pull requests and remote branches and stop for a decision unless the user already
         authorized a comparison or override. Do not open a second PR. Use the reported
         `branch_name` when creating a branch; do not invent a personal prefix.
@@ -212,7 +214,7 @@ phases:
     body: |-
       - Immediately before the first edit, verify again that the selected problem is not fixed,
         duplicate, or superseded. If it is, report an evidence-backed no-change outcome and stop.
-        For issue or PR work, then rerun the saved helper's `claim QUERY`.
+        Then rerun the saved helper's `claim` with the same query or `--description`.
         Treat the PR and branch this task already recorded as its own continuation. On any other
         hit, report the collision and stop for a decision unless the user already authorized
         proceeding with that specific hit. Where the host has a live native task registry, also
