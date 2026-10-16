@@ -124,8 +124,9 @@ class LocalReviewExportReportTest < Minitest::Test
   end
 
   def test_an_unreadable_report_is_marked_and_the_rest_still_exports
+    skip 'root reads a file whatever its mode' if Process.uid.zero?
     accepted_retry_removal
-    File.chmod(0o000, ledger.rounds.first.fetch('report'))
+    lock_first_report
     rounds = exported['rounds']
     assert_match(/could not be read/, rounds.first['report_unavailable'])
     assert rounds.last.key?('report_text')
@@ -145,6 +146,8 @@ class LocalReviewExportReportTest < Minitest::Test
     relocate_bundle
     FileUtils.rm_rf(File.join(@directory, 'reports'))
   end
+
+  def lock_first_report = File.chmod(0o000, ledger.rounds.first.fetch('report'))
 
   def damage_kept_reports
     FileUtils.rm_f(ledger.rounds.first.fetch('report'))
