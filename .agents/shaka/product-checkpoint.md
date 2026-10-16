@@ -1,7 +1,9 @@
 **Did we build the right thing?** Assume technical correctness. Compare the
 finished result with the original problem, intended users, and desired outcome.
 Assess observed benefit, scope drift, review churn, and ongoing maintenance cost;
-mark missing impact or frequency evidence unknown.
+mark missing impact or frequency evidence unknown. Without re-reviewing code,
+judge whether the reported verification is proportionate to what a failure would
+reach and to whether a revert undoes it, and name paths that were not exercised.
 
 For instruction changes, apply the trusted AGENTS.md **Skill architecture and
 review** criteria, using the instruction-growth report and actual loading conditions.
