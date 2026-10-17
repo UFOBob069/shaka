@@ -240,10 +240,14 @@ phases:
         meanwhile. Retain decisions in the task or PR within its privacy; silence is not approval.
         If another agent edits the change, agree on file ownership or take turns. Delegated workers
         own exclusive files or worktrees and never publish or merge.
-      - For behavior changes, observe one meaningful failing test, make the smallest change that
-        passes, then simplify while green. Test behavior, not implementation wording. If automation
-        is impractical, explain why and capture before and after behavior. Use the repo's existing
-        test and browser tools. Keep executable logic in code, not in Markdown.
+      - Before changing behavior, identify its triggering state and the fact the fix's safety depends on.
+        Use the repo's test and browser tools to reproduce through the real caller or integration boundary before editing
+        production code; label a lower-fidelity probe. Observe a meaningful failure, make the smallest
+        fix, rerun the same check, then simplify while green. Exercise the safety assumption for affected
+        shared callers; report unexercised paths and any impractical check. Keep useful probes rerunnable.
+        If automation is impractical, explain why and capture before and after behavior.
+        Keep executable logic in code, not in Markdown. Test behavior, not implementation wording.
+        For prose-only changes, inspect the diff.
     done_when: The change and its tests exist on the branch.
   - id: verify
     title: Verify

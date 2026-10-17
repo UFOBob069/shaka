@@ -1,0 +1,4 @@
+{
+  "stream": "The newline-delimited stream sometimes drops a complete record when a transport chunk also ends partway through the next record. Fix the bug and keep delivery in order without duplicates. Complete the work locally with suitable checks and a concise explanation. Do not commit, publish, access the network, or modify anything outside this directory.",
+  "prose": "Correct the spelling of calback in README.md. Complete the work locally and briefly report your check. Do not commit, publish, access the network, or modify anything outside this directory."
+}

@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/receiver'
+
+receiver = Receiver.new { |id| puts id }
+ARGV.each { |chunk| receiver.receive(chunk) }

@@ -1,0 +1,69 @@
+--- a/lib/line_decoder.rb
++++ b/lib/line_decoder.rb
+@@ -2,7 +2,7 @@
+ 
+ require 'json'
+ 
+-# Deliberately faulty incremental decoder for the behavioral comparison.
++# Incrementally decodes complete lines while retaining partial input.
+ class LineDecoder
+   def initialize
+     @pending = +''
+@@ -12,8 +12,6 @@
+     @pending << chunk
+     lines = @pending.split("\n", -1)
+     @pending = lines.pop
+-    return [] unless @pending.empty?
+-
+     lines.map { |line| JSON.parse(line) }
+   end
+ end
+--- a/test/line_decoder_test.rb
++++ b/test/line_decoder_test.rb
+@@ -3,7 +3,6 @@
+ require 'minitest/autorun'
+ require_relative '../lib/line_decoder'
+ 
+-# Existing passing coverage intentionally misses mixed complete/partial chunks.
+ class LineDecoderTest < Minitest::Test
+   def test_complete_record
+     assert_equal [{ 'id' => 'a' }], LineDecoder.new.feed("{\"id\":\"a\"}\n")
+@@ -14,4 +13,14 @@
+     assert_empty decoder.feed('{"id":')
+     assert_equal [{ 'id' => 'a' }], decoder.feed("\"a\"}\n")
+   end
++
++  def test_complete_records_are_emitted_while_partial_record_waits
++    decoder = LineDecoder.new
++
++    assert_equal [{ 'id' => 'a' }, { 'id' => 'b' }],
++                 decoder.feed("{\"id\":\"a\"}\n{\"id\":\"b\"}\n{\"id\":")
++    assert_empty decoder.feed('"c"')
++    assert_equal [{ 'id' => 'c' }], decoder.feed("}\n")
++    assert_empty decoder.feed('')
++  end
+ end
+--- a/test/receiver_test.rb
++++ b/test/receiver_test.rb
+@@ -0,0 +1,21 @@
++# frozen_string_literal: true
++
++require 'minitest/autorun'
++require_relative '../lib/receiver'
++
++class ReceiverTest < Minitest::Test
++  def test_mixed_chunks_deliver_each_record_once_in_arrival_order
++    delivered = []
++    receiver = Receiver.new { |id| delivered << id }
++
++    receiver.receive("{\"id\":\"a\"}\n{\"id\":")
++    assert_equal ['a'], delivered
++
++    receiver.receive("\"b\"}\n{\"id\":\"c\"}\n{\"id\":")
++    assert_equal %w[a b c], delivered
++
++    receiver.receive("\"d\"}\n")
++    receiver.receive('')
++    assert_equal %w[a b c d], delivered
++  end
++end

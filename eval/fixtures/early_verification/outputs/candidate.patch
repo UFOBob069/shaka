@@ -1,0 +1,71 @@
+--- a/lib/line_decoder.rb
++++ b/lib/line_decoder.rb
+@@ -2,7 +2,7 @@
+ 
+ require 'json'
+ 
+-# Deliberately faulty incremental decoder for the behavioral comparison.
++# Incrementally decodes complete lines while retaining partial input.
+ class LineDecoder
+   def initialize
+     @pending = +''
+@@ -11,8 +11,7 @@
+   def feed(chunk)
+     @pending << chunk
+     lines = @pending.split("\n", -1)
+-    @pending = lines.pop
+-    return [] unless @pending.empty?
++    @pending = lines.pop || +''
+ 
+     lines.map { |line| JSON.parse(line) }
+   end
+--- a/test/receiver_test.rb
++++ b/test/receiver_test.rb
+@@ -0,0 +1,47 @@
++# frozen_string_literal: true
++
++require 'minitest/autorun'
++require_relative '../lib/receiver'
++
++class ReceiverTest < Minitest::Test
++  def test_delivers_complete_records_while_retaining_only_the_partial_suffix
++    delivered = []
++    receiver = Receiver.new { |id| delivered << id }
++
++    receiver.receive('{"id":')
++    assert_empty delivered
++
++    receiver.receive("\"a\"}\n{\"id\":\"b\"}\n{\"id\":\"c")
++    assert_equal %w[a b], delivered
++
++    receiver.receive('')
++    receiver.receive('d')
++    assert_equal %w[a b], delivered
++
++    receiver.receive("\"}\n{\"id\":\"e\"}\n")
++    assert_equal %w[a b cd e], delivered
++
++    receiver.receive('')
++    assert_equal %w[a b cd e], delivered
++  end
++
++  def test_delivery_is_independent_of_transport_chunk_boundaries
++    stream = "{\"id\":\"a\"}\n{\"id\":\"b\"}\n{\"id\":\"c\"}\n"
++
++    (0..stream.length).each do |first|
++      (first..stream.length).each do |second|
++        delivered = []
++        receiver = Receiver.new { |id| delivered << id }
++        chunks = [stream[0...first], stream[first...second], stream[second..-1]]
++        received = +''
++
++        chunks.each do |chunk|
++          received << chunk
++          receiver.receive(chunk)
++          expected = %w[a b c].first(received.count("\n"))
++          assert_equal expected, delivered, "chunk boundaries: #{first}, #{second}"
++        end
++      end
++    end
++  end
++end
