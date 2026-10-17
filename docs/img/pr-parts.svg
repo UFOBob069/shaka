@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 608" width="360" role="img" aria-labelledby="t d">
 <title id="t">The parts of a Shaka pull request</title>
-<desc id="d">A pull request page titled Count button clicks, marked Open with the label awaiting-merge-approval. Its Files changed tab counts 5 lines added and 3 removed. One: Recommendation: Merge, beside links to the Code Walkthrough, a guided tour of the changed code; Code Review, the second AI's findings; and Checkpoint, a final look at whether it is ready. Two: the summary says what changed and why, in plain words. Three: the intent says why the change exists and why it is safe. Four: a table of checks with each result and its evidence, such as tests passing and two small review suggestions noted. Five: usage and cost, an estimate at API prices rather than your bill. Six: the merge button, which works like Accept all in Google Docs; with Ask, the agent waits for your yes.</desc>
+<desc id="d">A pull request page titled Count button clicks, marked Open with the label awaiting-merge-approval. Its Files changed tab counts 5 lines added and 3 removed. One: Recommendation: Merge, beside links to the Code Walkthrough, a guided tour of the changed code; Code Review, the second AI's findings; and Checkpoint, a final look at whether it is ready. Two: the summary says what changed and why, in plain words. Three: the intent says why the change exists and why it is safe. Four: a table of checks with each result and its evidence, such as tests passing and two small review notes recorded. Five: usage and cost, an estimate at API prices rather than your bill. Six: the merge button, which works like Accept all in Google Docs; with Ask, the agent waits for your yes.</desc>
 <style>
 .bg{fill:#fff;stroke:#d9e0e7}
 text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
@@ -80,7 +80,7 @@ text{fill:#e6edf5}
 <text class="s" x="126" y="357"><tspan class="ok">✓</tspan> 3 of 3 pass</text>
 <text class="s" x="234" y="357">Local run</text>
 <text class="s" x="66" y="380">Review</text>
-<text class="s" x="126" y="380"><tspan class="ok">✓</tspan> 2 nits noted</text>
+<text class="s" x="126" y="380"><tspan class="ok">✓</tspan> 2 small notes</text>
 <text class="s lnk" x="234" y="380">Comment</text>
 <text class="s m" x="58" y="406">What was checked, with proof.</text>
 <circle class="n" cx="38" cy="440" r="10"/><text class="nt c" x="38" y="444">5</text>

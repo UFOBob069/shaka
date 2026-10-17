@@ -118,7 +118,7 @@ means Shaka is ready.
 
 ### Step 2: Make a playground project
 
-This step is ordinary work for your coding agent. It is not a Shaka task yet.
+This is not a Shaka task yet.
 
 **Do:**
 
@@ -128,14 +128,19 @@ one-page website with a button and one automated test. Upload it to GitHub.
 ```
 
 A **repository**, or repo, is your project's home on GitHub. The test matters:
-Shaka runs your project's tests, so without one it has less to check and less to
-show you.
+Shaka runs your tests, so without one it has less to check and show you.
 
-**Success looks like:** the agent gives you a link to the new repository. Open it
-to see your project's files on GitHub.
+**You will see:** the agent gives you a link to the new repository. Open it to
+see your files.
 
-**Then:** open your coding agent in the `shaka-playground` folder on your computer.
-The agent told you where it saved the folder; ask again if you missed it.
+**Then:** the agent made the project in a folder on your computer, where Shaka
+will work. Ask it:
+
+```text
+How do I start a new chat in the shaka-playground folder and check it worked?
+```
+
+Continue in that new chat.
 
 ### Step 3: Run a health check
 
@@ -170,7 +175,7 @@ Set up Shaka just for me. Go.
 
 ### Step 5: Watch it work
 
-This takes about 10 minutes, because the agent tests and reviews its own work.
+This can take 10 minutes or more, because the agent tests and reviews its work.
 Its messages use the words from this page.
 
 | The agent… | It means… |
@@ -178,7 +183,7 @@ Its messages use the words from this page.
 | Shows its plan: value, scope, risk, model, and effort | Why the work matters, how big and risky it is, and how hard the AI will think. |
 | Names a branch | It made its own copy to work in. Your real version, called **main**, stays as it was. |
 | Runs your tests | The robot checks are running. |
-| Reports review findings | The second AI found something. The agent fixes real problems and checks again; small suggestions are only noted. |
+| Reports review findings | The second AI found something. The agent fixes real problems and checks again; small notes are only recorded. |
 | Pushes the branch | It uploaded its copy to GitHub. |
 | Opens a pull request | Its suggestions are ready for you. |
 | Publishes a walkthrough | A guided tour of the changed code. |
