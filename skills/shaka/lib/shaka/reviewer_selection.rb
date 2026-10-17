@@ -16,6 +16,7 @@ module Shaka
     SUPPORTED_REVIEWERS = %w[openai/codex anthropic/claude xai/grok deepseek/openrouter].freeze
     AVAILABLE = 'available'
     UNAVAILABLE = 'unavailable'
+    NOT_SET_UP = 'not set up on this machine'
     SAME_PROVIDER = 'same provider as the implementation'
     NOTES = {
       'different_provider' => 'Run %s: a provider that did not implement this.',
@@ -35,10 +36,13 @@ module Shaka
       { 'provider' => provider.strip, 'model_family' => family.strip }
     end
 
-    def initialize(reviewers:, implementers:, unavailable: [], count: 1)
+    # not_set_up lists reviewers whose CLI or API key this machine lacks; they are skipped like
+    # unavailable ones but reported under their own reason so the gap stays visible.
+    def initialize(reviewers:, implementers:, unavailable: [], not_set_up: [], count: 1)
       @reviewers = reviewers || []
       @implementers = implementers
       @unavailable = unavailable
+      @not_set_up = not_set_up
       @count = count
     end
 
@@ -64,6 +68,7 @@ module Shaka
 
     def reason(entry)
       return UNAVAILABLE if unavailable?(entry)
+      return NOT_SET_UP if listed?(@not_set_up, entry)
       return SAME_PROVIDER if providers.include?(fold(entry['provider']))
 
       AVAILABLE
@@ -92,7 +97,8 @@ module Shaka
     def run_order(selected, reasons)
       return [implementer] unless selected
 
-      others = reasons.reject { |entry, why| entry.equal?(selected) || why == UNAVAILABLE }.map(&:first)
+      others = reasons.reject { |entry, why| entry.equal?(selected) || [UNAVAILABLE, NOT_SET_UP].include?(why) }
+      others = others.map(&:first)
       [selected, *others].first(@count).map { |entry| identity(entry) }
     end
 
@@ -113,9 +119,9 @@ module Shaka
       format(template, selected ? identity(selected) : implementer)
     end
 
-    def unavailable?(entry)
-      @unavailable.any? { |blocked| key(blocked) == key(entry) }
-    end
+    def unavailable?(entry) = listed?(@unavailable, entry)
+
+    def listed?(list, entry) = list.any? { |blocked| key(blocked) == key(entry) }
 
     # Compare components and fold case: an identity read from display metadata may be spelled
     # differently than the seam spells it, and a miss would pick a less preferred reviewer.

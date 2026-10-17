@@ -37,11 +37,12 @@ module Shaka
 
     def selection
       review = config.review
+      inventory = Doctor::CliInventory.new(root:, environment: ENV).call(review)
       result = ReviewerSelection.new(reviewers: review[RepositoryConfig::ReviewSchema::LOCAL_REVIEW_AGENTS],
                                      implementers: identities(:implementers, required: true),
                                      unavailable: identities(:unavailable),
+                                     not_set_up: Doctor::CliInventory.not_set_up(inventory),
                                      count: @options.fetch(:count) { count(review) }).call
-      inventory = Doctor::CliInventory.new(root:, environment: ENV).call(review)
       result.merge('setup_notices' => Doctor::CliInventory.setup_notices(inventory))
     end
 

@@ -2,17 +2,33 @@
 
 require_relative 'test_helper'
 require_relative 'reviewer_command_fixture'
+require 'shaka/doctor/cli_inventory'
 
 class ReviewerSetupTest < Minitest::Test
   include ReviewerCommandFixture
 
-  def test_reports_configured_setup_gaps_without_launching_or_silently_skipping_reviewers
+  def test_skips_reviewers_this_machine_lacks_and_reports_why
     with_repository do |root|
       marker = File.join(root, 'launched')
       result = missing_setup_selection(root, marker)
-      assert_equal 'deepseek/openrouter', result.fetch('reviewer')
+      assert_equal 'same_model', result.fetch('outcome')
+      assert_equal ['openai/codex'], result.fetch('reviewers')
+      assert_equal(['not set up on this machine'] * 2, result.fetch('considered').map { |row| row.fetch('reason') })
       assert_setup_notices(result.fetch('setup_notices'))
       refute_path_exists marker
+    end
+  end
+
+  def test_a_listed_reviewer_joins_once_this_machine_has_it
+    with_repository do |root|
+      Dir.mktmpdir do |tools|
+        rewrite_reviewers(root, missing_setup_agents)
+        write_reviewer_tool(tools, File.join(root, 'launched'))
+        without_key = selection_with_path(root, "#{tools}:/usr/bin:/bin", '--count', '2')
+        with_key = selection_with_path(root, "#{tools}:/usr/bin:/bin", '--count', '2', key: 'test-key')
+        assert_equal ['anthropic/claude'], without_key.fetch('reviewers')
+        assert_equal %w[deepseek/openrouter anthropic/claude], with_key.fetch('reviewers')
+      end
     end
   end
 
@@ -29,6 +45,14 @@ class ReviewerSetupTest < Minitest::Test
     end
   end
 
+  # A lookup that could not be checked is left to the review run to report.
+  def test_keeps_a_reviewer_whose_lookup_could_not_be_checked
+    entries = [{ identity: 'openai/codex', configured: true, installed: false, unchecked: true },
+               { identity: 'deepseek/openrouter', configured: true, installed: false }]
+    assert_equal [{ 'provider' => 'deepseek', 'model_family' => 'openrouter' }],
+                 Shaka::Doctor::CliInventory.not_set_up(entries)
+  end
+
   private
 
   def missing_setup_selection(root, marker)
@@ -37,10 +61,10 @@ class ReviewerSetupTest < Minitest::Test
     selection_with_path(root, "#{root}/tools:/usr/bin:/bin")
   end
 
-  def selection_with_path(root, path)
-    env = { 'SHAKA_RUBY' => RbConfig.ruby, 'PATH' => path, 'OPENROUTER_API_KEY' => nil }
+  def selection_with_path(root, path, *, key: nil)
+    env = { 'SHAKA_RUBY' => RbConfig.ruby, 'PATH' => path, 'OPENROUTER_API_KEY' => key }
     output, error, status = Open3.capture3(env, COMMAND, 'reviewer', '--root', root,
-                                           '--implementer', 'openai/codex')
+                                           '--implementer', 'openai/codex', *)
     assert_predicate status, :success?, error
     JSON.parse(output)
   end

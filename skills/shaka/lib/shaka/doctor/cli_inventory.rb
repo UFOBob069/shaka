@@ -2,6 +2,7 @@
 
 require_relative 'check'
 require_relative '../local_review/path_guard'
+require_relative '../reviewer_selection'
 
 module Shaka
   class Doctor
@@ -34,6 +35,14 @@ module Shaka
           { 'reviewer' => entry.fetch(:identity),
             'summary' => "This repository configures #{entry.fetch(:identity)} reviews, but local setup is incomplete.",
             'guidance' => entry[:guidance] || 'Ask the repository maintainer which supported reviewer to configure.' }
+        end
+      end
+
+      # Configured reviewers this machine definitely lacks. A lookup that could not be checked is
+      # left to the review run, which reports its own failure.
+      def self.not_set_up(entries)
+        entries.select { |entry| entry[:configured] && !entry[:installed] && !entry[:unchecked] }.map do |entry|
+          ReviewerSelection.parse(entry.fetch(:identity))
         end
       end
 

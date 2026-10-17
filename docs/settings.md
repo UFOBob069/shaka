@@ -312,6 +312,10 @@ Shaka prefers a different provider from the one that implemented the change,
 then follows your list order among available reviewers. These settings choose
 the available choices; [`local_review_count`](#reviewlocal_review_count) chooses how
 many run. Listing three does not require all three to review every change.
+Each developer reviews with the listed reviewers their machine has: Shaka skips one
+whose CLI is not installed, or DeepSeek when `OPENROUTER_API_KEY` is not set, and
+names the skipped reviewer with setup steps. When none is set up, a fresh session
+of the model that wrote the change reviews it.
 
 ### Model and effort values
 

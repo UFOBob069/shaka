@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'settings_preview_fixture'
+require_relative 'reviewer_command_fixture'
 require 'shaka/publication/settings'
 
 class SettingsPreviewConsumersTest < Minitest::Test
@@ -61,7 +62,8 @@ class SettingsPreviewConsumersTest < Minitest::Test
   end
 
   def reviewer(root, trusted, *)
-    output, error, status = Open3.capture3(COMMAND, 'reviewer', '--root', root, '--ref', trusted,
+    output, error, status = Open3.capture3({ 'PATH' => ReviewerCliStubs.path }, COMMAND, 'reviewer',
+                                           '--root', root, '--ref', trusted,
                                            '--implementer', 'anthropic/claude', *)
     assert_predicate status, :success?, error
     JSON.parse(output)
