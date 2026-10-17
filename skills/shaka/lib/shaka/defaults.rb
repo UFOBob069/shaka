@@ -8,7 +8,7 @@ module Shaka
   # Reads the packaged built-in defaults that apply when a repository omits a setting.
   module Defaults
     PATH = File.expand_path('../../config/defaults.yml', __dir__)
-    SECTIONS = %w[review merge branches wip pr_description prose_limits runtime].freeze
+    SECTIONS = %w[review merge branches wip pr_description prose_limits project_guidance runtime].freeze
 
     def self.fetch(*keys)
       keys.reduce(data) do |node, key|

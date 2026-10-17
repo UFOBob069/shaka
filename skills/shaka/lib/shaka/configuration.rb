@@ -62,12 +62,17 @@ module Shaka
     private_class_method :standard_source
 
     def opening_prompt(root:, config:, ref:)
-      path = config.opening_check.fetch('prompt_file')
+      configured_prompt(root:, config:, ref:, path: config.opening_check.fetch('prompt_file'),
+                        label: 'opening_check.prompt_file')
+    end
+
+    # Reads a prompt from the commit its settings came from, or from individual setup's private tree.
+    def configured_prompt(root:, config:, ref:, path:, label:)
       if config.sha || !PrivateInventory.private_path?(root:, path:)
-        return TrustedConfigSource.new(root:).opening_prompt(config, ref: config.sha || ref)
+        return TrustedConfigSource.new(root:).read_prompt(path, config.sha || ref, label)
       end
 
-      private_prompt(root:, path:, label: 'opening_check.prompt_file')
+      private_prompt(root:, path:, label:)
     end
 
     # Reads instructions an individual setup keeps in its untracked settings directory.

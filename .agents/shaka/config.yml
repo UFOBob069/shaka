@@ -68,6 +68,11 @@ pr_description:
     # Set reviewer with model; Grok and OpenRouter need a model.
     # model: gpt-6.1-sol # Default: the reviewer's CLI default.
 
+# Default: none. Repository instructions the agent reads at two moments of each task.
+# project_guidance:
+#   pr_evidence: .agents/shaka/pr-evidence.md # Before writing the PR description.
+#   merge_readiness: .agents/shaka/merge-readiness.md # Before the final checkpoint.
+
 prose_limits: # Defaults: word limits for PR descriptions and walkthroughs.
   max_sentence_words: 35
   max_paragraph_words: 100

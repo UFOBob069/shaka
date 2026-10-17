@@ -5,6 +5,7 @@ require_relative '../../repository_config'
 require_relative '../private_inventory'
 require_relative '../private_source'
 require_relative 'trusted_prompts'
+require_relative '../../pr_template'
 
 module Shaka
   module Configuration
@@ -34,8 +35,18 @@ module Shaka
       def candidate_paths = private_paths + @settings.fetch('commands').values
 
       def prompt_paths
-        RepositoryConfig.prompt_files(review: @settings.fetch('review'),
-                                      opening: @settings.fetch('opening_check')).map(&:last)
+        guidance = RepositoryConfig::ProjectGuidanceSchema.resolve(@settings)
+        paths = RepositoryConfig.prompt_files(review: @settings.fetch('review'),
+                                              opening: @settings.fetch('opening_check'), guidance:).map(&:last)
+        paths + pr_template_paths(guidance)
+      end
+
+      # `shaka guidance pr_evidence` adds the pull request template, so the template counts as read input too.
+      def pr_template_paths(guidance)
+        ref = @private_source ? @private_source.ref : @trusted_ref
+        return [] unless guidance['pr_evidence'] && ref
+
+        [PrTemplate.path(root: @root, sha: ref)].compact
       end
 
       # Hashes each prompt where it is read: the private tree, or the default-branch commit.

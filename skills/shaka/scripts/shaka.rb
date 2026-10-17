@@ -28,6 +28,7 @@ require_relative '../lib/shaka/merge_limits'
 require_relative '../lib/shaka/opening_publication'
 require_relative '../lib/shaka/publication/squash_message'
 require_relative '../lib/shaka/prefix'
+require_relative '../lib/shaka/guidance'
 require_relative '../lib/shaka/publication/publication'
 require_relative '../lib/shaka/review_reply'
 require_relative '../lib/shaka/recommendation'
@@ -158,6 +159,11 @@ if ARGV.first == 'prefix'
   exit Shaka::Prefix.run(ARGV)
 end
 
+if ARGV.first == 'guidance'
+  ARGV.shift
+  exit Shaka::Guidance.run(ARGV)
+end
+
 COMMANDS = %w[pr comments description reply resolve walkthrough merge attention squash-message handoff].freeze
 
 def content(path)
@@ -230,7 +236,8 @@ def usage_banner
    '; shaka reviewer --help', '; shaka review-prompt --help', '; shaka review run --help',
    '; shaka review check --help', '; shaka review publish --help', '; shaka seam check --help',
    '; shaka workflow --help', '; shaka enforcement --help', '; shaka doctor --help',
-   '; shaka repos --help; shaka prefix --help; shaka issue-create --help; shaka install --help'].join
+   '; shaka repos --help; shaka prefix --help; shaka guidance --help',
+   '; shaka issue-create --help; shaka install --help'].join
 end
 
 def merge_flags(flags, options)

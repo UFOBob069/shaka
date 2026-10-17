@@ -104,6 +104,15 @@ choice for later. See that guide for the terms and current report labels.
 [Checkpoint settings](settings.md#reviewpost_implementation) choose who evaluates
 the result, with team or individual setup.
 
+## Add your own PR requirements
+
+```text
+$shaka Add project guidance: before merge, confirm the database backfill plan.
+```
+
+The agent reads your [PR evidence and merge-readiness guides](settings.md#project_guidance)
+when it writes the PR description and again before the checkpoint.
+
 ## Resume unfinished work
 
 **WIP Details** records the chat locator, checkout path, state, and next action.

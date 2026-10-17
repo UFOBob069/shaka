@@ -492,7 +492,8 @@ which has no `prompt_file` on its entry, uses `.agents/review-prompt.md`.
 ### Where Shaka reads a prompt file
 
 The [configuration source](#which-settings-apply) determines which `prompt_file`
-settings apply. This rule covers code-review, checkpoint, and opening prompts.
+settings apply. This rule covers code-review, checkpoint, and opening prompts, and
+[project guidance](#project_guidance) files.
 A settings preview reads each prompt at its selected commit. Without a preview:
 
 - **Shared team settings:** commit the prompt with the settings PR. Shaka uses
@@ -559,6 +560,47 @@ maintaining. The task owner supplies the original problem and evidence, resolves
 concerns, and establishes merge readiness. Final merge preparation
 requires a report for the current commit with no unresolved concerns, counting a concern
 you [accepted](pr-verification.md#checkpoint) as resolved, or an explicit opt-out.
+
+## `project_guidance`
+
+**Optional. Default: none.** Markdown files with your repository's own requirements,
+which the agent reads at the moment they apply instead of carrying them through every task.
+
+```yaml
+project_guidance:
+  pr_evidence: .agents/shaka/pr-evidence.md
+  merge_readiness: .agents/shaka/merge-readiness.md
+```
+
+- `pr_evidence`: read before the agent writes the PR description. For example, a
+  library can ask for a compatibility run against its oldest supported version, and
+  the agent reports that run in the description's verification.
+- `merge_readiness`: read before the [checkpoint](pr-verification.md#checkpoint).
+  For example, a data service can require a confirmed backfill plan. The agent lists
+  each requirement and its status, and an unmet one blocks the merge-ready claim.
+  Write standing rules for every PR here; a task's own acceptance criteria stay in
+  its issue or spec.
+
+When `pr_evidence` is set and your repository has a pull request template, the agent
+also reads that template and fills any of its sections Shaka's description does not
+already cover. The template gives the description its shape; the guide says what to
+run or check before writing it. Shaka looks for `pull_request_template.md` in `.github/`,
+the repository root, then `docs/`. With several templates, name the one to use as
+`pr_evidence`.
+
+Put anything a command can check in your [validate script](#standard-command-scripts)
+or CI, where a failure stops the PR. Keep the guides for judgment calls, such as
+whether a preview looks right, which the agent reports rather than proves.
+
+Set either one or both. Shaka reads the guides and the template from
+[the same place as prompt files](#where-shaka-reads-a-prompt-file), with the same file checks,
+so a PR cannot rewrite the requirements it is judged by. A PR that edits them is judged
+by the version already merged. Changing them makes earlier validation and review results
+for a PR out of date.
+
+The guides add requirements for the agent to follow; Shaka does not check them itself.
+The agent is told to ignore any guide text that would relax reviews, required checks, or
+[merge preference](#mergepreference); those stay enforced as before.
 
 <a id="opening_check"></a>
 

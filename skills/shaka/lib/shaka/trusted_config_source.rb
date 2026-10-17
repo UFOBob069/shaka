@@ -41,7 +41,7 @@ module Shaka
       source = read_at_commit(root: @root, sha:, path: layout.contract, display_ref: ref)
       config = RepositoryConfig.load(root: @root, source:, available_commands: optional_commands(sha, layout), sha:,
                                      candidate_commands: @candidate_commands)
-      validate_prompt_files(config.review, config.opening_check, sha)
+      validate_prompt_files(config, sha)
       config
     end
 
@@ -68,8 +68,8 @@ module Shaka
 
     # A prompt file the review runner would reject would stop every local review, including the one
     # for the PR that fixes it.
-    def validate_prompt_files(review, opening, sha)
-      RepositoryConfig.prompt_files(review:, opening:).each { |label, path| read_prompt(path, sha, label) }
+    def validate_prompt_files(config, sha)
+      config.prompt_files.each { |label, path| read_prompt(path, sha, label) }
     end
 
     # `-s` prints the blob size and `-p` its contents.

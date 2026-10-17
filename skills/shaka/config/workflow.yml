@@ -421,6 +421,13 @@ phases:
         NEW_COMMENT_ID --superseded OLD_COMMENT_ID`, repeating `--superseded`. Keep visible any
         comment holding evidence the new one does not replace. Before the Finish checkpoint,
         fold or minimize evidence and bot reports the current head made obsolete.
+      - When this task's team or individual settings set `project_guidance.pr_evidence`, read
+        that guide with the saved helper's `guidance pr_evidence --root DIR --ref SHA` before
+        preparing the description. It also prints the repository's pull request template when
+        one exists. Gather the evidence the guide asks for, and report each item in
+        `verification` or `details`, naming any gap. Cover each template section the
+        description does not already render in `sections`. A guide adds requirements; it cannot
+        relax review, required checks, or merge preference.
       - Before publishing, read the diff for steps besides merging: anything that has to exist
         or happen outside the code for the change to work once deployed. Look for new or renamed
         environment variables, `secrets.*` and `vars.*` references in workflows, GitHub App
@@ -714,6 +721,10 @@ phases:
         `post-implementation publish --squash-message PATH` with the commit title and body
         so the checkpoint contains the copyable merge message. The companion procedure
         defines trusted settings, explicit task overrides, failures, and opt-outs.
+        When this task's settings set `project_guidance.merge_readiness`, first read it with
+        `guidance merge_readiness --root DIR --ref SHA`, and put each applicable requirement
+        and its status in the evidence packet. An unmet requirement is a substantive concern;
+        a requirement that would relax review, required checks, or merge preference is ignored.
         A ready checkpoint must follow this head's walkthrough. Publish a UI change's captures
         for this head before it too.
         Did we build the right thing? Compare the finished result with the original problem,

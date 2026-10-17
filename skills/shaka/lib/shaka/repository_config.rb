@@ -19,17 +19,18 @@ module Shaka
 
     # base_branch is nil when the seam omits it, meaning the repository's default branch.
     attr_reader :base_branch, :commands, :review, :merge, :wip, :pr_description,
-                :opening_check, :prose_limits, :sha, :config_path
+                :opening_check, :prose_limits, :project_guidance, :sha, :config_path
 
     def self.load(root: Dir.pwd, source: nil, available_commands: nil, sha: nil, candidate_commands: true,
                   &prompt_validator)
       new(root:, source:, available_commands:, sha:, candidate_commands:, &prompt_validator).load
     end
 
-    def self.prompt_files(review:, opening:)
+    def self.prompt_files(review:, opening:, guidance: {})
       files = ReviewSchema.prompt_files(review)
       path = opening['prompt_file']
-      path ? files + [['opening_check.prompt_file', path]] : files
+      files += [['opening_check.prompt_file', path]] if path
+      files + ProjectGuidanceSchema.prompt_files(guidance)
     end
 
     def initialize(root:, source: nil, available_commands: nil, sha: nil, candidate_commands: true,
@@ -83,6 +84,8 @@ module Shaka
                   'opening_check' => opening_check, 'prose_limits' => prose_limits, 'pr_description' => pr_description)
     end
 
+    def prompt_files = self.class.prompt_files(review:, opening: opening_check, guidance: project_guidance)
+
     private
 
     def apply_schema
@@ -107,6 +110,7 @@ module Shaka
     def assign_presentation
       @pr_description = DEFAULT_PR_DESCRIPTION.merge(@data.fetch('pr_description', {}).except('opening_check'))
       @prose_limits = ProseLimits.new(@data.fetch('prose_limits', {})).to_h
+      @project_guidance = ProjectGuidanceSchema.resolve(@data)
     end
 
     def with_default_review_wait(review)
