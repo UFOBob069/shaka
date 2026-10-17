@@ -168,7 +168,7 @@ fingerprint. The record holds:
 
 Shipped: [the version 1 schema and offline Ruby check](../../eval/schemas/README.md)
 validate record structure and task-bank identity consistency. Fingerprint capture,
-comparison eligibility, and grading remain proposed.
+and grading remain proposed. The comparison eligibility check is described in D2.
 
 Proposed: `eval/bin/shaka-eval run` writes the record; `eval/lib/shaka/evaluation/`
 holds the fingerprint reader and grader modules. The product
@@ -223,6 +223,11 @@ every fingerprint field except the named axis matches. The axes are:
 Any other difference refuses the diff and names the field. No surveyed framework
 enforces a single-axis rule; they diff stored runs after the fact. Shaka enforces
 it because the release gate depends on attribution.
+
+Shipped: the offline [comparison guard](../../eval/comparisons.md) checks private
+run sets against these axes, validates task and trial matching, and marks missing
+fingerprint evidence provisional. It returns field names without private values.
+The diff card, statistics, fingerprint capture, and release verdict remain proposed.
 
 ### D3. Three task tiers by cost, and most of the budget on the cheap two
 

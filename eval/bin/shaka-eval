@@ -2,23 +2,40 @@
 # frozen_string_literal: true
 
 require_relative '../lib/shaka/evaluation/run_record'
+require_relative '../lib/shaka/evaluation/comparison'
+
+def read_json(path)
+  source = File.read(path, encoding: 'UTF-8')
+  raise JSON::ParserError unless source.valid_encoding?
+
+  JSON.parse(source)
+end
 
 def check_record(path)
-  source = File.read(path, encoding: 'UTF-8')
-  return ['Invalid JSON'] unless source.valid_encoding?
-
-  Shaka::Evaluation::RunRecord.errors(JSON.parse(source))
+  Shaka::Evaluation::RunRecord.errors(read_json(path))
 rescue JSON::ParserError
   ['Invalid JSON']
 rescue SystemCallError
   ['Cannot read record']
 end
 
-unless ARGV.length == 2 && ARGV.first == 'check-record'
-  warn 'Usage: eval/bin/shaka-eval check-record PRIVATE_RECORD.json'
-  exit 2
+def check_comparison(paths, axis)
+  a, b = paths.map { read_json(it) }
+  Shaka::Evaluation::Comparison.check(a, b, axis: axis)
+rescue JSON::ParserError, SystemCallError
+  { 'status' => 'refused', 'reason' => 'unreadable_or_invalid_json' }
 end
 
-errors = check_record(ARGV.last)
-puts JSON.pretty_generate({ valid: errors.empty?, errors: errors })
-exit(errors.empty? ? 0 : 1)
+if ARGV.length == 2 && ARGV.first == 'check-record'
+  errors = check_record(ARGV.last)
+  puts JSON.pretty_generate({ valid: errors.empty?, errors: errors })
+  exit(errors.empty? ? 0 : 1)
+elsif ARGV.length == 5 && ARGV.first == 'check-comparison' && ARGV[3] == '--axis'
+  result = check_comparison(ARGV[1, 2], ARGV.last)
+  puts JSON.pretty_generate(result)
+  exit(result.fetch('status') == 'eligible' ? 0 : 1)
+else
+  warn 'Usage: eval/bin/shaka-eval check-record PRIVATE_RECORD.json | ' \
+       'check-comparison PRIVATE_A.json PRIVATE_B.json --axis AXIS'
+  exit 2
+end
