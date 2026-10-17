@@ -44,6 +44,7 @@ require_relative '../lib/shaka/usage/usage'
 require_relative '../lib/shaka/usage/publisher_attribution'
 require_relative '../lib/shaka/usage/cursor_usage_refresh'
 require_relative '../lib/shaka/walkthrough/code_links'
+require_relative '../lib/shaka/walkthrough/notes'
 require_relative '../lib/shaka/trial/command'
 require_relative '../lib/shaka/work'
 require_relative '../lib/shaka/workflow'
@@ -221,13 +222,15 @@ def resolved_description(content, github, options)
   with_human_comments(resolved, options[:comments])
 end
 
-def walkthrough_body(options, github)
-  return File.read(options.fetch(:body_file), encoding: 'UTF-8') if options[:body_file]
+# The rendered review body and its inline notes; a prerendered body file carries no notes.
+def walkthrough_parts(options, github)
+  return [File.read(options.fetch(:body_file), encoding: 'UTF-8'), []] if options[:body_file]
 
   walkthrough = Shaka::PublisherAttribution.prepare(content(options.fetch(:content_file)))
   walkthrough = walkthrough.merge('head' => options.fetch(:head))
-  Shaka::Walkthrough::CodeLinks.resolve(Shaka::Publication.walkthrough(walkthrough, github.repository), walkthrough,
-                                        github)
+  body = Shaka::Walkthrough::CodeLinks.resolve(Shaka::Publication.walkthrough(walkthrough, github.repository),
+                                               walkthrough, github)
+  [body, Shaka::Walkthrough::Notes.resolve(walkthrough, github)]
 end
 
 def usage_banner
@@ -423,8 +426,8 @@ begin
            when 'resolve'
              github.resolve_thread(options.fetch(:thread))
            when 'walkthrough'
-             github.walkthrough(head: options.fetch(:head), body: walkthrough_body(options, github),
-                                seam_required_checks:,
+             body, notes = walkthrough_parts(options, github)
+             github.walkthrough(head: options.fetch(:head), body:, notes:, seam_required_checks:,
                                 prose: Shaka::ProseLimits.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref]))
            when 'merge'
              head = options.fetch(:head)

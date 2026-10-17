@@ -506,6 +506,10 @@ phases:
         at the first later line containing `to`, or with `block: true` at the bare `end` or `}`
         closing that line's indentation, and otherwise links the one line. Missing, ambiguous,
         or unclosed text refuses publication.
+        Optional `notes` lists reviewer notes, each with `path`, `from`, `to` or `block` as a code
+        link takes them, and a Markdown `body`. The helper posts each one as an inline comment of
+        the walkthrough review on those lines. Before writing notes or answering a note
+        thread, read [walkthrough notes](<{{package_root}}/skills/shaka/references/walkthrough-notes.md>).
         The helper always renders a Code Walkthrough link above the summary: the COMMENT review
         URL when `walkthrough` is supplied, otherwise `_Not published yet._`. Do not bury that URL
         in the opening paragraph. Beside it, the helper renders Code Review from `review`, the

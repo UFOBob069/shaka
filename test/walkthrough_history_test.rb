@@ -26,8 +26,11 @@ module WalkthroughHistoryExamples
 
   def collapse_responses(source, stored)
     [review_response(body: source), html_response('<details><p>Archived.</p></details>'),
-     review_response(body: source), graphql_response, review_response(body: stored)]
+     review_response(body: source), graphql_response, review_response(body: stored), no_notes]
   end
+
+  # The note listing for an earlier walkthrough of this account that left no notes.
+  def no_notes = response([])
 
   def collapsed(body)
     <<~TEXT
@@ -140,7 +143,7 @@ class WalkthroughHistoryTest < Minitest::Test
   def test_a_body_that_changes_again_before_the_update_is_not_overwritten
     published = publish_over(review_record(7, PRIOR), review_response(body: PRIOR),
                              html_response('<details><p>Archived.</p></details>'),
-                             review_response(body: 'changed'))
+                             review_response(body: 'changed'), no_notes)
 
     assert_empty published.dig('earlier_walkthroughs', 'collapsed')
     assert_includes published.dig('earlier_walkthroughs', 'unavailable').join, 'changed before collapse'
@@ -149,7 +152,7 @@ class WalkthroughHistoryTest < Minitest::Test
 
   def test_a_collapsed_walkthrough_without_a_url_is_reported
     damaged = "#{Shaka::WalkthroughHistory::MARKER} \n\n<details>\nkept\n</details>\n"
-    published = publish_over(review_record(7, damaged), review_response(body: damaged))
+    published = publish_over(review_record(7, damaged), review_response(body: damaged), no_notes)
 
     assert_empty published.dig('earlier_walkthroughs', 'collapsed')
     assert_includes published.dig('earlier_walkthroughs', 'unavailable').join, 'Review 7'
@@ -158,7 +161,7 @@ class WalkthroughHistoryTest < Minitest::Test
   def test_a_walkthrough_that_already_points_at_the_current_review_is_left_alone
     prior = review_record(7, collapsed(PRIOR))
     github = client(*publish_responses(snapshot_response), response([prior]), response({ 'login' => 'ada' }),
-                    review_response(body: collapsed(PRIOR)))
+                    review_response(body: collapsed(PRIOR)), no_notes)
     published = github.walkthrough(head: HEAD, body: WALKTHROUGH)
 
     assert_empty published.dig('earlier_walkthroughs', 'collapsed')
@@ -226,7 +229,7 @@ class WalkthroughHistoryFooterTest < Minitest::Test
   def test_rendered_content_outside_the_archive_leaves_the_prior_review_intact
     noisy = PRIOR.sub('The earlier behavior.', "</details>\nEscaped the archive.")
     published = publish_over(review_record(7, noisy), review_response(body: noisy),
-                             html_response('<details></details><p>Escaped the archive.</p>'))
+                             html_response('<details></details><p>Escaped the archive.</p>'), no_notes)
 
     assert_empty published.dig('earlier_walkthroughs', 'collapsed')
     assert_match(/outer details block/, published.dig('earlier_walkthroughs', 'unavailable').join)
@@ -269,10 +272,89 @@ class WalkthroughHistoryFooterTest < Minitest::Test
   end
 
   def test_a_review_that_stops_being_a_walkthrough_is_not_rewritten
-    published = publish_over(review_record(7, PRIOR), review_response(body: "No longer a walkthrough.\n"))
+    published = publish_over(review_record(7, PRIOR), review_response(body: "No longer a walkthrough.\n"), no_notes)
 
     assert_empty published.dig('earlier_walkthroughs', 'collapsed')
     assert_includes published.dig('earlier_walkthroughs', 'unavailable').join, 'Review 7'
     refute(@calls.any? { |_argv, stdin| stdin.include?('updatePullRequestReview') })
+  end
+end
+
+class WalkthroughHistoryNotesTest < Minitest::Test
+  include WalkthroughHistoryExamples
+
+  NOTE = { 'id' => 55, 'in_reply_to_id' => nil, 'user' => { 'login' => 'ada' },
+           'body' => "#{Shaka::Walkthrough::Notes::MARKER}\n🤖 Claude\n\nStart here." }.freeze
+
+  # A nil login stands for a comment whose author GitHub does not name, such as a deleted account.
+  def thread_response(*logins)
+    authors = logins.each_with_index.map do |login, index|
+      { 'fullDatabaseId' => (55 + index).to_s, 'author' => login && { '__typename' => 'User', 'login' => login } }
+    end
+    thread = { 'id' => 'PRRT_1', 'isResolved' => false,
+               'comments' => { 'nodes' => authors, 'pageInfo' => { 'hasNextPage' => false } } }
+    connection = { 'nodes' => [thread], 'pageInfo' => { 'hasNextPage' => false, 'endCursor' => nil } }
+    response({ 'data' => { 'repository' => { 'pullRequest' => { 'reviewThreads' => connection } } } })
+  end
+
+  def resolved_response
+    response({ 'data' => { 'resolveReviewThread' => { 'thread' => { 'id' => 'PRRT_1', 'isResolved' => true } } } })
+  end
+
+  def publish_over_noted(*tail, notes: [NOTE])
+    prior = review_record(7, collapsed(PRIOR))
+    github = client(*publish_responses(snapshot_response), response([prior]), response({ 'login' => 'ada' }),
+                    review_response(body: collapsed(PRIOR)), response(notes), *tail)
+    github.walkthrough(head: HEAD, body: WALKTHROUGH)
+  end
+
+  def test_an_earlier_walkthroughs_unanswered_note_is_resolved
+    published = publish_over_noted(thread_response('ada'), resolved_response)
+
+    assert_equal ['PRRT_1'], published.dig('earlier_walkthroughs', 'resolved_notes')
+    assert_equal 'PRRT_1', JSON.parse(@calls.last.last).dig('variables', 'id')
+  end
+
+  # A reply from the publishing account may be the person who owns it, so any reply keeps a note open.
+  def test_a_note_with_any_reply_stays_open
+    [thread_response('ada', 'grace'), thread_response('ada', 'ada')].each do |thread|
+      published = publish_over_noted(thread)
+
+      assert_empty published.dig('earlier_walkthroughs', 'resolved_notes')
+      refute(@calls.any? { |_argv, stdin| stdin.include?('resolveReviewThread') })
+    end
+  end
+
+  def test_a_note_answered_by_an_unnamed_author_stays_open
+    published = publish_over_noted(thread_response('ada', nil))
+
+    assert_empty published.dig('earlier_walkthroughs', 'resolved_notes')
+    refute(@calls.any? { |_argv, stdin| stdin.include?('resolveReviewThread') })
+  end
+
+  def test_a_resolution_github_did_not_apply_is_reported
+    unresolved = response({ 'data' => { 'resolveReviewThread' => { 'thread' => { 'isResolved' => false } } } })
+    published = publish_over_noted(thread_response('ada'), unresolved)
+
+    assert_empty published.dig('earlier_walkthroughs', 'resolved_notes')
+    assert_includes published.dig('earlier_walkthroughs', 'unavailable').join, 'did not resolve'
+  end
+
+  def test_a_failure_after_one_resolution_still_reports_that_resolution
+    unresolved = response({ 'data' => { 'resolveReviewThread' => { 'thread' => { 'isResolved' => false } } } })
+    published = publish_over_noted(two_threads, resolved_response, unresolved, notes: [NOTE, NOTE.merge('id' => 56)])
+
+    assert_equal ['PRRT_1'], published.dig('earlier_walkthroughs', 'resolved_notes')
+    assert_includes published.dig('earlier_walkthroughs', 'unavailable').join, 'PRRT_2'
+  end
+
+  def two_threads
+    threads = %w[PRRT_1 PRRT_2].each_with_index.map do |id, index|
+      author = { 'fullDatabaseId' => (55 + index).to_s, 'author' => { '__typename' => 'User', 'login' => 'ada' } }
+      { 'id' => id, 'isResolved' => false,
+        'comments' => { 'nodes' => [author], 'pageInfo' => { 'hasNextPage' => false } } }
+    end
+    connection = { 'nodes' => threads, 'pageInfo' => { 'hasNextPage' => false, 'endCursor' => nil } }
+    response({ 'data' => { 'repository' => { 'pullRequest' => { 'reviewThreads' => connection } } } })
   end
 end

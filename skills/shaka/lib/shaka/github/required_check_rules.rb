@@ -34,21 +34,28 @@ module Shaka
 
       private
 
-      def ruleset_contexts(branch)
+      def ruleset_contexts(branch) = status_check_contexts(branch_rules(branch))
+
+      # The rulesets that apply to branch, or none where the plan offers no rulesets.
+      def branch_rules(branch)
         path = "repos/#{@repository}/rules/branches/#{URI.encode_uri_component(branch)}"
         stdout, stderr, status = @runner.call(['gh', 'api', "#{path}?per_page=#{RULES_PAGE}"], stdin_data: '')
         failed = !status.exitstatus.zero?
         return [] if failed && "#{stdout}#{stderr}".match?(PLAN_WITHOUT_RULESETS)
         raise Error.from_gh("gh api #{path} failed (exit #{status.exitstatus}).", stderr) if failed
 
-        status_check_contexts(parse_json(stdout))
+        complete_rules(parse_json(stdout))
       end
 
-      def status_check_contexts(rules)
+      def complete_rules(rules)
         raise Error, 'GitHub branch rules response must be an array.' unless rules.is_a?(Array)
         raise Error, "GitHub returned #{RULES_PAGE} branch rules; refusing to read a truncated set." if
           rules.size >= RULES_PAGE
 
+        rules
+      end
+
+      def status_check_contexts(rules)
         rules.select { |rule| rule.is_a?(Hash) && rule['type'] == 'required_status_checks' }.flat_map do |rule|
           rule_contexts(rule.dig('parameters', 'required_status_checks'))
         end

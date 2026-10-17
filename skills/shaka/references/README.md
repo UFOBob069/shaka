@@ -29,6 +29,7 @@ the workflow reaches that decision:
 | Review documentation with the user, one topic at a time | [Guided documentation review](guided-documentation-review.md) |
 | Choose tests and evidence | [Verification](https://github.com/shakacode/shaka/blob/main/docs/pr-verification.md) |
 | Verify a UI or speed-affecting change | [UI evidence](ui-verification.md) or [performance comparison](performance-verification.md) |
+| Leave reviewer notes on a walkthrough diff | [Walkthrough notes](walkthrough-notes.md) |
 | Explain visible changes on the new capture | [Annotated screenshots and optional pixel diagnostics](visual-diff.md) |
 | Report model, token, and cost evidence | [Usage reporting](usage-reporting.md) |
 | Run a requested session retrospective | [Retrospective](retrospective.md) |

@@ -13,6 +13,7 @@ require_relative 'github/required_check_rules'
 require_relative 'github/review_evidence_reads'
 require_relative 'github/squash_comment'
 require_relative 'github/prose_description'
+require_relative 'github/walkthrough_notes'
 
 module Shaka
   # The native pull-request evidence a publication decision depends on.
@@ -57,6 +58,7 @@ module Shaka
     include ReviewEvidenceReads
     include SquashComment
     include ProseDescription
+    include WalkthroughNotePosting
 
     attr_reader :repository, :number
 
@@ -89,11 +91,14 @@ module Shaka
       ReviewThread.resolve(self, thread_id)
     end
 
-    def walkthrough(head:, body:, seam_required_checks: nil, prose: ProseLimits.new)
+    # notes are the review's inline comments, as Walkthrough::Notes resolves and checks them.
+    def walkthrough(head:, body:, notes: [], seam_required_checks: nil, prose: ProseLimits.new)
       body = publishable(body)
       changed_lines = ProseLimits.changed_lines(verify_head(head))
       WalkthroughEvidence.new(self, seam_required_checks:).verify(head, body)
-      published = record_walkthrough(head, body) { |html| prose.verify!(html, kind: :walkthrough, changed_lines:) }
+      published = record_walkthrough(head, body, notes) do |html|
+        prose.verify!(html, kind: :walkthrough, changed_lines:)
+      end
       published.merge('earlier_walkthroughs' => WalkthroughHistory.new(self).collapse(published))
     end
 
@@ -121,11 +126,13 @@ module Shaka
 
     def reviews_path = "repos/#{@repository}/pulls/#{@number}/reviews"
 
-    def record_walkthrough(head, body)
-      yield verify_rendering(body)
-      created = api(reviews_path, method: 'POST', fields: { event: 'COMMENT', commit_id: head, body: body })
+    # Notes count toward the prose limits, so they cannot carry what the body may not.
+    def record_walkthrough(head, body, notes)
+      yield [body, *notes.map { |note| note['body'] }].map { |text| verify_rendering(text) }.join("\n")
+      created = create_walkthrough(head, body, notes)
       published = review(created['id'])
       verify_review(published, created['id'], head, body)
+      verify_notes(created['id'], notes)
       verify_head(head, review_id: created['id'])
       published
     end

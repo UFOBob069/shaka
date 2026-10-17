@@ -2,6 +2,7 @@
 
 require_relative '../error'
 require_relative '../public_comments/bounded_list'
+require_relative 'note_threads'
 
 module Shaka
   # Recognizes a review body this command itself rendered.
@@ -114,9 +115,7 @@ module Shaka
       reviews = earlier_walkthroughs(published)
       return report if reviews.empty?
 
-      account = authenticated_login
-      reviews.each { |review| fold_one(review, url, account, report) }
-      report
+      fold_all(reviews, url, authenticated_login, report)
     rescue Error => e
       report['unavailable'] << e.message
       report
@@ -124,7 +123,13 @@ module Shaka
 
     private
 
-    def fresh_report = { 'collapsed' => [], 'left_intact' => [], 'unavailable' => [] }
+    def fold_all(reviews, url, account, report)
+      reviews.each { |review| fold_one(review, url, account, report) }
+      Walkthrough::NoteThreads.new(@github, account).resolve_all(reviews, report)
+      report
+    end
+
+    def fresh_report = { 'collapsed' => [], 'left_intact' => [], 'resolved_notes' => [], 'unavailable' => [] }
 
     def earlier_walkthroughs(published)
       raise Error, 'Published walkthrough has no submission time.' unless WalkthroughText.submitted_at(published)

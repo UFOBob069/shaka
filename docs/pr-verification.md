@@ -207,6 +207,32 @@ result.” Details can hold commands, tested commits, and a recording of the men
 Shaka uses your existing tests and validation commands, plus browser tools when
 needed. Required GitHub checks and approvals still apply.
 
+## Notes on the diff
+
+The walkthrough can also leave a few notes on the diff itself, written for you
+as the reviewer. Each note sits on the lines it is about and says how to read
+them: where to start, which lines change behavior, what to check closely, what
+to skim, or why the code took this approach. They are not findings to fix, and
+they do not replace explanations the code itself needs.
+
+For example, in a PR that stops duplicate refunds:
+
+> **Start here:** this check is the whole behavior change; the controller and
+> retry job only call it.
+
+> **Skim:** the rest of this file moves the old helper unchanged.
+
+Notes help most on a change of several files. Reviewers tend to read files in
+the order GitHub lists them and comment less on the later ones
+([Fregnan et al., 2022](https://arxiv.org/abs/2208.04259)), so a note can send
+you to the important part first. Understanding a change is usually harder than
+finding its defects
+([Bacchelli and Bird, 2013](https://www.microsoft.com/en-us/research/publication/expectations-outcomes-and-challenges-of-modern-code-review/)).
+
+When the agent publishes a walkthrough for a newer commit, it resolves the
+older walkthrough's notes. A note you replied to stays open, and the agent
+answers it like any review comment.
+
 ## When a diagram helps
 
 A walkthrough may include one small diagram when a change crosses several

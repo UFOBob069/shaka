@@ -45,6 +45,17 @@ module Shaka
         end
       end
 
+      # The 1-based first and last lines that path, from, and to or block name at the head.
+      # label names the reference in errors, such as `code link stage` or `note 2`.
+      def locate(label, link)
+        path, from = definition(label, link)
+        LineRange.find(file(label, path), from, to: link['to'], block: link['block'])
+      rescue Error => e
+        raise e if e.message.start_with?("Walkthrough #{label}")
+
+        raise Error, "Walkthrough #{label}: #{e.message}"
+      end
+
       private
 
       def url(name)
@@ -58,29 +69,22 @@ module Shaka
         end
       end
 
-      def range(name, link)
-        path, from = definition(name, link)
-        LineRange.find(file(name, path), from, to: link['to'], block: link['block'])
-      rescue Error => e
-        raise e if e.message.start_with?('Walkthrough code link')
+      def range(name, link) = locate("code link #{name}", link)
 
-        raise Error, "Walkthrough code link #{name}: #{e.message}"
-      end
+      def definition(label, link)
+        raise Error, "Walkthrough #{label} must be an object." unless link.is_a?(Hash)
+        raise Error, "Walkthrough #{label} needs a repository-relative path." unless relative?(link['path'])
+        raise Error, "Walkthrough #{label} needs from text." unless text?(link['from'])
 
-      def definition(name, link)
-        raise Error, "Walkthrough code link #{name} must be an object." unless link.is_a?(Hash)
-        raise Error, "Walkthrough code link #{name} needs a repository-relative path." unless relative?(link['path'])
-        raise Error, "Walkthrough code link #{name} needs from text." unless text?(link['from'])
-
-        check_end(name, link)
+        check_end(label, link)
         [link['path'], link['from']]
       end
 
-      def check_end(name, link)
+      def check_end(label, link)
         block = link['block']
-        raise Error, "Walkthrough code link #{name} has a non-boolean block." unless [nil, true, false].include?(block)
-        raise Error, "Walkthrough code link #{name} takes either to or block, not both." if link['block'] && link['to']
-        raise Error, "Walkthrough code link #{name} has invalid to text." if link.key?('to') && !text?(link['to'])
+        raise Error, "Walkthrough #{label} has a non-boolean block." unless [nil, true, false].include?(block)
+        raise Error, "Walkthrough #{label} takes either to or block, not both." if link['block'] && link['to']
+        raise Error, "Walkthrough #{label} has invalid to text." if link.key?('to') && !text?(link['to'])
       end
 
       def relative?(path)
@@ -89,13 +93,13 @@ module Shaka
 
       def text?(value) = value.is_a?(String) && !value.strip.empty?
 
-      def file(name, path)
+      def file(label, path)
         @files[path] ||= begin
           regular_file!(path)
           decoded(path, @github.api("repos/#{@github.repository}/contents/#{encoded(path)}?ref=#{@head}"))
         end
       rescue Error => e
-        raise Error, "Walkthrough code link #{name}: #{e.message}"
+        raise Error, "Walkthrough #{label}: #{e.message}"
       end
 
       def decoded(path, response)
