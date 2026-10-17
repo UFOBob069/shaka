@@ -68,7 +68,7 @@ module Shaka
           return true if path.start_with?("#{PATHS::COMMAND_DIRECTORY}/")
           return false unless path.start_with?("#{PATHS::DIRECTORY}/")
 
-          stat.mode & 0o111 != 0 || path.match?(/\.(?:sh|bash|rb|py)\z/) || File.binread(absolute, 2) == '#!'
+          stat.mode.anybits?(0o111) || path.match?(/\.(?:sh|bash|rb|py)\z/) || File.binread(absolute, 2) == '#!'
         end
 
         def scan_segmented_reference(path, text)

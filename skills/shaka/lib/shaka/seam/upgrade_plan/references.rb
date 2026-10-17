@@ -42,7 +42,7 @@ module Shaka
           scan_complex_references(path, text)
           return unless text.include?("#{PATHS::DIRECTORY}/")
 
-          executable = text.start_with?('#!') || stat.mode & 0o111 != 0
+          executable = text.start_with?('#!') || stat.mode.anybits?(0o111)
           updated = text.lines.map { |line| rewrite_line(path, line, executable) }.join
           return if updated == text
 
