@@ -1,50 +1,52 @@
-# Shaka settings for this repository; also a browsable configuration example.
-# Reference: docs/settings.md. Explicit values below preserve effective policy.
-# Required choices (review jobs, reviewers, merge preference) are repository-specific.
-# Optional settings with no fixed default stay commented rather than pinning a choice.
-# Policy comes from the trusted default branch; edits do not govern their own PR.
-# CI checks default drift in test/repository_configuration_example_test.rb.
+# Shaka's settings for its own repository, kept short so you can copy it as an example.
+# You rarely need to edit it; ask your agent: `$shaka Wait for all configured CI reviewers.`
+# Each comment gives the default; where this repository chooses otherwise, it says why.
+# All of Shaka's defaults in one place: skills/shaka/config/defaults.yml.
+# Every option: docs/settings.md (https://shaka.shakacode.com/docs/settings).
+# Changes take effect once merged into the default branch.
 ---
-version: 1 # Configuration format, independent of the Shaka release version.
-repo_prefix: SHAKA # Omitted: derive a label from the repository name.
-# base_branch: main # Omitted: follow the repository's default branch.
+version: 1 # Required. The configuration format, not the Shaka release.
+repo_prefix: SHAKA # Default: derived from the repo name ("SHAK" here); we prefer the full name.
+# base_branch: main # Default: the repository's default branch.
 
 review:
-  local_review_count: 2 # Default pair: Claude and Codex.
-  required: meaningful_changes # Repository choice: meaningful_changes, always, or none.
-  ci_review_jobs: # Repository jobs, required unless review.required is none.
+  # Required, no default; setup asks. meaningful_changes lets trivial prose skip review;
+  # the others are always and none.
+  required: meaningful_changes
+  ci_review_jobs: # Required unless review.required is none: the GitHub jobs that post AI reviews.
     - claude-review
-  ci_review_wait: one # Default: wait for one configured hosted review report.
-  local_max_rounds: 5 # Default: maximum committed heads in one local review ledger.
-  prompt_file: .agents/shaka/review-prompt.md # Project choice; omitted: skills/shaka/config/review-prompt.md.
-  post_implementation: # Explicit defaults for the finished-result checkpoint.
+  ci_review_wait: one # Default. A word, not a number: none, one, or all CI review reports.
+  local_max_rounds: 5 # Default: most commits one local review covers before the agent asks you.
+  # Default 1. We use 2, Claude and Codex: a mistake in Shaka weakens checks on every project.
+  local_review_count: 2
+  # Default: Shaka's built-in prompt. Ours also weighs the cost of instruction changes (README.md).
+  prompt_file: .agents/shaka/review-prompt.md
+  post_implementation: # Defaults: the final "did we build the right thing?" check before merge.
     enabled: true
     reviewer: openai/codex
     model: gpt-6.1-sol
     effort: medium
-    prompt_file: .agents/shaka/product-checkpoint.md # Project choice; omitted: Shaka's packaged prompt.
-  local_review_agents: # Repository preference order; omitted: fresh implementation-model review.
+    # Default: Shaka's built-in prompt. Ours adds the same instruction-cost check (README.md).
+    prompt_file: .agents/shaka/product-checkpoint.md
+  # Default: none, so the implementing model reviews in a fresh session.
+  # Ours: reviewers from other providers first, in this order.
+  local_review_agents:
     - provider: anthropic
-      model_family: claude
-      # model and effort omitted: use this reviewer's CLI defaults.
-      # prompt_file omitted: inherit review.prompt_file, then Shaka's packaged prompt.
+      model_family: claude # No model or effort: use the Claude CLI's defaults.
     - provider: openai
       model_family: codex
-  # Optional extras: request a named reviewer for one task.
-  # Keep these outside local_review_agents so they are never selected automatically.
-  # - provider: deepseek
+  # Optional reviewers, used only when a task asks for one by name:
+  # - provider: deepseek # Needs OPENROUTER_API_KEY; deadline 600 seconds by default.
   #   model_family: openrouter
   #   model: deepseek/deepseek-v4.1-flash
   #   effort: low
-  # DeepSeek/OpenRouter defaults to 600 seconds; --timeout-seconds overrides it per run.
-  # - provider: xai
+  # - provider: xai # Needs a model named in the task.
   #   model_family: grok
-  # Grok needs an explicit model for the task.
 
 merge:
-  preference: ask # Setup default: hand the verified PR back for merging.
-  # required_checks: [validate] # Omitted: no fallback list; live GitHub gates come first.
-  limits: # Defaults; exceeding a limit requires confirmation of the commit to merge.
+  preference: ask # Required; setup suggests ask: you merge on GitHub. auto lets the agent merge.
+  # required_checks: [validate] # Default: none; use when GitHub requires no checks.
+  limits: # Defaults. A larger PR needs your confirmation before the agent merges it.
     max_changed_files: 29
     max_changed_lines: 999 # Additions plus deletions.
     max_commits: 9
@@ -53,27 +55,24 @@ branches:
   name: '{login}-{host}/{issue}-{description}' # Default branch-name template.
 
 wip:
-  include_checkout_path: true # Default: publish the checkout path in WIP Details; false keeps the chat link.
+  include_checkout_path: true # Default: show the local checkout path in unfinished PRs.
 
 pr_description:
-  show_shaka_credit: true # Default: show a quiet Shaka website credit below the PR summary.
-  show_human_comments: true # Default: list the comments people wrote; false leaves the list out.
-  max_human_comments: 20 # Default: rows the list shows, open comments first.
+  show_shaka_credit: true # Default: a small Shaka link under the PR summary.
+  show_human_comments: true # Default: list comments people wrote on the PR.
+  max_human_comments: 20 # Default: how many of those comments to list.
   opening_check:
-    enabled: true # Default: check the opening; false turns the check off.
-    effort: low # Default: low, independent of the code-review effort.
-    # reviewer: openai/codex # Omitted: the agent selects from local_review_agents.
-    # model: gpt-6.1-sol # Also set reviewer; Grok and OpenRouter require a model.
-    # Omit model to use that reviewer's CLI default, not its code-review model.
-    # prompt_file: .agents/shaka/opening-prompt.md # Omitted: use Shaka's opening instructions.
+    enabled: true # Default: check that the PR description's first sentence leads with the outcome.
+    effort: low # Default.
+    # reviewer: openai/codex # Default: chosen like the code reviewers above.
+    # Set reviewer with model; Grok and OpenRouter need a model.
+    # model: gpt-6.1-sol # Default: the reviewer's CLI default.
 
-prose_limits: # Defaults for visible PR descriptions and walkthroughs.
+prose_limits: # Defaults: word limits for PR descriptions and walkthroughs.
   max_sentence_words: 35
   max_paragraph_words: 100
   max_description_words: 300
-  words_per_changed_line: 4 # Proportional budget adds 150 words before applying this factor.
+  words_per_changed_line: 4 # Text may use 150 words plus this many per changed line.
 
-# Commands are executable files, not YAML settings: .agents/shaka/bin/{setup,test,validate}.
-# Optional: .agents/shaka/bin/validate-local and .agents/shaka/bin/trigger-hosted-ci (requires validate-local).
-# Public-comment trust lives beside this file in trusted-github-actors.yml.
-# Older repositories may keep .agents/agent-workflow.yml and .agents/bin/.
+# Commands live in bin/ beside this file: setup, test, and validate.
+# Whose public comments the agent may read: trusted-github-actors.yml.

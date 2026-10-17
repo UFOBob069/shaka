@@ -86,5 +86,5 @@ reviewing the setup PR.
 The scripts usually wrap existing commands. In Shaka's repository, `.agents/shaka/bin/setup`
 installs development dependencies; `bin/install` installs the skill.
 
-Shaka's own [configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml)
-and [scripts](https://github.com/shakacode/shaka/tree/main/.agents/shaka/bin) provide working examples.
+Shaka's own [configuration](https://github.com/shakacode/shaka/tree/main/.agents/shaka)
+provides working examples of the required files.

@@ -11,6 +11,8 @@ Settings live in `.agents/shaka/config.yml`. Ask your agent to
 Browse [this repository’s configuration](https://github.com/shakacode/shaka/blob/main/.agents/shaka/config.yml) for a
 commented example with explicit defaults and repository-specific review choices.
 Optional choices without fixed defaults, such as the base branch and local reviewer models, stay commented.
+Its [README](https://github.com/shakacode/shaka/tree/main/.agents/shaka#readme) notes
+why its prompts and reviewer count differ from the defaults.
 
 ## Which settings apply?
 
@@ -466,7 +468,8 @@ task.
 
 **Optional. Default: Shaka's [review instructions](../skills/shaka/config/review-prompt.md).**
 A Markdown file in your repository that replaces what the local reviewer looks for
-and how it reports. Copy the default to start.
+and how it reports. Copy the default to start, or see Shaka's own
+[review prompt](https://github.com/shakacode/shaka/blob/main/.agents/shaka/review-prompt.md).
 
 ```yaml
 review:

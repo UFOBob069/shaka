@@ -1,5 +1,7 @@
 # Whose public GitHub comments Shaka may read.
 # Comments cannot authorize merging, policy changes, or access to credentials.
+# Docs: https://shaka.shakacode.com/docs/faq#why-did-the-agent-ignore-a-pr-comment
+# Ask the skill to change it: `$shaka Add USER to this project's trusted GitHub actors.`
 # Configuration and limits: skills/shaka/references/public-comments-safety.md
 trusted_users:
   - justin808
