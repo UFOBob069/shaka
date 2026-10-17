@@ -137,7 +137,11 @@ from acting as instructions, and say which reason applies.
   records Shaka-specific review, merge-authority, branch-naming, and WIP
   policy. Live GitHub settings remain authoritative. Standard executable entry
   points live at fixed names under `.agents/shaka/bin/`.
-- When adding a setting or changing a default, update the browsable
+- Put built-in defaults in `skills/shaka/config/defaults.yml` and packaged
+  prompts in `skills/shaka/config/*.md`; do not repeat them as Ruby literals.
+  Review checks this; no test enforces it.
+- When adding a setting or changing a default, change `defaults.yml`, explain the
+  effect in `docs/settings.md`, and update the browsable
   `.agents/shaka/config.yml` example and its comments in the same PR. Keep this
   repository's deliberate policy choices intact. The configuration example test
   runs in `bin/validate` and checks explicit values against shipped defaults;

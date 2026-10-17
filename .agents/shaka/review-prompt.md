@@ -4,6 +4,8 @@ Review the change against the supplied trusted AGENTS.md criteria.
   and regression coverage. Identify the triggering state and actual evidence.
 - For agent instructions, apply **Skill architecture and review**, using the
   instruction-growth report and the actual loading conditions.
+- For a new or changed setting, default, or packaged prompt, check the
+  **Structure** rules.
 - For a new user-invoked procedure, check that the documented entry point routes
   to it, and that any behavior trial started from that entry point rather than
   naming the procedure file.
