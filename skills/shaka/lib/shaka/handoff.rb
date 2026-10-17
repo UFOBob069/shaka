@@ -4,6 +4,7 @@ require_relative 'attention'
 require_relative 'error'
 require_relative 'merge_required_checks'
 require_relative 'status'
+require_relative 'handoff/review_threads'
 require_relative 'handoff/squash_note'
 require_relative 'handoff/walkthrough'
 require_relative 'handoff/wip_note'
@@ -54,8 +55,8 @@ module Shaka
 
     def open_facts(snapshot, live)
       checks = snapshot['requiredChecks']
-      [label_fact(checks), checks_fact(checks, snapshot['requiredChecksUnavailable']), walkthrough_fact(live),
-       checkpoint_fact(live), squash_fact(live), wip_fact(live)].compact
+      [label_fact(checks), checks_fact(checks, snapshot['requiredChecksUnavailable']), threads_fact,
+       walkthrough_fact(live), checkpoint_fact(live), squash_fact(live), wip_fact(live)].compact
     end
 
     # One label names the one decision the PR waits on, so a missing label hides the PR from its searches.

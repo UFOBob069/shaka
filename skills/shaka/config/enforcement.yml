@@ -547,8 +547,15 @@ rules:
   - id: settled-resolution
     phase: review
     quote: Do not claim resolution while the procedure says review is unsettled
-    enforced_by: agent
-    note: Nothing compares a resolution claim against the state of the reviews it claims to settle.
+    enforced_by: reported
+    detector: >-
+      `handoff` owes each unresolved review thread this account neither opened nor answered,
+      and exits 2. It reads the first 100 comments of each thread, so a longer thread without
+      a visible reply is only a note. Under merge approval it also notes answered threads left
+      open. A failed thread read is only a note, so it owes nothing. A thread a maintainer opens
+      under the agent's login counts as opened by this account. It cannot tell whether a
+      reviewer pushed back after the reply, nothing checks optional reviews still running, and
+      nothing stops a turn whose agent ignores the exit status.
   - id: no-handoff-monitor
     phase: review
     quote: never create a monitor or follow-up issue for the handoff

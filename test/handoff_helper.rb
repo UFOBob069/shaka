@@ -22,8 +22,15 @@ class HandoffFakeGitHub
   def snapshot = { 'state' => @pull[:state], 'headRefOid' => @pull[:head], 'number' => 42 }
   def required_checks = @pull[:checks]
   def configured_required_checks = []
-  def viewer_login = 'shaka-agent'
+  def viewer_login = @pull.fetch(:viewer, 'shaka-agent')
   def issue_comments = @pull[:comments]
+
+  def graphql(_query, **)
+    raise Shaka::Error, 'GraphQL failed or returned missing data.' if @pull[:threads] == :unreadable
+
+    page = { 'nodes' => @pull.fetch(:threads, []), 'pageInfo' => { 'hasNextPage' => false } }
+    { 'repository' => { 'pullRequest' => { 'reviewThreads' => page } } }
+  end
 
   def api(path, **)
     return { 'login' => 'shaka-agent' } if path == 'user'
@@ -83,6 +90,17 @@ module HandoffFixtures
 
   STATES = { 'pass' => 'SUCCESS', 'pending' => 'PENDING', 'skipping' => 'SKIPPED' }.freeze
 
+  # A review thread opened by a reviewer, with later comments from each login in replies.
+  # A login ending in [bot] is a Bot author, which GraphQL names without the suffix.
+  def self.thread(id, resolved: false, replies: [])
+    comments = ['reviewer', *replies].each_with_index.map do |login, index|
+      author = { '__typename' => login.end_with?('[bot]') ? 'Bot' : 'User', 'login' => login.delete_suffix('[bot]') }
+      { 'fullDatabaseId' => "#{id.delete('^0-9')}#{index + 1}", 'author' => author }
+    end
+    page = { 'nodes' => comments, 'pageInfo' => { 'hasNextPage' => false } }
+    { 'id' => id, 'isResolved' => resolved, 'comments' => page }
+  end
+
   def self.check(bucket) = { 'name' => 'validate', 'state' => STATES.fetch(bucket), 'bucket' => bucket }
 
   def self.description(wip = WIP) = "#{Shaka::Publishing::OPEN_MARK}\n#{rendered(wip)}#{Shaka::Publishing::CLOSE_MARK}"
@@ -94,6 +112,7 @@ module HandoffHarness
 
   def walkthrough(...) = HandoffFixtures.walkthrough(...)
   def check(bucket) = HandoffFixtures.check(bucket)
+  def thread(...) = HandoffFixtures.thread(...)
 
   def description(wip = WIP) = HandoffFixtures.description(wip)
 

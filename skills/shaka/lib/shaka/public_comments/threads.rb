@@ -15,7 +15,7 @@ module Shaka
                 nodes {
                   id isResolved
                   comments(first: 100) {
-                    nodes { fullDatabaseId }
+                    nodes { fullDatabaseId author { __typename login } }
                     pageInfo { hasNextPage }
                   }
                 }
@@ -26,8 +26,17 @@ module Shaka
         }
       GRAPHQL
 
+      # Logins that commented on each thread, opening comment first, keyed by thread ID. A Bot author
+      # gets the `[bot]` suffix GraphQL leaves off, so it matches the REST login of an app account.
+      attr_reader :authors
+
+      # Threads with more than the first page of comments, so their authors are incomplete.
+      attr_reader :truncated
+
       def initialize(github)
         @github = github
+        @authors = {}
+        @truncated = []
       end
 
       def call
@@ -84,7 +93,15 @@ module Shaka
       def add_thread(row, threads, index)
         meta, comments = normalize_thread(row)
         threads << meta
+        @authors[meta['thread_id']] = comments.filter_map { |comment| author_login(comment['author']) }
+        @truncated << meta['thread_id'] if row.dig('comments', 'pageInfo', 'hasNextPage')
         comments.each { |comment| index_comment(comment, meta, index) }
+      end
+
+      def author_login(author)
+        return unless author.is_a?(Hash) && author['login'].is_a?(String)
+
+        author['__typename'] == 'Bot' ? "#{author['login']}[bot]" : author['login']
       end
 
       def normalize_thread(row)
