@@ -493,6 +493,8 @@ phases:
         problem, what the PR covers, what it deliberately leaves out, and the fact its safety rests
         on. Its `review_effort`, 1 to 5, tells the reviewer how hard to look given that blast radius:
         1 for docs a reader can trust from the description, 5 for irreversible or security changes.
+        A bug fix adds `root_cause`: the mechanism that produced the symptom `why` names, or
+        that it was not found and the PR treats only the symptom.
         `verification` lists 1 to 3 `checks`, each what was run and its outcome, citing a link
         or the command, and a `not_verified` line naming what went unproven and why that is
         acceptable, or `Nothing.` when every claim was proved. An unfinished PR may list no checks

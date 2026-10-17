@@ -8,6 +8,8 @@ module Shaka
   module IntentVerification
     INTENT = { 'why' => 'Why', 'scope' => 'Scope', 'leaves_out' => 'Leaves out',
                'safe_because' => 'Safe because' }.freeze
+    # A bug fix names its cause apart from the symptom; other changes have none to name.
+    ROOT_CAUSE = 'root_cause'
     # Like heart-rate zones: the blast radius sets how hard a reviewer should work.
     REVIEW_EFFORT = {
       1 => 'recovery: read the description.',
@@ -30,6 +32,9 @@ module Shaka
     def intent(spec)
       lines = INTENT.map do |field, label|
         "**#{label}:** #{PublicationText.single_line(spec[field], "intent #{field}")}"
+      end
+      unless spec[ROOT_CAUSE].nil?
+        lines.insert(1, "**Root cause:** #{PublicationText.single_line(spec[ROOT_CAUSE], "intent #{ROOT_CAUSE}")}")
       end
       "## Intent\n\n#{[*lines, review_effort(spec['review_effort'])].join("\n\n")}"
     end

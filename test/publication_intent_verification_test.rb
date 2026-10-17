@@ -59,6 +59,20 @@ class PublicationIntentVerificationTest < Minitest::Test
     assert_includes rendered, "- #{checks.first}\n- #{checks.last}"
   end
 
+  # A bug-fix PR put the cause in Why and left the symptom unstated.
+  def test_a_bug_fix_names_its_root_cause_after_why
+    cause = 'The booking link covered the underlined price.'
+    rendered = render('intent' => INTENT.merge('root_cause' => cause))
+
+    assert_includes rendered, "**Why:** #{INTENT['why']}\n\n**Root cause:** #{cause}\n\n**Scope:**"
+  end
+
+  def test_root_cause_is_optional_but_not_blank
+    refute_includes render, 'Root cause'
+    error = assert_raises(Shaka::Error) { render('intent' => INTENT.merge('root_cause' => ' ')) }
+    assert_includes error.message, 'intent root_cause'
+  end
+
   # The reviewer sees from the blast radius how hard to look, like a heart-rate zone.
   def test_review_effort_names_its_zone
     rendered = render('intent' => INTENT.merge('review_effort' => 5))

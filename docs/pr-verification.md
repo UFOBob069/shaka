@@ -60,7 +60,7 @@ input. You can approve the approach, request revisions, or settle an open questi
 | Your question | Where to look |
 | --- | --- |
 | What changes for users? | The description, preview, and visual comparisons when applicable. |
-| What is it for, and what does it leave out? | **Intent** in the description: the problem, the scope, what was deliberately left out, and why the change is safe. |
+| What is it for, and what does it leave out? | **Intent** in the description: the problem, the scope, what was deliberately left out, and why the change is safe. A bug fix also names its **Root cause**, or says it was not found and the PR treats only the symptom. |
 | How carefully should I review it? | **Review effort** under Intent, from 1 (read the description) to 5 (review every line, reproduce it, and ask a second reviewer), based on what a mistake could reach. |
 | Why this approach? | The walkthrough, linked code, alternatives, and maintenance-cost assessment. |
 | How was it checked? | **Verification** in the description: up to three checks, each with what ran, its outcome, and a link to the evidence or the command itself. **Not verified** names what went unproven and why that is acceptable. Independent review covers the current revision. |
