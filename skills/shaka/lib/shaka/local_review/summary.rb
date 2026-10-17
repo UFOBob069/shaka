@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'usage'
+
 module Shaka
   # Links a commit to GitHub only when GitHub has it. A round reviewed before a rebase names a
   # commit that was never pushed, and a link to it would open a 404 page; `rebased` names the
@@ -67,6 +69,8 @@ module Shaka
     end
 
     def tokens
+      return 'token categories per round (totals not combined)' if @rounds.any?(&:usage_record)
+
       counts = @rounds.map { |round| round.value('tokens').to_s }
       return 'tokens UNKNOWN' unless counts.all? { |count| count.match?(NUMBER) }
 
@@ -75,10 +79,19 @@ module Shaka
 
     # A subscription session has no per-token bill, so its dollar figure is an API-equivalent estimate.
     def cost
+      return captured_cost if @rounds.any?(&:usage_record)
+
       prices = @rounds.map { |round| price(round).match(MONEY) }
       return 'cost UNKNOWN' if prices.any?(&:nil?)
 
       format('$%<sum>.2f %<label>s', sum: prices.sum { |match| match[1].to_f }, label: cost_label(prices))
+    end
+
+    def captured_cost
+      columns = @rounds.flat_map do |round|
+        round.usage_record ? round.usage_record.fetch('columns') : [{ 'usd' => price(round) }]
+      end
+      LocalReviewUsage.cost('columns' => columns)
     end
 
     def cost_label(prices)

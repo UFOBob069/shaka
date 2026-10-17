@@ -47,7 +47,33 @@ class CliFeaturePublicationTest < Minitest::Test
     end
   end
 
+  def test_saved_review_result_reaches_the_canonical_usage_table
+    with_checkout do |root, ref|
+      @head = ref
+      @files = []
+      Dir.mktmpdir { |dir| publish_usage_snapshot(dir, root, ref) }
+    end
+  end
+
   private
+
+  def publish_usage_snapshot(dir, root, ref)
+    flags = result_flags(dir, root, ref)
+    result = JSON.parse(File.read(flags.last))
+    record = USAGE_RECORD.merge('commits' => [ref], 'columns' => [USAGE_COLUMN.merge('input' => '579')],
+                                'host' => 'codex', 'contribution' => 'review')
+    File.write(flags.last, JSON.generate(result.merge('usage_records' => [record])))
+    content = description_content.merge('usage' => { 'note' => '', 'records' => [] })
+    _out, error, status = publish(dir, root, *flags, content:)
+    assert_predicate status, :success?, error
+    assert_usage_body(dir)
+  end
+
+  def assert_usage_body(dir)
+    body = File.read(File.join(dir, 'published.md'))
+    assert_includes body, '| codex | 579 | 0 | 0 |'
+    assert_equal 1, body.scan('<!-- usage-columns ').size
+  end
 
   def assert_bound_results(dir, root, arguments)
     _output, error, status = publish(dir, root, *arguments)
@@ -70,10 +96,10 @@ class CliFeaturePublicationTest < Minitest::Test
     ['--ref', ref, '--validation-result', paths.first, '--review-result', paths.last]
   end
 
-  def publish(dir, root, *flags)
+  def publish(dir, root, *flags, content: description_content)
     write_fake_commands(dir)
     path = File.join(dir, 'content.json')
-    File.write(path, JSON.generate(description_content))
+    File.write(path, JSON.generate(content))
     Open3.capture3({ 'PATH' => "#{dir}:#{ENV.fetch('PATH')}", 'HOME' => dir }, COMMAND,
                    'description', 'shakacode/shaka', '1', '--root', root, '--content-file', path, *flags)
   end

@@ -14,18 +14,18 @@ class ConfigurationBoundaryTest < Minitest::Test
   OTHER_GIT_READ = %w[local_review/criteria.rb seam/upgrade_plan/indexed_references.rb].freeze
   OTHER_FILE_IO = %w[
     hosts/codex_wake.rb trial/prepare.rb trial/command.rb install/display.rb install/checkout.rb install/official.rb
-    checkpoint.rb doctor.rb doctor/installation_identity.rb doctor/cursor_stop_hook.rb local_review/ledger_running.rb
+    local_review/usage.rb doctor/installation_identity.rb doctor/cursor_stop_hook.rb local_review/ledger_running.rb
     enforcement_config.rb evidence/command.rb evidence/verification.rb installer.rb install/source.rb install/tree.rb
     install/link_lock.rb install/package.rb install/package_verification.rb install/version.rb local_review/ledger.rb
     post_implementation.rb post_implementation_report.rb post_implementation_runner.rb usage/cursor_usage_refresh.rb
     local_review.rb local_review/cli.rb local_review/comment.rb local_review/path_guard.rb local_review/shebang.rb
-    local_review/report_check.rb local_review/runner.rb local_review/openrouter.rb usage/openrouter_usage.rb
+    local_review/report_check.rb local_review/runner.rb local_review/openrouter.rb usage/openrouter_usage.rb doctor.rb
     merge_tree_proof.rb opening_parse.rb opening_check.rb local_review/bundle.rb call_log.rb install/directory_safety.rb
     opening_verdict_cache.rb recommendation.rb repos/home.rb review_prompt.rb usage/claude_usage.rb usage/codex_usage.rb
     usage/cursor_usage_store.rb usage/opencode_usage.rb usage/pi_usage.rb usage/rate_card.rb pr_watch/command.rb
-    defaults.rb workflow_config.rb seam/upgrade_plan.rb seam/upgrade_plan/inventory.rb seam/upgrade_plan/references.rb
+    checkpoint.rb workflow_config.rb seam/upgrade_plan.rb seam/upgrade_plan/inventory.rb seam/upgrade_plan/references.rb
     seam/upgrade_plan/reference_patterns.rb seam/private_recovery.rb seam/private_recovery/copies.rb update_check.rb
-    seam/private_recovery/preparation.rb seam/private_recovery/rotation.rb seam/private_recovery/identity.rb
+    seam/private_recovery/preparation.rb seam/private_recovery/rotation.rb seam/private_recovery/identity.rb defaults.rb
     seam/upgrade_plan/reference_dependencies.rb seam/upgrade_plan/continued_references.rb seam/upgrader/recovery.rb
     seam/upgrade_plan/symlink_chain.rb seam/private_recovery/exclusion.rb seam/upgrader.rb seam/upgrader/filesystem.rb
   ].freeze

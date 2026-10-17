@@ -15,6 +15,7 @@ require_relative 'budget'
 require_relative 'triage'
 require_relative 'assessment_view'
 require_relative 'bundle'
+require_relative 'usage'
 
 module Shaka
   # Renders one pull request comment for a local adversarial review: a summary a reader skims,
@@ -186,11 +187,13 @@ module Shaka
       def cells(links)
         effort, = @report.match(CLOSING).captures
         [@number.to_s, links.commit(@head), @reviewer, optional('model'), effort, prompt(links),
-         finding_count, optional('tokens'), cost]
+         finding_count, usage_record ? LocalReviewUsage.tokens(usage_record) : optional('tokens'), cost]
       end
 
       # The attested count, then what became of those findings, such as `2 (1 fixed, 1 documented)`.
       def finding_count = @report.match(CLOSING)[2] + outcome
+
+      def usage_record = @spec['usage_record']
 
       # A supplied single-line value, or nil when the round leaves it out.
       def value(name) = (field(name) unless @spec[name].nil? || @spec[name].to_s.strip.empty?)
@@ -250,6 +253,8 @@ module Shaka
 
       # A subscription session has no per-token bill; its API-equivalent estimate is marked as one.
       def cost
+        return LocalReviewUsage.cost(usage_record) if usage_record
+
         estimate = value('estimate')
         value('cost') || (estimate ? "#{estimate} est." : 'UNKNOWN')
       end

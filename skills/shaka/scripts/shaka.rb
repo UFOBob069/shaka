@@ -210,8 +210,10 @@ rescue Shaka::Error, SystemCallError
 end
 
 # Links and the recommendation come from GitHub evidence for the head, not from the agent.
-def resolved_description(content, github)
-  Shaka::CheckpointRecommendation.resolve(Shaka::DeploymentLink.resolve(content, github), github)
+def resolved_description(content, github, options)
+  content = Shaka::LocalReviewUsage.attach(content, options[:review])
+  resolved = Shaka::CheckpointRecommendation.resolve(Shaka::DeploymentLink.resolve(content, github), github)
+  with_human_comments(resolved, options[:comments])
 end
 
 def walkthrough_body(options, github)
@@ -383,7 +385,7 @@ begin
                  Open3.capture3(gh, *argv.drop(1), stdin_data:, chdir: neutral)
                end)
                attributed = Shaka::PublisherAttribution.prepare(content(options.fetch(:content_file)))
-               described = with_human_comments(resolved_description(attributed, github), options[:comments])
+               described = resolved_description(attributed, github, options)
                usage_records = carried = nil
                published = github.description(prose:) do |pull|
                  carried, usage_records = Shaka::UsageRecords.carry_from(described, pull)

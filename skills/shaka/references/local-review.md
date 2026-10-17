@@ -432,10 +432,14 @@ It also refuses one reviewer reading a commit twice, rounds of one commit listed
 fix recorded in the commit its round reviewed. A
 content file without a ledger gets only these checks: publishing does not read Git history, so
 use `--ledger` when fixes must be proven to follow and reach the reviewed head.
-Add `model`, `tokens`, and `cost` from native usage; a missing value renders `UNKNOWN`. Leave
-`cost` out unless the host reports a priced route. For a subscription session, put the
-`USD estimate` that `shaka usage` reports in `estimate` instead: the table marks it `est.` and
-the returned loop summary calls it an API-equivalent estimate, never a bill. When `shaka reviewer` did not return `different_provider`, add
+`review run` captures a redacted `usage_record` from supported native sources and keeps it
+with the ledger round. Supply the saved review results through description's `--review-result`
+inputs to include every ledger round in the canonical PR usage table automatically, even after
+temporary source cleanup. Retain saved results for description publication; keep the ledger
+for findings and reports.
+Legacy rounds without captured records still accept `model`, `tokens`, `cost`, and
+`estimate`; subscription estimates belong in `estimate`, never `cost`.
+When `shaka reviewer` did not return `different_provider`, add
 `fallback` with its `outcome` and one `attempts` entry per reviewer tried, copying each
 `reviewer`, `failure_stage`, and `reason` from its `shaka review run` result. Leave
 `attempts` empty when selection tried no other reviewer. The helper replaces each `reason`
