@@ -27,10 +27,81 @@ end
 # Human guides must not send readers into agent instructions; see AGENTS.md.
 def agent_reference_links(text)
   inline = text.scan(/\]\(\s*<?([^)\s>]+)/).flatten
-  defined = text.scan(/^\s{0,3}\[[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/).flatten
+  defined = text.scan(/^\s{0,3}\[(?!\^)[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/).flatten
   html = text.scan(/href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`=]+))/).flatten.compact
   urls = text.scan(%r{https?://[^\s<>()"'\]]+})
   (inline + defined + html + urls).grep(AGENT_REFERENCES).uniq
+end
+
+# Code prints these into user output, so a heading rename in a docs-only PR would break them silently.
+EMITTED_DOCS = %r{shakacode/shaka/blob/[^/\s]+/docs/([\w./-]+\.md)(?:#([\w-]+))?}
+
+def prose(path)
+  File.read(path, encoding: 'UTF-8').gsub(/^ {0,3}```.*?^ {0,3}```/m, '')
+end
+
+# GitHub's heading slugs for the heading forms these docs use; emphasis and {#id} are not modeled.
+def slug(heading)
+  text = heading.gsub(/<[^>]*>/, '').gsub(/\[([^\]]*)\]\([^)]*\)/, '\\1')
+  text.downcase.strip.gsub(/[^\p{Word}\- ]/, '').tr(' ', '-')
+end
+
+def heading_ids(text)
+  seen = Hash.new(0)
+  text.scan(/^ {0,3}\#{1,6}[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/).flatten.map do |heading|
+    id = slug(heading)
+    count = (seen[id] += 1) - 1
+    count.zero? ? id : "#{id}-#{count}"
+  end
+end
+
+def anchors(path)
+  @anchors ||= {}
+  @anchors[path] ||= begin
+    text = prose(path)
+    heading_ids(text) + text.scan(/<a\s+(?:id|name)\s*=\s*["']([^"']+)["']/).flatten
+  end
+end
+
+def unresolved(path, target)
+  file, anchor = target.split('#', 2)
+  destination = file.empty? ? path : File.expand_path(file, File.dirname(path))
+  return 'missing file' unless File.exist?(destination)
+
+  'missing anchor' if anchor && destination.match?(/\.mdx?\z/) && !anchors(destination).include?(anchor)
+end
+
+def broken_relative_links(repository, path)
+  text = prose(path).gsub(/`[^`\n]*`/, '')
+  inline = text.scan(/\]\(\s*<?([^)\s>]+)/).flatten
+  defined = text.scan(/^\s{0,3}\[(?!\^)[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/).flatten
+  (inline + defined).uniq.filter_map do |target|
+    next if target.match?(%r{\A(?:[a-z][\w+.-]*:|/)}i) || target.include?('{{')
+
+    problem = unresolved(path, target)
+    "#{path.delete_prefix("#{repository}/")} -> #{target} (#{problem})" if problem
+  end
+end
+
+def broken_emitted_links(repository, docs, path)
+  File.read(path, encoding: 'UTF-8').scrub.scan(EMITTED_DOCS).uniq.filter_map do |page, anchor|
+    target = [page, anchor].compact.join('#')
+    problem = unresolved(File.join(docs, 'index.md'), target)
+    "#{path.delete_prefix("#{repository}/")} -> docs/#{target} (#{problem})" if problem
+  end
+end
+
+def markdown_files(docs, repository)
+  Dir.glob(File.join(docs, '**/*.{md,mdx}')) + Dir.glob(File.join(repository, 'skills/**/*.md'))
+end
+
+def broken_links(docs)
+  docs = File.expand_path(docs)
+  repository = File.dirname(docs)
+  markdown = markdown_files(docs, repository)
+  sources = markdown | Dir.glob(File.join(repository, 'skills/**/*')).select { |path| File.file?(path) }
+  markdown.flat_map { |path| broken_relative_links(repository, path) } +
+    sources.flat_map { |path| broken_emitted_links(repository, docs, path) }
 end
 
 begin
@@ -49,9 +120,12 @@ begin
   puts "Missing from docs/sidebars.json: #{missing.join(', ')}" unless missing.empty?
   puts "Navigation targets missing pages: #{stale.join(', ')}" unless stale.empty?
   puts "Link a human guide, not agent instructions: #{agent_links.join(', ')}" unless agent_links.empty?
-  exit 1 unless missing.empty? && stale.empty? && agent_links.empty?
+  broken = broken_links(root)
+  puts "Unresolved links in docs/ and skills/:\n#{broken.join("\n")}" unless broken.empty?
+  exit 1 unless missing.empty? && stale.empty? && agent_links.empty? && broken.empty?
 
-  puts "All #{pages.size} published pages are in docs/sidebars.json and link no agent instructions."
+  puts "All #{pages.size} published pages are in docs/sidebars.json and link no agent instructions; " \
+       'links and anchors in docs/ and skills/ resolve.'
 rescue JSON::ParserError, KeyError, ArgumentError, Errno::ENOENT => e
   warn "Docs navigation check failed: #{e.message}"
   exit 1

@@ -89,6 +89,17 @@ class ValidateWorkflowTest < Minitest::Test
     FileUtils.remove_entry(root) if root && File.exist?(root)
   end
 
+  def test_documentation_fast_path_rejects_an_unresolved_anchor
+    root = validation_fixture
+    File.write(File.join(root, 'docs/guide.md'), "# Guide\nSee [setup](#set-up).\n")
+    output, status = run_local_validation(root)
+
+    refute_predicate status, :success?
+    assert_includes output, 'docs/guide.md -> #set-up (missing anchor)'
+  ensure
+    FileUtils.remove_entry(root) if root && File.exist?(root)
+  end
+
   def test_local_validation_rejects_staged_whitespace_hidden_by_the_working_tree
     root = validation_fixture
     guide = File.join(root, 'docs/guide.md')
