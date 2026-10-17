@@ -3,6 +3,8 @@
 
 require 'json'
 
+AGENT_REFERENCES = %r{(?:\A|/)skills/shaka/references(?:[/#?]|\z)}
+
 # Check the full published tree, so an already-merged orphan is caught too.
 def document_ids(item)
   case item
@@ -22,20 +24,34 @@ def sidebar_ids(item)
   end
 end
 
+# Human guides must not send readers into agent instructions; see AGENTS.md.
+def agent_reference_links(text)
+  inline = text.scan(/\]\(\s*<?([^)\s>]+)/).flatten
+  defined = text.scan(/^\s{0,3}\[[^\]]+\]:\s*<?(\S+?)>?(?:\s|$)/).flatten
+  html = text.scan(/href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`=]+))/).flatten.compact
+  urls = text.scan(%r{https?://[^\s<>()"'\]]+})
+  (inline + defined + html + urls).grep(AGENT_REFERENCES).uniq
+end
+
 begin
   root = ARGV.fetch(0, File.expand_path('../docs', __dir__))
   navigation = JSON.parse(File.read(File.join(root, 'sidebars.json')))
   raise ArgumentError, 'Expected a sidebar object' unless navigation.is_a?(Hash)
 
   ids = document_ids(navigation.fetch('docsSidebar'))
-  pages = Dir.glob('**/*.{md,mdx}', base: root).map { |file| file.sub(/\.(md|mdx)\z/, '') }
+  files = Dir.glob('**/*.{md,mdx}', base: root)
+  pages = files.map { |file| file.sub(/\.(md|mdx)\z/, '') }
   missing = pages - ids
   stale = ids - pages
+  agent_links = files.flat_map do |file|
+    agent_reference_links(File.read(File.join(root, file), encoding: 'UTF-8')).map { |link| "#{file} -> #{link}" }
+  end
   puts "Missing from docs/sidebars.json: #{missing.join(', ')}" unless missing.empty?
   puts "Navigation targets missing pages: #{stale.join(', ')}" unless stale.empty?
-  exit 1 unless missing.empty? && stale.empty?
+  puts "Link a human guide, not agent instructions: #{agent_links.join(', ')}" unless agent_links.empty?
+  exit 1 unless missing.empty? && stale.empty? && agent_links.empty?
 
-  puts "All #{pages.size} published pages are in docs/sidebars.json."
+  puts "All #{pages.size} published pages are in docs/sidebars.json and link no agent instructions."
 rescue JSON::ParserError, KeyError, ArgumentError, Errno::ENOENT => e
   warn "Docs navigation check failed: #{e.message}"
   exit 1

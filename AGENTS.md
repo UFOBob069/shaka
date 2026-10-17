@@ -16,9 +16,9 @@ is the reusable default.
 - Assume the reader is new to Shaka and wants to get useful work done.
 - In product guides, explain outcomes, choices, and examples. Put agent execution
   details with the skill and development records under `internal/`.
-- Human-facing files in `docs/` must not link to agent instructions under
-  `skills/shaka/references/`. Link to the relevant human guide in `docs/` and give
-  readers a useful prompt when their agent should carry out a procedure.
+- `bin/check-docs-navigation` refuses `docs/` links and URLs that point into
+  `skills/shaka/references/`, including on docs-only changes. Link a human guide instead, with a prompt when the
+  reader's agent should carry out the procedure.
 - Put command syntax and flag rules in the Shaka skill. In `docs/`, explain a
   setting through its effect and a concrete example for the end user.
 - Write files under `skills/shaka/` as instructions for agents: the rule and when it
