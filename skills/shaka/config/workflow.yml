@@ -16,7 +16,7 @@ phases:
         new task; when the user keeps this chat, record its UTC start time before work and
         use that start point to separate its usage.
       - For an explicit request to try a Shaka tool PR on a separate project task,
-        follow [PR trial preparation](references/pr-trials.md) before starting that task.
+        follow [PR trial preparation](<{{package_root}}/skills/shaka/references/pr-trials.md>) before starting that task.
         Return the pinned startup prompt for a fresh chat; preparation does not switch
         this running task's helper. A plain PR URL remains the work item.
       - When the task hands over a spec with tickets or another skill's output, or asks you

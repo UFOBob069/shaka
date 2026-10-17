@@ -130,11 +130,29 @@ class WorkflowCommandTest < Minitest::Test
     assert_includes error.message, 'unknown template token'
   end
 
+  def test_rendered_workflow_rejects_bare_relative_markdown_links
+    output, status = Open3.capture2e(COMMAND, 'workflow')
+
+    assert_predicate status, :success?, output
+    bare = markdown_link_targets(output).select { |target| bare_relative_markdown?(target) }
+
+    assert_empty bare, "bare relative markdown links: #{bare.join(', ')}"
+  end
+
   private
 
   def heading_slugs(file)
     File.readlines(file, encoding: 'UTF-8').grep(/\A#+ /).map do |line|
       line.sub(/\A#+ /, '').strip.downcase.gsub(/[^\w\s-]/, '').gsub(/\s+/, '-')
     end
+  end
+
+  def markdown_link_targets(text) = text.scan(/\]\(([^)]+)\)/).flatten
+
+  def bare_relative_markdown?(target)
+    path = target.delete_prefix('<').delete_suffix('>')
+    return false if path.match?(%r{\A(?:https?:)?//}) || path.start_with?('/')
+
+    path.match?(/\.md(?:#|\z)/)
   end
 end
