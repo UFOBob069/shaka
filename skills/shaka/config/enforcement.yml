@@ -780,9 +780,8 @@ rules:
   - id: issue-offer-approval
     phase: always
     quote: >-
-      Do not search unless the user approves the exact query. Do not file unless the user separately
-      approves the exact issue text after inspecting candidates or accepting the zero-result caveat;
-      do not change that text before filing.
+      Do not file unless the user approves the exact issue text after inspecting candidates or
+      accepting the zero-result caveat; do not change that text before filing.
     enforced_by: agent
     note: No Shaka command reads conversational approval or freezes accepted issue text.
   - id: issue-offer-stop
@@ -804,10 +803,10 @@ rules:
   - id: issue-offer-repeat-search
     phase: always
     quote: >-
-      After separate filing approval, repeat the same metadata-only search; if candidate metadata is
-      new or changed, share it and ask again before filing.
+      After filing approval, repeat the same metadata-only search; if candidate metadata is new or
+      changed, share it and ask again before filing.
     enforced_by: agent
-    note: No Shaka command repeats the approved search or compares its candidate metadata.
+    note: No Shaka command repeats the search or compares its candidate metadata.
   - id: issue-offer-owner
     phase: always
     quote: Workers must report possible issue-offer gaps to the root task owner and keep the current task moving.

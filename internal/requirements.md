@@ -113,9 +113,9 @@ must cite that evidence before claiming the pilot's real-use acceptance.
 
 - **R19 — Keep Shaka gaps actionable.** Unless offers are skipped, the root task
   owner offers a public-source draft for a worthwhile, independently verified gap
-  outside the active request. Verify the fixed public repository identity and get
-  exact-query approval before searching; share candidate links and metadata for
-  inspection. Get separate approval for the exact issue text, repeat the search,
+  outside the active request. Verify the fixed public repository identity, show the
+  draft and query, then search without asking; share candidate links and metadata
+  for inspection. Get approval for the exact issue text, repeat the search,
   and return for review and approval if candidates change. File the unchanged draft
   only after candidates are cleared. Exclude private context; stop on identity
   mismatch, search failure or limit, or unresolved candidates. Never create an

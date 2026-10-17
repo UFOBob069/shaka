@@ -52,7 +52,7 @@ The small reduction justifies a bounded trial, not a claim of major savings.
 | --- | --- | --- |
 | Private/team first setup | Trusted seam is absent and setup mode is established | See the [setup follow-up](#first-time-setup-and-recovery-follow-up) for retained boundaries and recovery evidence |
 | Reviewer execution failures | Selected reviewer returns a failure | Keep trusted selection, qualifying unavailability, account refusal, and no-unreviewed-publication boundaries; reconcile existing local-review references |
-| Issue offers | Root owner finds a verified gap outside the active request | Preserve separate query/text approvals and public-repository identity checks; relocating current classified quotes needs explicit audit treatment |
+| Issue offers | Root owner finds a verified gap outside the active request | Preserve exact-text filing approval and public-repository identity checks; relocating current classified quotes needs explicit audit treatment |
 | PR-watch mechanics | A task waits for checks or trusted feedback | Keep the native-wake boundary and manual resume owner; preserve startup races, timeout/error handling, and exact-head refresh |
 | Publication JSON/flag reference | Agent is about to publish | Already needed by most delivery tasks; moving it alone reduces the entry rendering but may save no task context |
 

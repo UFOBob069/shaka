@@ -931,13 +931,13 @@ always: |-
   For issue offers, do not search or file outside this procedure.
   Before search and filing, the root task owner must verify the fixed public repository identity
   and stop on mismatch.
-  Do not search unless the user approves the exact query. Do not file unless the user separately
-  approves the exact issue text after inspecting candidates or accepting the zero-result caveat;
-  do not change that text before filing.
+  Show the draft and query, then run the metadata-only duplicate search without asking first.
+  Do not file unless the user approves the exact issue text after inspecting candidates or
+  accepting the zero-result caveat; do not change that text before filing.
   Do not file after a search failure, a result limit, unresolved candidates, or repository identity
   mismatch.
   Prefix every GitHub CLI request in this procedure with `GH_HOST=github.com`.
-  After separate filing approval, repeat the same metadata-only search; if candidate metadata is new
+  After filing approval, repeat the same metadata-only search; if candidate metadata is new
   or changed, share it and ask again before filing.
   During an offer's duplicate check, do not fetch candidate issue or PR titles, descriptions, or
   comments; let the user inspect candidate links.

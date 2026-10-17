@@ -6,7 +6,7 @@ that owner.
 Respect a user request to skip offers for the current task. Keep the current task moving while the
 user considers the offer.
 
-## Offer before searching
+## Show the draft, then search
 
 Offer a clear, actionable gap worth tracking, not every idea set aside by the active task. For an
 AI-found gap or uncertain value, use the Shaka
@@ -21,14 +21,13 @@ draft, separated by spaces. Do not include punctuation, symbols, or the standalo
 [search syntax](https://docs.github.com/en/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax).
 The `--` separator stops CLI option parsing, but GitHub still parses query operators. If no safe
 query can be formed, explain why; do not search or file, and continue the active task. When a safe
-query is available, show the exact title, body, source links, and query.
-Ask whether the user authorizes that search; tell them you will ask again before filing. Continue
-the active task while waiting. Do not search if the user declines or has not accepted. If the
-accepted text or query changes, show the full revision and ask again.
+query is available, show the exact title, body, source links, and query, then run the searches
+below without asking first; tell the user you will ask before filing. If the query changes, show
+it and search again. If the draft text changes, show the full revision.
 
 ## Verify the target and search
 
-After acceptance, verify the target is the fixed public Shaka repository on GitHub.com,
+After showing the draft, verify the target is the fixed public Shaka repository on GitHub.com,
 `github.com/shakacode/shaka`. Run `GH_HOST=github.com gh repo view shakacode/shaka --json id,nameWithOwner,visibility` and
 require live values to match node ID `R_kgDOUZzTGw`, canonical name `shakacode/shaka`, and public
 visibility `PUBLIC`. Stop and report any command failure or mismatch before searching.
@@ -69,7 +68,7 @@ the zero-result outcome, then ask whether the user authorizes creating the exact
 If there were no candidates, file only after the user accepts the zero-result caveat and explicitly
 authorizes creation. If there were candidates, file only after the user confirms none covers the gap
 and explicitly authorizes creation. Reverify the repository identity, then repeat both searches
-with the exact approved query. If either search fails or either reaches the 1,000-result limit,
+with the same query. If either search fails or either reaches the 1,000-result limit,
 the whole check fails; do not file. Compare the returned candidate metadata with the results the
 user reviewed, including which search returned each row. If any candidate is new or its metadata
 changed, share the updated metadata and wait for the user's inspection and renewed explicit
