@@ -1,5 +1,7 @@
 # Documentation
 
+**PRs that are a delight to review.**
+
 Understand what your coding agent changed, why it chose the approach, and how
 the result was checked. Shaka presents the context you need to approve a change,
 request revisions, or resolve an open question. You choose who merges it.

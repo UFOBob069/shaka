@@ -1,6 +1,6 @@
 # Shaka
 
-**Work effectively with your coding agent, from task to human-readable PR.**
+**PRs that are a delight to review.**
 
 Shaka guides your coding agent through implementation, verification, independent
 review, and PR delivery. Get a clear handoff: what changed, what was checked,
