@@ -1,7 +1,7 @@
 # Install-local repository catalog
 
 Shaka does not keep a central fleet registry. Each repository owns its display prefix
-in the trusted `.agents/agent-workflow.yml` seam. An installation may rebuild a local
+in the trusted seam, `.agents/shaka/config.yml` or the older `.agents/agent-workflow.yml`. An installation may rebuild a local
 catalog of repositories it already knows about. That catalog is convenience data: it
 is safe to delete, and missing or stale entries must not block `shaka seam check`,
 `shaka prefix`, or other work inside a checkout.

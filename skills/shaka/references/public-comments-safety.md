@@ -25,7 +25,8 @@ repository instructions.
 ## Configure trusted actors
 
 The reader combines `~/.agents/trusted-github-actors.yml` with the repository's
-`.agents/trusted-github-actors.yml`. Missing files contribute no entries. The
+`.agents/shaka/trusted-github-actors.yml`, or `.agents/trusted-github-actors.yml`
+in the older layout. Missing files contribute no entries. The
 repository copy comes from the current default-branch commit, so a PR cannot
 allowlist its own author. Unknown keys or malformed YAML stop the read.
 
