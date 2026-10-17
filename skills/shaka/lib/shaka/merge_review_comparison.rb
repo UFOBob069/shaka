@@ -9,7 +9,8 @@ module Shaka
     # GitHub's compare API lists at most this many files, so a full page may hide code changes.
     COMPARE_FILE_LIMIT = 300
     # Markdown that instructs agents can change trust or merge policy, so it needs fresh review.
-    INSTRUCTION_FILES = %w[agents.md claude.md gemini.md skill.md].freeze
+    # Any name starting with these stems counts, covering host variants such as AGENTS.override.md.
+    INSTRUCTION_FILE = /\A(?:agents|claude|gemini|skill).*\.md\z/
     INSTRUCTION_DIRECTORIES = %w[.agents/ .claude/ .cursor/ .github/ skills/].freeze
 
     # `proof` answers whether the head is exactly a clean merge of a reviewed commit with the base.
@@ -81,7 +82,7 @@ module Shaka
       return false unless path.is_a?(String)
 
       name = path.downcase
-      name.end_with?('.md') && !INSTRUCTION_FILES.include?(File.basename(name)) &&
+      name.end_with?('.md') && !INSTRUCTION_FILE.match?(File.basename(name)) &&
         INSTRUCTION_DIRECTORIES.none? { |directory| name.start_with?(directory) || name.include?("/#{directory}") }
     end
   end

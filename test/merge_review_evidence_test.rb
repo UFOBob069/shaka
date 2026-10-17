@@ -118,13 +118,13 @@ class MergeReviewEvidenceTest < Minitest::Test
 
   def test_accepts_an_earlier_attestation_when_only_markdown_changed_since
     @client.comments = [attestation(EARLIER)]
-    @client.comparisons = { EARLIER => markdown_only('README.md', 'docs/Guide.MD') }
+    @client.comparisons = { EARLIER => markdown_only('README.md', 'docs/Guide.MD', 'docs/using-claude.md') }
 
     result = evidence
 
     assert_equal 'markdown_only_since_review', result.fetch('basis')
     assert_equal EARLIER, result.fetch('reviewed')
-    assert_equal %w[README.md docs/Guide.MD], result.fetch('changed_since_review')
+    assert_equal %w[README.md docs/Guide.MD docs/using-claude.md], result.fetch('changed_since_review')
     assert_equal [[EARLIER, HEAD]], @client.compared
   end
 
@@ -139,8 +139,8 @@ class MergeReviewEvidenceTest < Minitest::Test
   end
 
   def test_refuses_an_earlier_attestation_when_agent_instructions_changed_since
-    paths = %w[AGENTS.md skills/shaka/references/review.md .agents/writing-style.md
-               pkg/.github/pull_request_template.md]
+    paths = %w[AGENTS.md AGENTS.override.md docs/CLAUDE.local.md docs/Gemini.Notes.MD skills/shaka/references/review.md
+               .agents/writing-style.md pkg/.github/pull_request_template.md]
     paths.each do |path|
       @client.comments = [attestation(EARLIER)]
       @client.comparisons = { EARLIER => markdown_only('README.md', path) }

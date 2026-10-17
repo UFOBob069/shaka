@@ -201,8 +201,10 @@ A review of an earlier commit still counts in two cases:
   new review or a waiver instead.
 - **Ordinary Markdown since.** Every later change is ordinary Markdown. Agent
   instructions are not ordinary Markdown: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-  `SKILL.md`, and files under `.agents/`, `.claude/`, `.cursor/`, `.github/`, or
-  `skills/` need a new review.
+  `SKILL.md`, any other Markdown file whose name starts with `agents`, `claude`,
+  `gemini`, or `skill` (such as `AGENTS.override.md` or `CLAUDE.local.md`), and
+  files under `.agents/`, `.claude/`, `.cursor/`, `.github/`, or `skills/` need a
+  new review.
 
 When no review applies, `merge` stops before merging. A maintainer can record a
 waiver reason when review was skipped on purpose, a later commit only fixed nits,
