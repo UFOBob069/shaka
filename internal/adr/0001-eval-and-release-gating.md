@@ -780,7 +780,10 @@ under D9.
 Shipped: the [budgeted Ruby batch core](../../eval/budget-runner.md) requires
 explicit operator limits, retains unresolved calls across one private account, and saves
 validated records before settling charges. It requires a trusted executor callback;
-Harbor integration, native usage conversion, and scheduled execution remain unbuilt.
+The [native usage adapter](../../eval/native-usage.md) converts collected Harbor
+JSONL sessions through the installed usage command and reprices cache-neutral
+dollars. Harbor launching, full fingerprint capture, grading, paired statistics,
+release-gate consumers, and scheduled execution remain unbuilt, in that order.
 
 All figures are cache-neutral (D12), at the rate card's base input and output rates
 as verified in September 2026, and are planning references to be replaced by the
