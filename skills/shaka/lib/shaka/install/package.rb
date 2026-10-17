@@ -112,7 +112,9 @@ module Shaka
       end
 
       def write_metadata(staging, target, identity, version)
-        raise ArgumentError, 'Managed package skills are invalid' unless self.class.valid_skills?(@names)
+        # A unique allowlisted list can still follow flag order. Only the canonical list may be stored.
+        canonical = self.class.normalize_skills(@names)
+        raise ArgumentError, 'Managed package skills are invalid' unless @names == canonical
 
         metadata = { 'schema_version' => 1, 'package_id' => File.basename(target),
                      'version' => version, 'skills' => @names, 'source' => identity }
