@@ -81,6 +81,7 @@ module Shaka
 
       def add_setup_options(flags)
         flags.on('--ref SHA') { |value| @options[:ref] = value }
+        flags.on('--from ID') { |value| @options[:from] = value }
         add_command_options(flags)
         add_review_options(flags)
         flags.on('--base-branch BRANCH') { |value| @options[:base_branch] = value }

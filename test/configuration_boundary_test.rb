@@ -4,14 +4,8 @@ require_relative 'test_helper'
 require_relative 'repository_fixture'
 require 'shaka/configuration'
 
-class ConfigurationBoundaryTest < Minitest::Test
-  include RepositoryConfigTestHelpers
-
-  ROOT = File.expand_path('../skills/shaka/lib/shaka', __dir__)
-  INTERNAL = %w[configuration.rb repository_config.rb trusted_config_source.rb].freeze
-  OTHER_PATHS = %w[install/official.rb install/official_links.rb
-                   merge_review_comparison.rb seam/initializer_readme.rb seam/pointer.rb].freeze
-  OTHER_GIT_READ = %w[local_review/criteria.rb seam/upgrade_plan/indexed_references.rb].freeze
+# Production files allowed to read or write files directly.
+module ConfigurationBoundaryFileIO
   OTHER_FILE_IO = %w[
     hosts/codex_wake.rb trial/prepare.rb trial/command.rb install/display.rb install/checkout.rb install/official.rb
     local_review/usage.rb doctor/installation_identity.rb doctor/cursor_stop_hook.rb local_review/ledger_running.rb
@@ -28,7 +22,19 @@ class ConfigurationBoundaryTest < Minitest::Test
     seam/private_recovery/preparation.rb seam/private_recovery/rotation.rb seam/private_recovery/identity.rb defaults.rb
     seam/upgrade_plan/reference_dependencies.rb seam/upgrade_plan/continued_references.rb seam/upgrader/recovery.rb
     seam/upgrade_plan/symlink_chain.rb seam/private_recovery/exclusion.rb seam/upgrader.rb seam/upgrader/filesystem.rb
+    seam/private_recovery/seed.rb seam/private_seed.rb
   ].freeze
+end
+
+class ConfigurationBoundaryTest < Minitest::Test
+  include RepositoryConfigTestHelpers
+  include ConfigurationBoundaryFileIO
+
+  ROOT = File.expand_path('../skills/shaka/lib/shaka', __dir__)
+  INTERNAL = %w[configuration.rb repository_config.rb trusted_config_source.rb].freeze
+  OTHER_PATHS = %w[install/official.rb install/official_links.rb
+                   merge_review_comparison.rb seam/initializer_readme.rb seam/pointer.rb].freeze
+  OTHER_GIT_READ = %w[local_review/criteria.rb seam/upgrade_plan/indexed_references.rb].freeze
 
   def test_public_paths_remain_concrete_and_independent
     paths = Shaka::Configuration::Paths

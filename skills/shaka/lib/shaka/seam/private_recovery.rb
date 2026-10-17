@@ -131,6 +131,7 @@ end
 
 require_relative 'private_recovery/preparation'
 require_relative 'private_recovery/copies'
+require_relative 'private_recovery/seed'
 require_relative 'private_recovery/rotation'
 require_relative 'private_recovery/identity'
 require_relative 'private_recovery/inventory'

@@ -27,6 +27,9 @@ Set up Shaka just for me. Go.
 Individual settings remain outside commits in a repository without team setup.
 They cover the same choices as shared settings: reviewers, custom code-review
 instructions, checkpoint choices, writing limits, opening instructions, and WIP preferences.
+When a later task starts in a new worktree, the agent copies your individual
+settings into it. Edits you made after setup come along while the earlier
+checkout still exists.
 
 The agent follows setup instructions to find existing commands and continue into
 your task. That is not proof of seamless first-user delivery. The

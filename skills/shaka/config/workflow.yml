@@ -231,7 +231,9 @@ phases:
         `branches.name`. Allowed placeholders are `{login}` (the GitHub account for this task),
         `{host}`, `{issue}`, and `{description}`. If the seam omits `branches`, use
         `{login}-{host}/{issue}-{description}`. Fetch this task's base fresh. Start a new task in a
-        new worktree from that base. Continue a task in the worktree that already holds its branch,
+        new worktree from that base. When the trusted seam is absent and `seam private list` reports copies, carry one into that worktree as
+        [private setup](<{{package_root}}/skills/shaka/references/repository-setup.md#start-another-worktree-with-private-settings>)
+        describes. Continue a task in the worktree that already holds its branch,
         creating that worktree when the branch is not checked out. Pull or rebase an existing
         upstream. Edit in that worktree, and move the session into it before the first edit when the
         host can. Preserve user work. Run candidate code only in the authorized isolated checkout.

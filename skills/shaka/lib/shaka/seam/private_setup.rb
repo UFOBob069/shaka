@@ -2,11 +2,14 @@
 
 require_relative 'initializer'
 require_relative 'private_recovery'
+require_relative 'private_seed'
 
 module Shaka
   class Seam
     # Prepares local recovery and exclusion before placing generated private files.
     class PrivateSetup < Initializer
+      include PrivateSeed
+
       def initialize(root:, ref:, options:)
         super(root:, options:)
         @root = File.realpath(root)
@@ -21,7 +24,7 @@ module Shaka
         activate(recovery, files, resumable)
         verify_complete!(recovery)
         recovery.mark_activated!
-        recovery.inspect_checkout.merge('status' => 'complete')
+        recovery.inspect_checkout.merge({ 'status' => 'complete', 'seeded_from' => @options[:from] }.compact)
       rescue SystemCallError => e
         raise interrupted_error(e, recovery)
       end
@@ -36,6 +39,8 @@ module Shaka
       def merge_policy = { 'preference' => Defaults.fetch('merge', 'preference') }
 
       def validate_policies
+        return if seeding?
+
         RepositoryConfig::ReviewSchema.new(review_policy).validate
         RepositoryConfig::MergeSchema.new(merge_policy).validate
       end
@@ -98,6 +103,8 @@ module Shaka
       end
 
       def generated_files
+        return seeded_files if seeding?
+
         files = super.reject { |path, _| path == Configuration.path(@root, :POINTER) }
         files.merge(optional_files)
       end
