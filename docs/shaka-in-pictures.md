@@ -59,14 +59,16 @@ Then the agent does the gray box:
 1. **Build.** It makes the change on its own copy.
 2. **Test.** It runs your project's tests. If the change shows on screen, it also
    takes before and after pictures when it can.
-3. **Review.** A second AI reads the change and looks for mistakes. The agent
+3. **Review.** A second AI looks for mistakes: a fresh copy of your agent that
+   has not seen your chat, unless you
+   [add one from another AI company](settings.md#add-a-second-reviewer). The agent
    fixes real problems, then tests and reviews again.
 
 Then it hands you the green box: a pull request with everything you need to decide.
 
-Shaka gives the agent rules. A program checks some of them, and the agent follows
-the others on its own. The PR lists what was checked, and also what could not be
-checked. See [which rules a program checks](workflow.md#what-is-enforced).
+Shaka gives the agent rules. A program checks some, and the agent follows the
+others on its own. The PR lists what was checked and what could not be. See
+[which rules a program checks](workflow.md#what-is-enforced).
 
 ## Who says yes?
 
@@ -79,8 +81,8 @@ Shaka has two merge choices. **Ask** is the default.
 - **Auto:** the agent merges once its checks and reviews pass. Big or risky
   changes still come back to you.
 
-This page uses Ask. With Ask, Shaka's rules tell the agent to wait for your yes
-before anything joins your project. See [choose a merge policy](working-with-shaka.md#choose-a-merge-policy).
+This page uses Ask: Shaka's rules tell the agent to wait for your yes before
+anything joins your project. See [choose a merge policy](working-with-shaka.md#choose-a-merge-policy).
 
 ## Tutorial: your first Shaka task
 
@@ -95,8 +97,7 @@ the PR, and merge it. Your real projects stay untouched.
 - A coding agent that can run commands on your computer, such as Claude Code,
   Codex, or Cursor. See [coding agents](coding-agents.md).
 
-The examples type `/shaka`, which works in Claude Code, Cursor, and OpenCode. In
-Codex, type `$shaka` instead.
+Claude Code, Cursor, and OpenCode use `/shaka`; Codex uses `$shaka`.
 
 Shaka also needs a few tools on your computer: Ruby, Git, and GitHub's
 command-line tool. In step 1, the agent checks for them and tells you what is missing.
@@ -113,8 +114,9 @@ Install Shaka from https://github.com/shakacode/shaka.
 folder, away from your projects. If GitHub asks you to sign in, follow the
 agent's steps.
 
-**Success looks like:** in a new chat, type `/shaka` by itself. A short welcome
-means Shaka is ready.
+**Success looks like:** in a new chat, in any folder, type `/shaka` (`$shaka` in
+Codex) by itself. A short welcome means Shaka is ready, even if FAILED lines
+follow it.
 
 ### Step 2: Make a playground project
 
@@ -123,15 +125,15 @@ This is not a Shaka task yet.
 **Do:**
 
 ```text
-Create a private GitHub repository named shaka-playground. Give it a
-one-page website with a button and one automated test. Upload it to GitHub.
+Create a private GitHub repository named shaka-playground, outside my other
+projects. Give it a one-page website with a button and one automated test.
+Upload it to GitHub.
 ```
 
 A **repository**, or repo, is your project's home on GitHub. The test matters:
-Shaka runs your tests, so without one it has less to check and show you.
+without one, Shaka has less to check and show you.
 
-**You will see:** the agent gives you a link to the new repository. Open it to
-see your files.
+**You will see:** a link to the new repository. Open it to see your files.
 
 **Then:** the agent made the project in a folder on your computer, where Shaka
 will work. Ask it:
@@ -140,28 +142,25 @@ will work. Ask it:
 How do I start a new chat in the shaka-playground folder and check it worked?
 ```
 
-Continue in that new chat.
+**Success looks like:** ask the new chat which folder it is in; it says
+shaka-playground. Continue there.
 
 ### Step 3: Run a health check
 
-**Do:**
+**Do:** (in Codex, `$shaka doctor`)
 
 ```text
 /shaka doctor
 ```
 
-**Success looks like:** the tools Shaka needs show HEALTHY. Expect one FAILED
-row, **Repository seam**, and a few DEGRADED rows: Shaka is not set up in this
-project until step 4, so skip their advice for now. If a tool is missing, ask the
-agent to help you install it.
-
-In this tutorial, the second look comes from a fresh copy of the same AI that has
-not seen your chat. A reviewer from another AI company is optional; see
-[add a second reviewer](settings.md#add-a-second-reviewer).
+**Success looks like:** one FAILED line, **Repository seam**: Shaka's settings for
+this project, which step 4 adds. Leave it and any DEGRADED lines for now, even if
+the agent offers to fix them. If any other line says FAILED, ask the agent to fix
+it.
 
 ### Step 4: Give Shaka a task
 
-**Do:**
+**Do:** (in Codex, `$shaka` instead of `/shaka`)
 
 ```text
 /shaka Add a counter that shows how many times the button was clicked.
@@ -171,7 +170,8 @@ Set up Shaka just for me. Go.
 - **Set up Shaka just for me** saves Shaka's settings only on your computer.
 - **Go** means: start now.
 
-**You will see:** the agent starts working and shows its plan. Move on to step 5.
+**Success looks like:** the agent starts working and shows its plan. Move on to
+step 5.
 
 ### Step 5: Watch it work
 
@@ -182,7 +182,7 @@ Its messages use the words from this page.
 | --- | --- |
 | Shows its plan: value, scope, risk, model, and effort | Why the work matters, how big and risky it is, and how hard the AI will think. |
 | Names a branch | It made its own copy to work in. Your real version, called **main**, stays as it was. |
-| Runs your tests | The robot checks are running. |
+| Runs your tests | Your project's tests are running. |
 | Reports review findings | The second AI found something. The agent fixes real problems and checks again; small notes are only recorded. |
 | Pushes the branch | It uploaded its copy to GitHub. |
 | Opens a pull request | Its suggestions are ready for you. |
@@ -190,10 +190,11 @@ Its messages use the words from this page.
 | Publishes a checkpoint | Its final look: did it build the right thing, and is it ready? |
 | Adds the `awaiting-merge-approval` label | A tag on the PR that means: your turn to decide. |
 
-**If it stops to ask you something,** answer in your own words. If a question is
-confusing, reply “Explain that in simple words.” On this first run, your coding
-agent may ask your permission many times before it runs commands such as `git`,
-`gh`, and `ruby`. For this playground project, saying yes is fine.
+**You do not need to type while it works, but stay nearby.** If it asks you
+something, answer in your own words, or reply “Explain that in simple words.” The
+agent may often ask permission to run commands such as `git`, `gh`, and `ruby`.
+For this playground, say yes to each permission request, but only for that
+request. If one worries you, ask the agent what it does first.
 
 **Success looks like:** the agent gives you a PR link and says the PR is ready
 for your decision.
@@ -225,9 +226,8 @@ says so. Ask the agent about it.
 Make the counter number bigger.
 ```
 
-**You will see:** the agent updates the same PR. It saves a new commit, like a new
-entry in version history, then tests and reviews again. Reload the PR page to see
-the changes.
+**Success looks like:** the agent updates the same PR, tests and reviews again,
+and says it is ready. Reload the PR page to see the changes.
 
 **What it means:** you can steer as often as you like, and main still has not
 changed.
