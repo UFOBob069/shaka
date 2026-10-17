@@ -43,7 +43,6 @@ class SettingsPreviewGatesTest < Minitest::Test
       "[{ 'name' => 'validate', 'state' => 'SUCCESS', 'bucket' => 'pass' }]",
       "ARGV.include?('--required') ? fixture.fetch('required') : []"
     )
-    script = script.sub("when 'user'", "when %r{/rules/branches/} then []\n             when 'user'")
     File.write(File.join(bin, 'gh'), "#!#{RbConfig.ruby}\n#{script}")
     File.chmod(0o755, File.join(bin, 'gh'))
     File.write(File.join(bin, 'fixture.json'), JSON.generate('head' => ref, 'body' => '', 'required' => required))

@@ -10,7 +10,7 @@ module MergeFixtures
   class Client
     attr_accessor :snapshots, :head_checks, :review_result, :mutation_result, :mutation_error, :comments
     attr_reader :mutations, :requested_review, :features
-    attr_writer :checks
+    attr_writer :checks, :configured
 
     def initialize
       @mutations = []
@@ -36,7 +36,7 @@ module MergeFixtures
       head_checks.length > 1 ? head_checks.shift : head_checks.first
     end
 
-    def configured_required_checks = []
+    def configured_required_checks = @configured || []
 
     def review(id)
       @requested_review = id
@@ -412,6 +412,15 @@ class MergeQueueSubmissionTest < Minitest::Test
 
     assert_equal 'merge_queue', result.fetch('submission')
     assert_equal 1, @client.mutations.length
+  end
+
+  # The queue admits BLOCKED, so a renamed required job must not drop out of the gate.
+  def test_queue_enabled_pull_request_blocks_on_a_configured_check_that_never_reported
+    @client.snapshots = [snapshot.merge('isMergeQueueEnabled' => true, 'mergeStateStatus' => 'BLOCKED')]
+    @client.head_checks = [{ 'name' => 'Validate', 'state' => 'SUCCESS', 'bucket' => 'pass' }]
+    @client.configured = %w[Validate checks]
+
+    assert_blocked(/Required check is not passing.*"name" => "checks", "state" => "MISSING"/)
   end
 
   def test_queue_enabled_pull_request_rejects_conflicting_or_unknown_state

@@ -44,7 +44,7 @@ module GitHubHelper
 
   def gate_responses
     required = [{ 'name' => 'validate', 'state' => 'SUCCESS', 'bucket' => 'pass' }]
-    [response(required), response(COMPLETED_GATES)]
+    [response(required), *no_configured_requirements, response(COMPLETED_GATES)]
   end
 
   def html_response(html = '<p>A walkthrough.</p>')
@@ -63,6 +63,6 @@ module GitHubHelper
   def pending_review_gate_responses
     passed = { 'name' => 'validate', 'state' => 'SUCCESS', 'bucket' => 'pass' }
     pending = { 'name' => 'claude-review', 'state' => 'PENDING', 'bucket' => 'pending' }
-    [response([passed]), response([passed, pending])]
+    [response([passed]), *no_configured_requirements, response([passed, pending])]
   end
 end

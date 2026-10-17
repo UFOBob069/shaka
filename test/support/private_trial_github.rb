@@ -19,6 +19,7 @@ module PrivateTrialGitHub
                  { 'headRefOid' => head, 'state' => 'OPEN', 'baseRefName' => 'main',
                    'reviewThreads' => { 'nodes' => [], 'pageInfo' => { 'hasNextPage' => false } } } } } }
              when 'repos/owner/repo' then { 'visibility' => 'private' }
+             when %r{/rules/branches/} then []
              when 'user' then { 'login' => 'shaka-agent' }
              when 'markdown' then '<p>Feature verified.</p><table></table>'
              when %r{/pulls/1/files} then [{ 'filename' => 'README.md' }]

@@ -36,6 +36,14 @@ class RequiredChecksTest < Minitest::Test
     end
   end
 
+  # A renamed job leaves its configured name unreported beside checks that did report.
+  def test_configured_requirements_missing_from_a_non_empty_native_report_are_missing
+    missing = { 'name' => 'validate', 'state' => 'MISSING', 'bucket' => 'missing' }
+    result = Shaka::RequiredChecks.new(Client.new([PASS], [PASS], %w[checks validate])).call
+
+    assert_equal({ 'source' => 'github', 'checks' => [PASS, missing] }, result)
+  end
+
   def test_configured_native_requirements_use_reported_head_results
     %w[SUCCESS FAILURE IN_PROGRESS].zip(%w[pass fail pending]).each do |state, bucket|
       check = PASS.merge('state' => state, 'bucket' => bucket)

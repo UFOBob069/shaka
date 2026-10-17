@@ -10,8 +10,8 @@ class GitHubWalkthroughTest < Minitest::Test
     published = github.walkthrough(head: HEAD, body: WALKTHROUGH)
     assert_equal 'COMMENTED', published['state']
     assert_equal({ 'event' => 'COMMENT', 'commit_id' => HEAD, 'body' => WALKTHROUGH },
-                 JSON.parse(@calls[5].last))
-    assert_equal %w[gh api repos/owner/repo/pulls/42/reviews/123 --method GET --input -], @calls[6].first
+                 JSON.parse(@calls[7].last))
+    assert_equal %w[gh api repos/owner/repo/pulls/42/reviews/123 --method GET --input -], @calls[8].first
   end
 
   def test_changed_or_closed_head_prevents_publication
@@ -25,7 +25,7 @@ class GitHubWalkthroughTest < Minitest::Test
     github = client(*publish_responses(snapshot_response(head: 'b' * 40)))
     error = assert_raises(Shaka::Error) { github.walkthrough(head: HEAD, body: WALKTHROUGH) }
     assert_includes error.message, '123'
-    assert_equal 8, @calls.size
+    assert_equal 10, @calls.size
   end
 
   def test_review_readback_requires_matching_native_state_commit_body_and_id
@@ -34,7 +34,7 @@ class GitHubWalkthroughTest < Minitest::Test
       github = client(snapshot_response, files_response, *gate_responses, html_response, review_response,
                       review_response(**changes))
       assert_raises(Shaka::Error) { github.walkthrough(head: HEAD, body: WALKTHROUGH) }
-      assert_equal 7, @calls.size
+      assert_equal 9, @calls.size
     end
   end
 
@@ -55,6 +55,6 @@ class GitHubWalkthroughTest < Minitest::Test
   def test_unauthorized_publication_does_not_attempt_readback
     github = client(snapshot_response, files_response, *gate_responses, html_response, response({}, status: 1))
     assert_raises(Shaka::Error) { github.walkthrough(head: HEAD, body: WALKTHROUGH) }
-    assert_equal 6, @calls.size
+    assert_equal 8, @calls.size
   end
 end

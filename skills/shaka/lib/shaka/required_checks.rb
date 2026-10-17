@@ -12,11 +12,14 @@ module Shaka
 
     def call
       native = @github.required_checks
-      return github(native) unless native == []
+      return github(native) unless native.is_a?(Array)
 
-      # An empty required-only report can omit checks already present on the head.
-      configured = @github.configured_required_checks
-      return github(check_rows(configured)) unless configured.empty?
+      # The required-only report omits configured checks that never reported, and an empty
+      # one can omit checks already present on the head.
+      reported = native.map { |row| row['name'] if row.is_a?(Hash) }
+      unreported = @github.configured_required_checks - reported
+      checks = native + check_rows(unreported)
+      return github(checks) unless checks.empty?
       return github([]) unless @seam_names&.any?
 
       { 'source' => 'seam', 'checks' => check_rows(@seam_names) }
@@ -31,6 +34,8 @@ module Shaka
     # A declared check that never reported on the head must block, so a renamed or removed
     # job fails closed instead of silently dropping out of the gate.
     def check_rows(names)
+      return [] if names.empty?
+
       head = @github.checks
       names.flat_map do |name|
         rows = head.select { |row| row.is_a?(Hash) && row['name'] == name }

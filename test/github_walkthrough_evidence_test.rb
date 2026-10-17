@@ -47,7 +47,7 @@ class GitHubWalkthroughEvidenceTest < Minitest::Test
     end
     assert_includes error.message, 'claude-review'
     refute_includes error.message, 'validate'
-    assert_equal 4, @calls.size
+    assert_equal 6, @calls.size
   end
 
   # Catches a required check that finished and is missing from the walkthrough.
@@ -57,7 +57,7 @@ class GitHubWalkthroughEvidenceTest < Minitest::Test
       github.walkthrough(head: HEAD, body: "See #{PINNED_LINK}. Gates: claude-review.")
     end
     assert_includes error.message, 'validate'
-    assert_equal 4, @calls.size
+    assert_equal 6, @calls.size
   end
 
   def test_pending_review_checks_are_not_required_in_the_walkthrough
@@ -78,7 +78,8 @@ class GitHubWalkthroughEvidenceTest < Minitest::Test
   # Catches omitting a skipped required check that merge still treats as terminal.
   def test_walkthrough_requires_a_skipped_required_check
     skipped = [{ 'name' => 'validate', 'state' => 'SKIPPED', 'bucket' => 'skipping' }]
-    github = client(snapshot_response, files_response, response(skipped), response(skipped))
+    github = client(snapshot_response, files_response, response(skipped), *no_configured_requirements,
+                    response(skipped))
     error = assert_raises(Shaka::Error) { github.walkthrough(head: HEAD, body: "See #{PINNED_LINK}.") }
     assert_includes error.message, 'validate'
   end
@@ -119,7 +120,8 @@ class GitHubWalkthroughEvidenceTest < Minitest::Test
 
   def test_walkthrough_requires_a_cancelled_required_check
     cancelled = [{ 'name' => 'validate', 'state' => 'CANCELLED', 'bucket' => 'cancel' }]
-    github = client(snapshot_response, files_response, response(cancelled), response(cancelled))
+    github = client(snapshot_response, files_response, response(cancelled), *no_configured_requirements,
+                    response(cancelled))
     error = assert_raises(Shaka::Error) { github.walkthrough(head: HEAD, body: "See #{PINNED_LINK}.") }
     assert_includes error.message, 'validate'
   end
