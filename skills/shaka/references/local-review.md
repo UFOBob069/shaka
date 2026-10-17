@@ -524,9 +524,10 @@ independently after publishing.
 After assessing completed CI feedback, also minimize obsolete bot review reports
 and notices with GitHub's native **outdated** disclosure. Read them with `shaka comments`
 at the current head first. Select reports that earlier commits have superseded and
-notices that no longer help the reader. Minimize a CodeRabbit review-limit notice
-when it contains no review findings; record `rate-limited; no review completed`
-in the existing review summary even when the notice concerns the current head. Carry
+notices that no longer help the reader. At any point, you may also minimize a bot
+comment that contains no review findings, such as a skipped-review, plan, upgrade,
+or status-only notice. For a CodeRabbit review-limit notice, record `rate-limited; no
+review completed` in the existing review summary even when it concerns the current head. Carry
 still-applicable findings into the current summary; leave current review reports
 and discussions with unaddressed material concerns visible. A different SHA alone
 does not establish that findings are resolved. The agent makes this assessment;

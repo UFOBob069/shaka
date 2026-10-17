@@ -422,7 +422,9 @@ phases:
         samples for an older head, fold them with `review collapse OWNER/REPO NUMBER --current
         NEW_COMMENT_ID --superseded OLD_COMMENT_ID`, repeating `--superseded`. Keep visible any
         comment holding evidence the new one does not replace. Before the Finish checkpoint,
-        fold or minimize evidence and bot reports the current head made obsolete.
+        fold or minimize evidence and bot reports the current head made obsolete. At any
+        point, you may minimize bot comments that contain no review findings with
+        `review collapse OWNER/REPO NUMBER --head SHA --bot-comment ID`.
       - When this task's team or individual settings set `project_guidance.pr_evidence`, read
         that guide with the saved helper's `guidance pr_evidence --root DIR --ref SHA` before
         preparing the description. It also prints the repository's pull request template when
