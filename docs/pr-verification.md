@@ -84,7 +84,8 @@ Open each source to read the full record; its live state may have changed.
 ![PR description opening with Recommendation: Merge, a short Next action, and links to Code Walkthrough, Code Review, and Checkpoint.](img/pr-recommendation.webp)
 
 [PR #527](https://github.com/shakacode/shaka/pull/527) shows the recommendation
-above the summary and links to its supporting evidence. Open **Checkpoint**
+above the summary and links to its supporting evidence. Newer descriptions put
+those links on the recommendation's line. Open **Checkpoint**
 before acting on the recommendation; the screenshot is a historical example,
 not approval to merge another commit.
 
@@ -326,16 +327,18 @@ and recoverable work state for a later return. This uses the existing
 [recovery procedure](working-with-shaka.md#revise-earlier-guidance-and-try-again),
 not an automatic Ruby snapshot or an extra human approval at every return point.
 The PR description opens with **Decisions to make** while you have questions to answer.
-Otherwise it opens with the task owner's recommendation from the checkpoint published for
-that commit, such as **Recommendation: Merge**, or with **No recommendation yet** before the
-owner has recorded one. Shaka reads that heading from the latest checkpoint for that commit
-each time the description is published; your agent republishes the description when the
-checkpoint changes. A checkpoint that holds only the reviewer's verdict shows it as **Reviewer
-recommendation** and leaves the description at **No recommendation yet**.
-The next action follows in one short sentence. Shaka refuses to show a recommendation
-made for an earlier commit, so that line does not name one. After
-the summary, links open the walkthrough, the detailed code review when one was published,
-and the full checkpoint. Your agent summarizes
+Otherwise, below the line naming the AI that wrote it, it opens with the task owner's
+recommendation from the checkpoint published for that commit, such as
+**Recommendation: Merge**, or **No recommendation yet** before the owner has recorded one.
+Shaka reads the recommendation from the latest checkpoint for that commit each time the
+description is published; your agent republishes the description when the checkpoint
+changes. A checkpoint that holds only the reviewer's verdict shows it as **Reviewer
+recommendation** and leaves the description at **No recommendation yet**. Shaka refuses
+to show a recommendation made for an earlier commit, so the recommendation does not name
+one. Beside it, links open the walkthrough, the detailed code review when one was
+published, and the full checkpoint. Your agent adds a **Next** line when merging waits on
+something the recommendation does not say, such as another PR. The **Summary** follows.
+Your agent summarizes
 consequential decisions, questions or friction, and critical changes in a few lines.
 Supporting evidence appears below.
 The report keeps the **Reviewer verdict** within the checkpoint. A recommendation becomes a

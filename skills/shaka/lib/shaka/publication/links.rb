@@ -16,41 +16,55 @@ module Shaka
 
     module_function
 
-    # The heading is the decision a maintainer acts on: the owner's recommendation, or the open decisions.
+    # The first line is the decision a maintainer acts on, beside the evidence links that support it.
+    # Open decisions come first while they last, even over a Merge checkpoint, and take the label's place.
     # The head check keeps a stale recommendation off the page, so the text need not name the commit.
-    def checkpoint(content, pull, decisions)
-      return decisions unless content.key?('checkpoint')
+    def lead(content, pull, decisions)
+      links = links(content, pull)
+      return [*decisions, links] unless content.key?('checkpoint')
 
+      checkpoint = current_checkpoint(content['checkpoint'], pull)
+      label = recommendation_label(checkpoint['recommendation'])
+      [*decisions, decisions.any? ? links : "#{label} · #{links}", *next_action(checkpoint['next_action'])]
+    end
+
+    def current_checkpoint(checkpoint, pull)
       head = pull&.dig('head', 'sha')
-      checkpoint = content['checkpoint']
       raise Error, 'Description checkpoint must be an object.' unless checkpoint.is_a?(Hash)
       raise Error, 'Description checkpoint is not for the current PR head.' unless
         head && checkpoint['head'] == head
 
-      action = PublicationText.summary_text(checkpoint['next_action'], 'checkpoint next_action')
-      [*checkpoint_heading(checkpoint['recommendation'], decisions), "**Next:** #{action}"]
+      checkpoint
     end
 
-    # Open decisions are the heading while they last, even over a Merge checkpoint; its recommendation follows them.
-    # Without one for this head, such as while the checkpoint is pending or failed, the heading says so.
-    def checkpoint_heading(recommendation, decisions)
+    # Without a recommendation for this head, such as while the checkpoint is pending or failed, the label says so.
+    def recommendation_label(recommendation)
       recommendations = PostImplementationReport::RECOMMENDATIONS
       unless recommendation.nil? || recommendations.include?(recommendation)
         raise Error, "Description checkpoint recommendation must be one of: #{recommendations.join(', ')}."
       end
-      return decisions if decisions.any?
 
-      [recommendation ? "## Recommendation: #{recommendation}" : '## No recommendation yet']
+      recommendation ? "**Recommendation: #{recommendation}**" : '**No recommendation yet**'
+    end
+
+    # Optional, because a Merge recommendation already says what happens next; the line adds a dependency or approval.
+    def next_action(action)
+      return [] if action.nil? || (action.is_a?(String) && action.strip.empty?)
+
+      ["**Next:** #{PublicationText.summary_text(action, 'checkpoint next_action')}"]
     end
 
     # Keep both review surfaces together before an optional deployment preview.
-    def top(content, settings, pull)
+    def links(content, pull)
       reviews = [walkthrough(content['walkthrough']), review(content['review']),
                  post_implementation(content['post_implementation'])].compact.join(' · ')
       preview = deployment(content['deployment']) ||
                 deployment_not_found(content['deployment_not_found_for'], pull&.dig('head', 'sha'))
-      [(CREDIT if settings.attribution?), preview ? "#{reviews} · #{preview}" : reviews].compact
+      preview ? "#{reviews} · #{preview}" : reviews
     end
+
+    # The credit closes the description so it never sits between the decision and its evidence.
+    def credit(settings) = settings.attribution? ? [CREDIT] : []
 
     def post_implementation(url)
       return "Checkpoint: #{UNPUBLISHED}" if url.nil? || (url.is_a?(String) && url.strip.empty?)

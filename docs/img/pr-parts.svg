@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 608" width="360" role="img" aria-labelledby="t d">
 <title id="t">The parts of a Shaka pull request</title>
-<desc id="d">A pull request page titled Count button clicks, marked Open with the label awaiting-merge-approval. Its Files changed tab counts 5 lines added and 3 removed. One: Recommendation: Merge, with a Next line saying what happens now. Two: the summary says what changed and why, in plain words. Three: links to the Code Walkthrough, a guided tour of the changed code; Code Review, the second AI's findings; and Checkpoint, a final look at whether it is ready. Four: a table of checks with each result and its evidence, such as tests passing and two small review suggestions noted. Five: usage and cost, an estimate at API prices rather than your bill. Six: the merge button, which works like Accept all in Google Docs; with Ask, the agent waits for your yes.</desc>
+<desc id="d">A pull request page titled Count button clicks, marked Open with the label awaiting-merge-approval. Its Files changed tab counts 5 lines added and 3 removed. One: Recommendation: Merge, beside links to the Code Walkthrough, a guided tour of the changed code; Code Review, the second AI's findings; and Checkpoint, a final look at whether it is ready. Two: the summary says what changed and why, in plain words. Three: the intent says why the change exists and why it is safe. Four: a table of checks with each result and its evidence, such as tests passing and two small review suggestions noted. Five: usage and cost, an estimate at API prices rather than your bill. Six: the merge button, which works like Accept all in Google Docs; with Ask, the agent waits for your yes.</desc>
 <style>
 .bg{fill:#fff;stroke:#d9e0e7}
 text{font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#0f1724}
@@ -63,13 +63,13 @@ text{fill:#e6edf5}
 <g transform="translate(0 36)">
 <circle class="n" cx="38" cy="146" r="10"/><text class="nt c" x="38" y="150">1</text>
 <text class="b" x="58" y="150">Recommendation: Merge</text>
-<text class="s m" x="58" y="170">Next: what happens now, and who acts.</text>
+<text class="s lnk" x="58" y="170">Code Walkthrough · Code Review · Checkpoint</text>
 <circle class="n" cx="38" cy="210" r="10"/><text class="nt c" x="38" y="214">2</text>
 <text class="b" x="58" y="214">Summary</text>
 <text class="s m" x="58" y="234">What changed and why, in plain words.</text>
 <circle class="n" cx="38" cy="274" r="10"/><text class="nt c" x="38" y="278">3</text>
-<text class="u lnk" x="58" y="278">Code Walkthrough · Code Review · Checkpoint</text>
-<text class="s m" x="58" y="298">Code tour, review findings, final look.</text>
+<text class="b" x="58" y="278">Intent</text>
+<text class="s m" x="58" y="298">Why it exists, and why it is safe.</text>
 <circle class="n" cx="38" cy="338" r="10"/><text class="nt c" x="38" y="342">4</text>
 <rect class="tbl" x="58" y="318" width="266" height="69" rx="4"/>
 <path class="tbl" d="M58 341H324M58 364H324M118 318V387M226 318V387"/>

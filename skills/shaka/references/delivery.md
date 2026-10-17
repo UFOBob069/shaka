@@ -276,7 +276,7 @@ audit material the helper keeps collapsed.
 Keep optional review history and routine rollback detail collapsed.
 
 Supply the current COMMENT review URL in the `walkthrough` field. The helper
-renders its link after the summary, or `_Not published yet._` until it exists.
+renders its link above the summary, or `_Not published yet._` until it exists.
 Set the required `deployment` field to `auto`, an https URL, or `none`. `auto` reads
 the GitHub Deployments API for the PR head and links the newest successful
 deployment's `environment_url`, the same link GitHub shows as "View deployment";

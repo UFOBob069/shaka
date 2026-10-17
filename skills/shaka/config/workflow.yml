@@ -493,15 +493,16 @@ phases:
         at the first later line containing `to`, or with `block: true` at the bare `end` or `}`
         closing that line's indentation, and otherwise links the one line. Missing, ambiguous,
         or unclosed text refuses publication.
-        The helper always renders a Code Walkthrough link after the summary: the COMMENT review
+        The helper always renders a Code Walkthrough link above the summary: the COMMENT review
         URL when `walkthrough` is supplied, otherwise `_Not published yet._`. Do not bury that URL
         in the opening paragraph. Beside it, the helper renders Code Review from `review`, the
         published local review comment URL, and Checkpoint, using `post_implementation` for the
         published PR comment URL or a named placeholder until publication. Supply `checkpoint`
-        with the live full `head` and a one-sentence `next_action`, such as
-        `Maintainer: merge on GitHub.`; the helper reads the
-        heading's recommendation from this head's published checkpoint `disposition`, and
-        non-empty `decisions` head the description instead. The renderer rejects a stale
+        with the live full `head`; the helper reads the recommendation that opens the links line
+        from this head's published checkpoint `disposition`, and non-empty `decisions` head the
+        description instead. Add a one-sentence `next_action` only for a dependency, check, or
+        approval the recommendation does not already say, such as `Merge after #570 lands.`
+        The renderer rejects a stale
         head, so neither line names the commit; leave checks and any table without a commit
         unless one covers an earlier commit. Summarize consequential decisions,
         questions or friction, and critical changes in a few lines; put further evidence in details.

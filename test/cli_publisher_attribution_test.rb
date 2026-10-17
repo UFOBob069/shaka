@@ -41,7 +41,7 @@ class CliPublisherAttributionTest < Minitest::Test
       run_publication(environment) do |dir, output, error, status|
         assert_predicate status, :success?, "#{output}\n#{error}"
         body = File.read(File.join(dir, 'published.md'))
-        assert_includes body, "🤖 Claude Code · Anthropic · claude-opus-5-5 · medium\n\n#{SUMMARY}"
+        assert_includes body, "🤖 Claude Code · Anthropic · claude-opus-5-5 · medium\n\n_Not published yet._"
         assert_includes body, '| Active model / effort | claude-opus-5-5 / medium |'
       end
     end

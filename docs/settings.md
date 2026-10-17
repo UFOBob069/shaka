@@ -754,9 +754,9 @@ work item through that branch name. Git must accept the name as a branch name.
 
 **Optional. Default: `true`.**
 
-PR descriptions show *PR prepared with [Shaka](https://shaka.shakacode.com/).* below
-the opening summary. The credit helps readers discover the workflow that prepared
-the PR and try it on their own project.
+PR descriptions end with *PR prepared with [Shaka](https://shaka.shakacode.com/).*
+The credit helps readers discover the workflow that prepared the PR and try it on
+their own project.
 
 When Shaka is configured for a repository, the credit helps teammates discover its
 workflow. For private repositories, leave attribution enabled while introducing

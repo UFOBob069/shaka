@@ -405,7 +405,7 @@ rules:
     quote: Do not bury that URL in the opening paragraph.
     enforced_by: agent
     note: >-
-      `PublicationLinks.top` always renders the Code Walkthrough link after the summary, so
+      `PublicationLinks.links` always renders the Code Walkthrough link above the summary, so
       the link has a home. Nothing stops a summary from repeating the URL as prose.
   - id: excluded-comment-bodies
     phase: explain

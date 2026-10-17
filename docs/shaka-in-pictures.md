@@ -197,7 +197,7 @@ for your decision.
 
 **Do:** open the PR link. Shaka's PRs use the same layout every time:
 
-![A pull request page with the label awaiting-merge-approval and a Files changed tab. One: Recommendation: Merge, with the next step. Two: the summary. Three: links to the Code Walkthrough, Code Review, and Checkpoint. Four: a table of checks, results, and evidence. Five: usage and cost, an estimate. Six: the merge button, like Accept all; with Ask, the agent waits for your yes.](img/pr-parts.svg)
+![A pull request page with the label awaiting-merge-approval and a Files changed tab. One: Recommendation: Merge, beside links to the Code Walkthrough, Code Review, and Checkpoint. Two: the summary. Three: the intent, which says why the change exists and why it is safe. Four: a table of checks, results, and evidence. Five: usage and cost, an estimate. Six: the merge button, like Accept all; with Ask, the agent waits for your yes.](img/pr-parts.svg)
 
 Find each numbered part on your PR. **Code Review** opens the second AI's
 findings, in a comment titled Local Adversarial Review. Then open the **Files

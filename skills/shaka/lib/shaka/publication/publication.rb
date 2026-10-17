@@ -20,8 +20,8 @@ module Shaka
     # With the pull request being replaced, the provenance history carries forward from its body.
     def self.description(content, workflow_version = nil, pull = nil, settings = nil)
       new(content, description: true, workflow_version:, pull:, settings:)
-        .render(%i[top_links intent_verification sections table provenance skills_used details wip],
-                lead: %i[checkpoint])
+        .render(%i[steps intent_verification sections table provenance skills_used details wip credit],
+                lead: %i[lead])
     end
 
     def self.comment(content) = new(content).render([])
@@ -42,11 +42,13 @@ module Shaka
     end
 
     # A description leads with the maintainer's decision, so lead parts come before the summary.
+    # Only a description names its summary, because there the decision line stands above it.
     def render(parts, title: false, lead: [])
       blocks = [PublicationText.publisher_identity(@content)]
       blocks << '# Code Walkthrough' if title
       lead.each { |part| blocks.concat(send(part)) }
-      blocks << PublicationText.required(@content['summary'], 'summary')
+      summary = PublicationText.required(@content['summary'], 'summary')
+      blocks << (@description ? "## Summary\n\n#{summary}" : summary)
       parts.each { |part| blocks.concat(send(part)) }
       "#{blocks.join("\n\n")}\n"
     end
@@ -56,10 +58,12 @@ module Shaka
     # Only a description is rendered with its pull request, so only a description lists what people wrote.
     def sections = PublicationSections.render(@content, HumanComments.for(@content, @pull, @settings))
 
-    def checkpoint = PublicationLinks.checkpoint(@content, @pull, PublicationSections.decisions(@content['decisions']))
+    def lead = PublicationLinks.lead(@content, @pull, PublicationSections.decisions(@content['decisions']))
 
-    # The steps besides merging sit under the headline links so a reader cannot miss them.
-    def top_links = [*PublicationLinks.top(@content, @settings, @pull), *StepsBesidesMerging.render(@content)]
+    # The steps besides merging sit right under the summary so a reader cannot miss them.
+    def steps = StepsBesidesMerging.render(@content)
+
+    def credit = PublicationLinks.credit(@settings)
 
     # Intent and verification answer whether to trust the merge, so they come before any section.
     def intent_verification = IntentVerification.render(@content)
