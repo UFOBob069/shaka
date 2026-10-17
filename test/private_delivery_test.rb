@@ -61,6 +61,7 @@ class PrivateDeliveryBoundaryTest < Minitest::Test
         args = command == 'reviewer' ? ['--implementer', 'openai/codex'] : []
         invoke(command, *args, exit_code: 1, error: 'Cannot read')
       end
+      invoke_merge(error: 'Cannot read')
     end
   end
 
@@ -70,6 +71,7 @@ class PrivateDeliveryBoundaryTest < Minitest::Test
       commit(@root)
       invoke('reviewer', '--implementer', 'openai/codex', exit_code: 1, error: 'Cannot read')
       invoke('handoff', exit_code: 1, error: 'Cannot read')
+      invoke_merge(error: 'Cannot read')
     end
   end
 
@@ -84,14 +86,28 @@ class PrivateDeliveryBoundaryTest < Minitest::Test
 
   def test_private_auto_is_not_merge_authority_and_native_gates_remain_live
     with_trial do
-      update_private { |data| data['merge'] = { 'preference' => 'auto', 'required_checks' => ['private-check'] } }
+      loosen_private_merge_policy
       alter_pull do |pull|
         pull['native_checks'] = [{ 'name' => 'live-gate', 'state' => 'PENDING', 'bucket' => 'pending' }]
       end
       assert_native_gate
-      invoke('merge', '--head', @ref, '--base', 'main', '--walkthrough', '7',
-             exit_code: 1, error: 'Cannot read')
+      invoke_merge(error: 'Checkpoint is missing')
       assert_includes invoke('handoff', exit_code: 2)['status'], '1 pending'
     end
+  end
+
+  private
+
+  def loosen_private_merge_policy
+    update_private do |data|
+      data['merge'] = { 'preference' => 'auto', 'required_checks' => ['private-check'] }
+      data['review'].delete('ci_review_jobs')
+      data['review'].merge!('required' => 'none', 'post_implementation' => { 'enabled' => false })
+    end
+  end
+
+  def invoke_merge(error:)
+    invoke('merge', '--head', @ref, '--base', 'main', '--walkthrough', '7',
+           '--squash-message', squash_message_file, exit_code: 1, error:)
   end
 end

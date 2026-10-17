@@ -17,7 +17,7 @@ class PrivateTrialCommandTest < Minitest::Test
         prepare_github(directory, ref)
         assert_native_commands(directory, root, ref)
         assert_native_watch(directory, root, ref)
-        assert_merge_still_requires_trusted_policy(directory, root, ref)
+        assert_merge_reads_no_private_policy(directory, root, ref)
       end
     end
   end
@@ -68,10 +68,12 @@ class PrivateTrialCommandTest < Minitest::Test
     end
   end
 
-  def assert_merge_still_requires_trusted_policy(directory, root, ref)
+  # Merge loads no policy from private settings, then applies its own checks.
+  def assert_merge_reads_no_private_policy(directory, root, ref)
     _output, error, status = invoke('merge', directory, root, ref)
     refute_predicate status, :success?
-    assert_includes error, '.agents/agent-workflow.yml'
+    refute_includes error, 'Cannot read'
+    assert_includes error, 'merge requires --squash-message'
   end
 
   def assert_native_watch(directory, root, ref)

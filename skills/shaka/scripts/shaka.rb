@@ -178,9 +178,8 @@ def with_human_comments(described, path)
   path ? described.merge(Shaka::HumanComments::KEY => content(path)) : described
 end
 
-def merge_limits(options)
-  Shaka::MergeLimits.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref],
-                              confirmed_head: options[:confirmed_head])
+def merge_limits(options, seam)
+  Shaka::MergeLimits.new(seam ? seam.merge.fetch('limits') : {}, confirmed_head: options[:confirmed_head])
 end
 
 def require_merge_ref!(options)
@@ -353,7 +352,9 @@ begin
   if %w[pr walkthrough handoff squash-message].include?(command) && options[:ref]
     seam = Shaka::Configuration.resolve_source(root: options[:root] || Dir.pwd, ref: options[:ref]).first
   elsif command == 'merge'
-    seam = Shaka::TrustedConfigSource.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref])
+    # Private trial settings grant no policy, so merge applies defaults and GitHub's gates under them.
+    seam = Shaka::TrustedConfigSource.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref],
+                                               private_trial: true)
   end
   seam_required_checks = seam.merge['required_checks'] if seam&.sha
   if command == 'merge' && !options[:squash_message]
@@ -430,7 +431,7 @@ begin
                                               seam_required_checks:)
              merge.empty_checks_confirmed_head = options[:empty_checks_confirmed_head]
              merge.call(head:, base: options.fetch(:base), walkthrough: options.fetch(:walkthrough),
-                        limits: merge_limits(options), squash_message:)
+                        limits: merge_limits(options, seam), squash_message:)
            when 'attention' then Shaka::Attention.new(github).call(state: options.fetch(:state))
            when 'squash-message'
              message = Shaka::SquashMessage.for(github, content(options.fetch(:content_file)))

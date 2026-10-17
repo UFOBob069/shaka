@@ -35,8 +35,8 @@ class SettingsPreviewPolicyTest < Minitest::Test
       data = settings(root)
       data['merge']['limits'] = { 'max_changed_files' => 2 }
       select_preview(root, write_settings(root, data))
-      limits = Shaka::MergeLimits.from_ref(root:, ref: trusted)
-      assert_equal 2, limits.to_h['max_changed_files']
+      limits = Shaka::TrustedConfigSource.from_ref(root:, ref: trusted).merge['limits']
+      assert_equal 2, limits['max_changed_files']
     end
   end
 

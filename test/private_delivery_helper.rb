@@ -173,6 +173,12 @@ module PrivateDeliveryFixture
     invoke('walkthrough', '--head', @ref, '--content-file', walkthrough_file)
   end
 
+  def squash_message_file
+    path = File.join(@state, 'squash.json')
+    File.write(path, JSON.generate('title' => 'Add the feature', 'body' => SUMMARY))
+    path
+  end
+
   def walkthrough_file
     path = File.join(@state, 'walkthrough.json')
     data = { 'identity' => { 'agent' => 'Codex' },

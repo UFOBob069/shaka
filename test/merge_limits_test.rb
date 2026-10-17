@@ -5,6 +5,7 @@ require_relative 'repository_fixture'
 require 'yaml'
 require 'shaka/merge_limits'
 require 'shaka/repository_config'
+require 'shaka/trusted_config_source'
 
 class MergeLimitsTest < Minitest::Test
   include RepositoryConfigTestHelpers
@@ -49,8 +50,8 @@ class MergeLimitsTest < Minitest::Test
       commit_repository(root)
       loosen_candidate_limits(root)
 
-      assert_equal 3, Shaka::MergeLimits.from_ref(root:, ref: 'HEAD').to_h.fetch('max_commits')
-      assert_equal Shaka::MergeLimits::DEFAULTS, Shaka::MergeLimits.from_ref(root:, ref: nil).to_h
+      assert_equal 3, Shaka::TrustedConfigSource.from_ref(root:, ref: 'HEAD').merge['limits'].fetch('max_commits')
+      assert_equal Shaka::MergeLimits::DEFAULTS, Shaka::MergeLimits.new.to_h
     end
   end
 
