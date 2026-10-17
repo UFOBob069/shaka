@@ -1,6 +1,7 @@
 # 0001: Eval and release gating
 
-Status: proposed. Date: 2026-10-07, revised 2026-10-12 to remove company-specific
+Status: proposed; Harbor execution-layer choice accepted on 2026-10-16.
+Date: 2026-10-07, revised 2026-10-12 to remove company-specific
 planning and clarify evaluation rules. Tracks [issue #206](https://github.com/shakacode/shaka/issues/206).
 
 Shaka changes agent behavior through prose in skill files and through deterministic
@@ -49,8 +50,9 @@ Shipped, under `eval/` and documented in the
   credentials, prepare the fixture trust file for the destination owner, correct a
   wrong grader assumption and re-apply it to both arms, and treat a repair that
   restores the base byte for byte as a harness error.
-- No runner, no run record, and no fingerprint capture in eval code. The proposal's
-  `eval/bin/shaka-eval` with `plan`, `selftest`, and `run` was never built.
+- A versioned run-record schema and offline Ruby structure check. Record capture
+  and execution are unbuilt; the proposal's `plan`, `selftest`, and `run` commands
+  do not exist.
 
 Shipped in the product runtime, and reusable by an eval:
 
@@ -164,8 +166,12 @@ fingerprint. The record holds:
 - `artifacts`: digests and private paths of the PR description, walkthrough, review
   replies, diff, and transcript. Public records carry digests only.
 
+Shipped: [the version 1 schema and offline Ruby check](../../eval/schemas/README.md)
+validate record structure and task-bank identity consistency. Fingerprint capture,
+comparison eligibility, and grading remain proposed.
+
 Proposed: `eval/bin/shaka-eval run` writes the record; `eval/lib/shaka/evaluation/`
-holds the schema check, the fingerprint reader, and the grader modules. The product
+holds the fingerprint reader and grader modules. The product
 runtime's usage readers and workflow version are reused by calling the installed
 `shaka usage --format json` and reading the provenance, not by importing product
 modules into the eval.
@@ -630,9 +636,11 @@ the eval organization. Public summaries on a tracking issue in `shakacode/shaka`
 Reports that a human writes still go to `eval/reports/` and the experiment index.
 Whether the runner drives containers itself or wraps another tool is D15.
 
-### D15. Two layers: the comparison layer is ours, the execution layer is open
+### D15. Two layers: Ruby comparison and Harbor execution
 
-Decision. The system has two layers, and this record commits to only one of them.
+Decision. The comparison layer is Ruby. The maintainer selected Harbor for tier 2
+after the [bounded spike](https://github.com/shakacode/shaka/blob/043a13d450f0111a98c9f8341ab7a366f8cef891/eval/reports/harbor-spike.md), with its tested
+Codex upload adapter and sidecar ICMP restriction, on 2026-10-16.
 
 - The comparison layer is the fingerprint match and single-axis rule (D2), the gates
   and judge protocol (D4, D5), the score and statistics (D8), the release gate (D9),
@@ -642,14 +650,14 @@ Decision. The system has two layers, and this record commits to only one of them
 - The execution layer starts a container, installs a pinned host CLI, loads a skill
   revision, runs the agent at a set effort, enforces resource and network limits,
   collects artifacts, runs the verifier, and repeats K times. D1 and D14 describe a
-  Ruby runner for it. That runner is not built, and a spike on
-  [Harbor](https://www.harborframework.com/) comes before it is. The maintainer
-  chooses between them after the spike reports (open decision 12).
+  Ruby runner for it. Harbor now supplies tier 2 execution; the Ruby wrapper is
+  still unbuilt. Tier 1 stays Ruby and tier 3 keeps its existing driver.
 
 Harbor is an Apache-2.0 Python tool from the Terminal-Bench authors
-([repository](https://github.com/harbor-framework/harbor)). It was read, not
-installed or run. Verified in its documentation and in its source at v0.24.0,
-released 2026-10-05:
+([repository](https://github.com/harbor-framework/harbor)). The spike ran pinned
+v0.24.0. Its report records both hosts, the adapters, isolation controls, cost,
+and remaining limits. The capabilities below were verified in that version's
+documentation and source:
 
 - It ships agent integrations for Claude Code, Codex, Cursor, OpenCode, and Pi, the
   five hosts Shaka supports
@@ -749,14 +757,20 @@ result. It passes when all of these hold:
 The report recommends and the maintainer decides. The earlier merge-authorization
 run scored the two revisions 3 of 8 and 8 of 8 with the workflow embedded in the
 prompt; seeing that gap again through skill loading is a useful signal, not a pass
-condition. If Harbor is adopted, `shaka-eval run` becomes a wrapper that writes a
-Harbor job, runs it, and converts the result into the run record; tier 2 tasks take
+condition. With Harbor selected, `shaka-eval run` will wrap a Harbor job and convert
+its result into the run record; tier 2 tasks take
 Harbor's task layout; and the probe container builder and proxy sidecar give way to
-Harbor for that tier only where condition 7 allows. If it is not adopted, the Ruby
-runner in D1 and D14 stands. Tier 1 needs no container and stays plain Ruby either
-way.
+Harbor for that tier only where condition 7 allows. Tier 1 needs no container and
+stays plain Ruby.
 
 ## Budget
+
+The maintainer approved pilot caps on 2026-10-16: $200 per month in total,
+$5 per night, and $15 per PR evaluation, all in API-equivalent dollars.
+Judges, retries, and tier 3 count toward the monthly total; tier 3 runs manually
+at first. The shared monthly cap takes precedence. These caps fund a smaller
+initial bank than the full workload estimated below; a partial night is not clean
+under D9. The budget checks remain unbuilt.
 
 All figures are cache-neutral (D12), at the rate card's base input and output rates
 as verified in September 2026, and are planning references to be replaced by the
@@ -1058,13 +1072,14 @@ human question is the cap, not whether there is one.
 10. Who may promote a proposed task into core, and how many reviewer hours per task
     the budget funds.
 11. How a user-defined comparison records an advisory same-family judge result.
-12. The execution layer: Harbor or a Ruby runner. Recommendation: run the D15 spike
-    first and decide on its report. Adoption would trade runner code not yet written
-    for a pinned Python tool on the eval machines and the isolation gaps D15 lists.
+12. Resolved on 2026-10-16: Harbor for tier 2, with the spike's tested upload adapter
+    and ICMP restriction. The maintainer accepted the recommendation after the
+    [report](https://github.com/shakacode/shaka/blob/043a13d450f0111a98c9f8341ab7a366f8cef891/eval/reports/harbor-spike.md); D2's provisional-evidence rules remain.
 
 ## Questions a human must answer before we build
 
-1. What is the monthly cap in API-equivalent dollars, and does it include tier 3?
+1. Resolved on 2026-10-16: $200/month including tier 3, $5/night, and $15/PR;
+   judges and retries count toward the total, and tier 3 runs manually initially.
 2. Which two cheap models and which two strong models form the first series, and in
    which provider order does the strong tier rotate?
 3. Which model family is the judge, and is a third family available for provider-axis
@@ -1085,8 +1100,8 @@ human question is the cap, not whether there is one.
 11. Which parts of an implemented evaluation system need a human-facing guide?
     Keep proposed development records under `internal/`; publish a guide when the
     behavior exists.
-12. Is a pinned Python tool acceptable on the eval machines, with its telemetry off
-    and no uploads to its hosted hub?
+12. Resolved on 2026-10-16: pinned Harbor is accepted with telemetry disabled and
+    no Hub uploads; D15 records the required adaptations.
 
 ## Documentation to read first
 

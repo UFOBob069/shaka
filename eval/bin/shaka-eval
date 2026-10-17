@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/shaka/evaluation/run_record'
+
+def check_record(path)
+  source = File.read(path, encoding: 'UTF-8')
+  return ['Invalid JSON'] unless source.valid_encoding?
+
+  Shaka::Evaluation::RunRecord.errors(JSON.parse(source))
+rescue JSON::ParserError
+  ['Invalid JSON']
+rescue SystemCallError
+  ['Cannot read record']
+end
+
+unless ARGV.length == 2 && ARGV.first == 'check-record'
+  warn 'Usage: eval/bin/shaka-eval check-record PRIVATE_RECORD.json'
+  exit 2
+end
+
+errors = check_record(ARGV.last)
+puts JSON.pretty_generate({ valid: errors.empty?, errors: errors })
+exit(errors.empty? ? 0 : 1)

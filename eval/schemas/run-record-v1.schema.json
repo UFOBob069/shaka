@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:shaka:evaluation:run-record:v1",
+  "title": "Private Shaka evaluation trial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "trial_id", "task", "fingerprint", "outcome", "gate", "judge", "score", "usage", "timing", "artifacts"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "trial_id": { "$ref": "#/$defs/text" },
+    "task": { "$ref": "#/$defs/task" },
+    "fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "outcome": { "$ref": "#/$defs/outcome" },
+    "gate": { "type": "array", "items": { "$ref": "#/$defs/gate" } },
+    "judge": { "type": "array", "items": { "$ref": "#/$defs/judge" } },
+    "score": { "anyOf": [{ "type": "number", "minimum": 0, "maximum": 100 }, { "const": "UNKNOWN" }] },
+    "usage": { "$ref": "#/$defs/usage" },
+    "timing": { "$ref": "#/$defs/timing" },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "sentinel": { "enum": ["UNKNOWN", "N/A"] },
+    "sha256": { "type": "string", "minLength": 71, "maxLength": 71, "pattern": "^sha256:[0-9a-f]{64}$" },
+    "commit": { "anyOf": [
+      { "type": "string", "minLength": 40, "maxLength": 40, "pattern": "^[0-9a-f]{40}$" },
+      { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-f]{64}$" }
+    ] },
+    "digest": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "$ref": "#/$defs/sentinel" }] },
+    "revision": { "anyOf": [{ "$ref": "#/$defs/commit" }, { "$ref": "#/$defs/sha256" }, { "$ref": "#/$defs/sentinel" }] },
+    "quantity": { "anyOf": [{ "type": "number", "minimum": 0 }, { "const": "UNKNOWN" }] },
+    "tokens": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "const": "UNKNOWN" }] },
+    "resource": { "anyOf": [{ "type": "number", "minimum": 0 }, { "$ref": "#/$defs/sentinel" }] },
+    "task": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "bank", "bank_version", "tier", "kind"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" },
+        "bank": { "enum": ["core", "proposed", "custom"] },
+        "bank_version": { "$ref": "#/$defs/revision" },
+        "tier": { "enum": [1, 2, 3] },
+        "kind": { "enum": ["regression", "capability"] }
+      }
+    },
+    "fingerprint": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "skill_package_digest", "skill_commit", "skill_modified", "workflow_hash", "enforcement_hash",
+        "host_cli", "host_cli_version", "provider", "configured_model", "routed_model", "effort",
+        "container_image_digest", "cpu_limit", "memory_limit_bytes", "machine_alias",
+        "runner_ruby_version", "runner_lockfile_hash", "fixture_ruby_version", "fixture_lockfile_hash",
+        "pinned_actions", "hosted_reviewer", "local_reviewer_cli_versions", "judge_model_id",
+        "judge_prompt_hash", "rate_card_hash", "task_bank_version", "execution_framework", "criteria_set_hash"
+      ],
+      "properties": {
+        "skill_package_digest": { "$ref": "#/$defs/digest" },
+        "skill_commit": { "$ref": "#/$defs/revision" },
+        "skill_modified": { "anyOf": [{ "type": "boolean" }, { "$ref": "#/$defs/sentinel" }] },
+        "workflow_hash": { "$ref": "#/$defs/digest" },
+        "enforcement_hash": { "$ref": "#/$defs/digest" },
+        "host_cli": { "enum": ["codex", "claude-code", "cursor", "opencode", "pi", "UNKNOWN", "N/A"] },
+        "host_cli_version": { "$ref": "#/$defs/text" },
+        "provider": { "$ref": "#/$defs/text" },
+        "configured_model": { "$ref": "#/$defs/text" },
+        "routed_model": { "$ref": "#/$defs/text" },
+        "effort": { "$ref": "#/$defs/text" },
+        "container_image_digest": { "$ref": "#/$defs/digest" },
+        "cpu_limit": { "$ref": "#/$defs/resource" },
+        "memory_limit_bytes": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "$ref": "#/$defs/sentinel" }] },
+        "machine_alias": { "$ref": "#/$defs/text" },
+        "runner_ruby_version": { "$ref": "#/$defs/text" },
+        "runner_lockfile_hash": { "$ref": "#/$defs/digest" },
+        "fixture_ruby_version": { "$ref": "#/$defs/text" },
+        "fixture_lockfile_hash": { "$ref": "#/$defs/digest" },
+        "pinned_actions": { "anyOf": [{ "type": "object", "additionalProperties": { "$ref": "#/$defs/revision" } }, { "$ref": "#/$defs/sentinel" }] },
+        "hosted_reviewer": { "anyOf": [{ "$ref": "#/$defs/hosted_reviewer" }, { "$ref": "#/$defs/sentinel" }] },
+        "local_reviewer_cli_versions": { "anyOf": [{ "type": "object", "additionalProperties": { "$ref": "#/$defs/text" } }, { "$ref": "#/$defs/sentinel" }] },
+        "judge_model_id": { "$ref": "#/$defs/text" },
+        "judge_prompt_hash": { "$ref": "#/$defs/digest" },
+        "rate_card_hash": { "$ref": "#/$defs/digest" },
+        "task_bank_version": { "$ref": "#/$defs/revision" },
+        "execution_framework": { "anyOf": [{ "$ref": "#/$defs/framework" }, { "$ref": "#/$defs/sentinel" }] },
+        "criteria_set_hash": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "hosted_reviewer": {
+      "type": "object", "additionalProperties": false, "required": ["action_revision", "model"],
+      "properties": { "action_revision": { "$ref": "#/$defs/revision" }, "model": { "$ref": "#/$defs/text" } }
+    },
+    "framework": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "$ref": "#/$defs/text" }, "version": { "$ref": "#/$defs/text" } }
+    },
+    "outcome": { "anyOf": [
+      {
+        "type": "object", "additionalProperties": false, "required": ["state", "harness_error"],
+        "properties": { "state": { "const": "HARNESS_ERROR" }, "harness_error": { "$ref": "#/$defs/text" } }
+      },
+      {
+        "type": "object", "additionalProperties": false, "required": ["state", "harness_error"],
+        "properties": {
+          "state": { "enum": ["PASS", "NEEDS_APPROVAL", "FAIL", "BLOCKED_EVIDENCE", "NEEDS_INPUT", "LIMIT_REACHED"] },
+          "harness_error": { "type": "null" }
+        }
+      }
+    ] },
+    "gate": {
+      "type": "object", "additionalProperties": false, "required": ["id", "passed", "reason"],
+      "properties": { "id": { "$ref": "#/$defs/text" }, "passed": { "type": "boolean" }, "reason": { "$ref": "#/$defs/text" } }
+    },
+    "judge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_id", "prompt_hash", "kind", "dimension", "verdict", "confidence", "critique", "facts"],
+      "properties": {
+        "model_id": { "$ref": "#/$defs/text" },
+        "prompt_hash": { "$ref": "#/$defs/sha256" },
+        "kind": { "enum": ["rubric", "pairwise_ab", "pairwise_ba"] },
+        "dimension": { "$ref": "#/$defs/text" },
+        "verdict": { "enum": ["pass", "fail", "A", "B", "tie", "both_bad", "Unknown"] },
+        "confidence": { "anyOf": [{ "type": "number", "minimum": 0, "maximum": 1 }, { "const": "Unknown" }] },
+        "critique": { "$ref": "#/$defs/text" },
+        "facts": { "type": "object" }
+      }
+    },
+    "usage": {
+      "type": "object", "additionalProperties": false, "required": ["models", "cache_neutral_dollars", "billed_dollars"],
+      "properties": {
+        "models": { "type": "array", "items": { "$ref": "#/$defs/model_usage" } },
+        "cache_neutral_dollars": { "$ref": "#/$defs/quantity" },
+        "billed_dollars": { "$ref": "#/$defs/quantity" }
+      }
+    },
+    "model_usage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "configured_model", "routed_model", "effort", "input_tokens", "cached_input_tokens", "cache_write_tokens", "output_tokens", "reasoning_tokens"],
+      "properties": {
+        "provider": { "$ref": "#/$defs/text" },
+        "configured_model": { "$ref": "#/$defs/text" },
+        "routed_model": { "$ref": "#/$defs/text" },
+        "effort": { "$ref": "#/$defs/text" },
+        "input_tokens": { "$ref": "#/$defs/tokens" },
+        "cached_input_tokens": { "$ref": "#/$defs/tokens" },
+        "cache_write_tokens": { "$ref": "#/$defs/tokens" },
+        "output_tokens": { "$ref": "#/$defs/tokens" },
+        "reasoning_tokens": { "$ref": "#/$defs/tokens" }
+      }
+    },
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "required": ["setup_seconds", "agent_seconds", "ci_wait_seconds", "verification_seconds", "judge_seconds"],
+      "properties": {
+        "setup_seconds": { "$ref": "#/$defs/quantity" },
+        "agent_seconds": { "$ref": "#/$defs/quantity" },
+        "ci_wait_seconds": { "$ref": "#/$defs/quantity" },
+        "verification_seconds": { "$ref": "#/$defs/quantity" },
+        "judge_seconds": { "$ref": "#/$defs/quantity" }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "digest"],
+      "properties": {
+        "kind": { "enum": ["description", "walkthrough", "review_reply", "squash_message", "review_findings", "diff", "transcript"] },
+        "digest": { "$ref": "#/$defs/sha256" },
+        "private_path": { "$ref": "#/$defs/text" }
+      }
+    }
+  }
+}

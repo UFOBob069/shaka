@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "trial_id": "synthetic-trial",
+  "task": {
+    "id": "synthetic-decision",
+    "bank": "proposed",
+    "bank_version": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "tier": 1,
+    "kind": "regression"
+  },
+  "fingerprint": {
+    "skill_package_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "skill_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "skill_modified": false,
+    "workflow_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "enforcement_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "host_cli": "codex",
+    "host_cli_version": "synthetic-version",
+    "provider": "synthetic-provider",
+    "configured_model": "synthetic-generator",
+    "routed_model": "UNKNOWN",
+    "effort": "medium",
+    "container_image_digest": "N/A",
+    "cpu_limit": "N/A",
+    "memory_limit_bytes": "N/A",
+    "machine_alias": "synthetic-machine",
+    "runner_ruby_version": "synthetic-version",
+    "runner_lockfile_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "fixture_ruby_version": "N/A",
+    "fixture_lockfile_hash": "N/A",
+    "pinned_actions": "N/A",
+    "hosted_reviewer": "N/A",
+    "local_reviewer_cli_versions": "N/A",
+    "judge_model_id": "N/A",
+    "judge_prompt_hash": "N/A",
+    "rate_card_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "task_bank_version": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "execution_framework": "N/A",
+    "criteria_set_hash": "N/A"
+  },
+  "outcome": { "state": "PASS", "harness_error": null },
+  "gate": [{ "id": "synthetic-check", "passed": true, "reason": "Synthetic fixture" }],
+  "judge": [],
+  "score": 100,
+  "usage": {
+    "models": [{
+      "provider": "synthetic-provider",
+      "configured_model": "synthetic-generator",
+      "routed_model": "UNKNOWN",
+      "effort": "medium",
+      "input_tokens": 100,
+      "cached_input_tokens": 20,
+      "cache_write_tokens": 0,
+      "output_tokens": 10,
+      "reasoning_tokens": 4
+    }],
+    "cache_neutral_dollars": "UNKNOWN",
+    "billed_dollars": "UNKNOWN"
+  },
+  "timing": {
+    "setup_seconds": 0.1,
+    "agent_seconds": 1,
+    "ci_wait_seconds": 0,
+    "verification_seconds": 0.1,
+    "judge_seconds": 0
+  },
+  "artifacts": [{
+    "kind": "transcript",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "private_path": "/synthetic/transcript.jsonl"
+  }]
+}
