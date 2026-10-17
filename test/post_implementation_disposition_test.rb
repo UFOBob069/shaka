@@ -17,7 +17,7 @@ module PostImplementationDispositionFixture
     assert_includes body, "## Recommendation: #{result['disposition']['recommendation']}"
     assert_includes body, result['disposition']['reason']
     assert_includes body, "**Next:** #{result['disposition']['next_action']}"
-    assert_includes body, 'Required checks, reviews, and merge authority still apply.'
+    assert_equal 1, body.scan('Required checks, reviews, and merge authority still apply.').size
   end
 
   def accepted(*concerns)
@@ -100,13 +100,40 @@ class PostImplementationDispositionValidationTest < Minitest::Test
 
   def test_invalid_dispositions_cannot_publish_a_ready_attestation
     [nil, [], disposition('Ship'), disposition('Merge').except('reason'),
-     disposition('Merge').except('next_action'), disposition('Merge').merge('next_action' => ' ')].each do |invalid|
+     disposition('Revise before merge').except('next_action'),
+     disposition('Merge').merge('next_action' => ' ')].each do |invalid|
       with_result do |result, path|
         result['disposition'] = invalid
         github, status = publish(result, path)
         assert_equal 1, status
         assert_empty github.bodies
       end
+    end
+  end
+
+  def test_merge_without_a_next_action_publishes_no_next_line
+    with_result do |result, path|
+      result['disposition'] = disposition('Merge').merge('next_action' => nil)
+      github, status = publish(result, path)
+      body = github.bodies.first.first
+      visible = body.split('<details>', 2).first
+
+      assert_equal 0, status
+      refute_includes body, '**Next:**'
+      assert_includes visible, "## Recommendation: Merge\n\n#{result['disposition']['reason']}\n\n**Reviewer verdict:**"
+    end
+  end
+
+  def test_reviewer_summary_moves_into_details_beside_the_owner_reason
+    with_result do |result, path|
+      result['disposition'] = disposition('Merge')
+      github, = publish(result, path)
+      visible, details = github.bodies.first.first.split('<details>', 2)
+      summary = 'Useful change'
+
+      assert_includes visible, "**Reviewer verdict:** Proceed, no unresolved concerns.\n"
+      refute_includes visible, summary
+      assert_includes details, "Reviewer summary: #{summary}"
     end
   end
 

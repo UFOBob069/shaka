@@ -132,6 +132,28 @@ class PostImplementationPublicationTest < Minitest::Test
     end
   end
 
+  def test_usage_is_one_token_line_and_a_pinned_prompt_links_to_its_file
+    with_result do |result, path|
+      attach_private_usage(result, path)
+      file = '.agents/shaka/product-checkpoint.md'
+      result['prompt_source'] = "#{'c' * 40}:#{file}"
+      body = publish(result, path).first.bodies.first.first
+      tokens = '1 response: 17 input, UNKNOWN cached input, UNKNOWN cache writes, 2 output'
+      assert_match(/Native usage \(.*observed-model.*\), #{tokens}/, body)
+      refute_includes body, '```json'
+      assert_includes body, "prompt: [`#{file}`](https://github.com/example/test/blob/#{'c' * 40}/#{file})"
+    end
+  end
+
+  def test_token_totals_group_thousands_and_an_unpinned_prompt_stays_plain
+    publication = Shaka::PostImplementationPublication.new({ 'prompt_source' => 'Shaka default' },
+                                                           head: 'a' * 40, repository: 'example/test')
+
+    assert_equal '1,234,567',
+                 publication.send(:token_total, [{ 'usage' => { 'total_tokens' => 1_234_567 } }], 'total_tokens')
+    assert_equal 'Shaka default', publication.send(:prompt_text)
+  end
+
   def test_alternative_label_fits_a_report_that_proposes_no_change
     with_result do |result, path|
       github, = publish(result, path)

@@ -6,12 +6,14 @@ require_relative '../usage/codex_usage'
 require_relative '../usage/claude_usage'
 require_relative 'evidence'
 require_relative 'publisher_identity'
+require_relative 'execution_text'
 require_relative '../github/squash_comment'
 
 module Shaka
   # Presents the checkpoint's action without confusing configuration with observations.
   class PostImplementationPublication
     include PostImplementationPublisherIdentity
+    include PostImplementationExecutionText
 
     attr_reader :state
 
@@ -23,12 +25,14 @@ module Shaka
       'Do not merge' => ['Do not merge; decide whether to close or replace',
                          'Bring the close-or-replace decision to the maintainer.']
     }.freeze
-    GATES = 'Required checks, reviews, and merge authority still apply.'
+    SCOPE = 'Ruby checked this report\'s format and commit; the reviewer judged value, not correctness. ' \
+            'Required checks, reviews, and merge authority still apply.'
 
     def initialize(result, head:, repository:, message: nil)
       @result = result
       @head = head
       @message = message
+      @repository = repository
       @revision = "[`#{head[0, 7]}`](https://github.com/#{repository}/commit/#{head})"
       @usage = native_usage
       @configuration = @usage.last&.fetch('configuration') || []
@@ -81,20 +85,19 @@ module Shaka
       verdict = PostImplementationReport.ready?(report) ? 'Proceed, no unresolved concerns' : report.fetch('conclusion')
       items = report.fetch('concerns')
       list = "\n\n**Unresolved concerns:**\n\n#{items.map { |item| "- #{item}" }.join("\n")}" unless items.empty?
-      "**Reviewer verdict:** #{verdict}. #{summary}#{list}"
+      "**Reviewer verdict:** #{verdict}.#{" #{summary}" if summary}#{list}"
     end
 
     def squash_details
       "<details>\n<summary>Squash commit message</summary>\n\n#{SquashComment.body(@head, @message.call)}\n</details>"
     end
 
-    def supporting_analysis(report, summary)
-      ["<details>\n<summary>Supporting analysis and execution details</summary>",
+    # A lead paragraph, such as the reviewer summary an owner decision moves out of view, opens the details.
+    def supporting_analysis(report, summary, lead: nil)
+      ["<details>\n<summary>Supporting analysis and execution details</summary>", *lead,
        *report.fetch('reasons').reject { |reason| reason == summary },
        "Alternative considered: #{report.fetch('alternative')}",
-       GATES, execution_evidence, "Prompt: #{@result.fetch('prompt_source')}.", usage_text,
-       'Ruby verified report shape and head binding. The reviewer judged value; the task owner handles concerns ' \
-       'and merge readiness. This does not attest to technical review.', '</details>'].join("\n\n")
+       "#{execution_evidence} · prompt: #{prompt_text}", usage_text, SCOPE, '</details>'].join("\n\n")
     end
 
     def recommendation(report)
@@ -121,12 +124,6 @@ module Shaka
                              end
       "## #{heading}\n\n#{summary}\n\n**Next:** #{next_action}\n\n" \
         "<details>\n<summary>Execution details</summary>\n\n#{execution_evidence}\n\n#{usage_text}\n\n</details>"
-    end
-
-    def usage_text
-      return 'Native usage: UNKNOWN (no readable provider record).' if @usage.empty?
-
-      "```json\n#{JSON.pretty_generate(@usage)}\n```"
     end
 
     def native_usage

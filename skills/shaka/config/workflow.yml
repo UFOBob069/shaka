@@ -724,7 +724,7 @@ phases:
         affect the result or its cost; an earlier conclusion is not evidence for a different approach.
         After verification, supply the task owner's head-bound `disposition` in the checkpoint
         publication: Merge, Revise before merge, Reconsider approach, or Do not merge,
-        with a reason and concrete next action. Judge the finished PR against the original
+        with a reason and, except for Merge, a concrete next action. Judge the finished PR against the original
         outcome; successful verification alone does not choose its disposition.
         A Merge recommendation grants no merge authority. Every other disposition blocks
         readiness and follows the existing repair or maintainer decision path; do not close

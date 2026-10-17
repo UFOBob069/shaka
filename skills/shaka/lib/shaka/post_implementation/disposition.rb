@@ -51,8 +51,11 @@ module Shaka
       text_fields!(content)
     end
 
+    # Merge already says what happens next, so its next_action is optional; any other value needs one.
     def text_fields!(content)
       %w[reason next_action].each do |key|
+        next if key == 'next_action' && merge?(content) && content[key].nil?
+
         raise Error, "PR disposition #{key} must be non-empty text" unless
           PostImplementationReport.text?(content[key])
       end
@@ -71,17 +74,22 @@ module Shaka
       @state = PostImplementationDisposition.merge?(disposition) ? 'ready' : 'blocked'
       @summary = disposition.fetch('reason')
       verification = report.fetch('summary', report.fetch('reasons').first)
-      ["## Recommendation: #{disposition.fetch('recommendation')}", @summary,
-       "**Next:** #{disposition.fetch('next_action')}",
-       evidence_lines(report, disposition, verification), supporting_analysis(report, verification)].join("\n\n")
+      ["## Recommendation: #{disposition.fetch('recommendation')}", @summary, *next_line(disposition),
+       evidence_lines(report, disposition),
+       supporting_analysis(report, verification, lead: "Reviewer summary: #{verification}")].join("\n\n")
     end
 
+    def next_line(disposition)
+      disposition['next_action'] ? ["**Next:** #{disposition['next_action']}"] : []
+    end
+
+    # The owner's reason leads, so the visible verdict states only the conclusion and any open concerns.
     # The hidden disposition line, rendered above the attestation, lets a description read this recommendation.
-    def evidence_lines(report, disposition, verification)
+    def evidence_lines(report, disposition)
       accepted = disposition.fetch('accepted_concerns')
       @disposition_line = PostImplementationEvidence.disposition(disposition.fetch('recommendation'))
       open = report.merge('concerns' => PostImplementationDisposition.unresolved(report, accepted))
-      [verdict(open, verification), *accepted_section(accepted)].join("\n\n")
+      [verdict(open, nil), *accepted_section(accepted)].join("\n\n")
     end
 
     def accepted_section(accepted)

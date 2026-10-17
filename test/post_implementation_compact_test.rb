@@ -21,7 +21,7 @@ class PostImplementationCompactTest < Minitest::Test
   def test_supporting_analysis_and_usage_remain_available_in_closed_details
     visible, details = routine_report.split('<details>', 2)
     ['Compatibility remains intact.', 'No new dependencies.',
-     'Documentation alone leaves the ambiguous label.', 'Ruby verified report shape'].each do |evidence|
+     'Documentation alone leaves the ambiguous label.', 'the reviewer judged value, not correctness'].each do |evidence|
       refute_includes visible, evidence
       assert_includes details, evidence
     end

@@ -22,8 +22,9 @@ not a reason to run this review. Conclude **Proceed**, **Simplify/reframe**, or
 **Do not merge**, with concrete reasons and the smallest useful next action.
 
 Assess every question, but report only evidence that affects the decision. Do not
-write a paragraph for each criterion or repeat the conclusion in the summary,
-reasons, and next action. Omit generic assurances and claims of significance.
+write a paragraph for each criterion, repeat the conclusion in the summary,
+reasons, and next action, or restate the summary in the reasons. Omit generic
+assurances and claims of significance.
 
 For routine **Proceed** results, aim for 60–100 visible words. Give a short summary
 with the concrete reason and a concise next action. Supporting reasons and the
