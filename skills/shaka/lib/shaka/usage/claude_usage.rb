@@ -130,11 +130,16 @@ module Shaka
       turn = nil
       ingest = lambda do |item|
         turn = item['promptId'] if item['type'] == 'user'
-        records.merge!(response(item, turn)) if item['type'] == 'assistant'
+        records.merge!(response(item, turn)) if item['type'] == 'assistant' && !synthetic?(item)
       end
       ingest.call(record)
       io.each { |line| ingest.call(parse(line)) }
       [records, turn]
+    end
+
+    # The host writes its own notices as `<synthetic>` responses; no model served or billed those.
+    def synthetic?(record)
+      record['message'].is_a?(Hash) && record['message']['model'] == '<synthetic>'
     end
   end
 

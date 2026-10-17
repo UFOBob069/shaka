@@ -372,6 +372,20 @@ class ClaudeUsageIdentityTest < Minitest::Test
     end
   end
 
+  # Break: host notices written as `<synthetic>` responses became an all-zero UNKNOWN column,
+  # and the real model's label fell back to "UNKNOWN medium".
+  def test_host_written_synthetic_responses_are_not_a_model_column
+    Dir.mktmpdir do |directory|
+      notice = reply('notice', 0, output: 0, model: '<synthetic>',
+                                  usage: { cache_read_input_tokens: 0, cache_creation_input_tokens: 0,
+                                           output_tokens_details: nil, speed: nil })
+      notice.delete(:effort)
+      file = transcript(directory, 'session.jsonl', [prompt('new'), priced_reply('m1', 100), notice])
+      columns = JSON.parse(report('--host', 'claude-code', '--file', file, '--format', 'json'))['columns']
+      assert_equal(['claude-opus-5 implementation'], columns.map { |column| column['label'] })
+    end
+  end
+
   def print_identity(*files)
     output = report('--host', 'claude-code', *files.flat_map { |file| ['--file', file] })
     [JSON.parse(output[/\A<!-- shaka:usage (.*) -->\n/, 1])['responses'], output]
