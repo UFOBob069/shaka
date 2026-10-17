@@ -775,7 +775,12 @@ $5 per night, and $15 per PR evaluation, all in API-equivalent dollars.
 Judges, retries, and tier 3 count toward the monthly total; tier 3 runs manually
 at first. The shared monthly cap takes precedence. These caps fund a smaller
 initial bank than the full workload estimated below; a partial night is not clean
-under D9. The budget checks remain unbuilt.
+under D9.
+
+Shipped: the [budgeted Ruby batch core](../../eval/budget-runner.md) requires
+explicit operator limits, retains unresolved calls across one private account, and saves
+validated records before settling charges. It requires a trusted executor callback;
+Harbor integration, native usage conversion, and scheduled execution remain unbuilt.
 
 All figures are cache-neutral (D12), at the rate card's base input and output rates
 as verified in September 2026, and are planning references to be replaced by the

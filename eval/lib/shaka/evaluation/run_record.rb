@@ -12,6 +12,8 @@ module Shaka
 
       module_function
 
+      def task_errors(task) = SCHEMA.errors(task, { '$ref' => '#/$defs/task' })
+
       def errors(record)
         errors = SCHEMA.errors(record)
         return errors unless errors.empty?
