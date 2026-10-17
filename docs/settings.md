@@ -425,6 +425,8 @@ with the account that should pay for reviews:
 
 Then list that provider in `local_review_agents`. The next review picks it, and the
 published review names it in its summary table instead of the fallback notice.
+When you set up Shaka with the CLI already installed, the agent offers it and
+records your choice, so no edit is needed.
 
 ## `review.local_review_count`
 

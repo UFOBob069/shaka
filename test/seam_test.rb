@@ -95,6 +95,13 @@ class SeamPointerTest < Minitest::Test
     assert_trust_safe_pointer(output)
   end
 
+  def test_check_refuses_the_local_review_agent_init_option
+    _output, error, status = Open3.capture3(COMMAND, 'seam', 'check', '--local-review-agent', 'openai/codex')
+
+    refute_predicate status, :success?
+    assert_includes error, 'init options do not apply to check'
+  end
+
   def test_pointer_refuses_check_and_init_options
     _output, error, status = Open3.capture3(COMMAND, 'seam', 'pointer', '--ref', 'HEAD')
 

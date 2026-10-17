@@ -17,7 +17,7 @@ shaka seam private setup --root /path/to/repository --ref DEFAULT_BRANCH_SHA \
 
 Replace the example commands with executable commands found in that repository.
 Supply `--ci-review-job NAME` with a matching review policy when a real CI review
-job exists. If the repository defers hosted CI, supply
+job exists. [Offer local reviewers](#offer-local-reviewers) before running setup. If the repository defers hosted CI, supply
 `--validate-local-command COMMAND` and `--trigger-hosted-ci-command COMMAND`
 together. The private generator reuses the normal new-layout wrappers and records
 Ask and `wip.include_checkout_path: true`, matching team setup. WIP Details include the
@@ -112,6 +112,7 @@ and standard script; keep those definitions there.
    reports one check per workflow. Explain that Shaka, not GitHub, then enforces them.
    If the user wants no required checks, continue with merge preference `ask` and
    say that Auto merge needs at least one.
+   [Offer local reviewers](#offer-local-reviewers) for `seam init`.
 4. Prepare the files with the trusted installed helper. `seam init` creates
    version-one configuration in `.agents/shaka/`. When the repository already has
    `.agents/agent-workflow.yml`, `seam init` refuses and names the
@@ -144,6 +145,14 @@ implementation still gets local review. The initializer refuses to overwrite
 conflicting files. When GitHub enforces no required checks, add
 `--required-check NAME` for each confirmed check.
 
+
+## Offer local reviewers
+
+Run `shaka doctor --host HOST` and read its Reviewer CLIs check. Offer each
+reviewer CLI it reports on PATH, putting one from a provider other than the
+current host first. Pass each reviewer the user accepts,
+in that order, as `--local-review-agent PROVIDER/FAMILY`. Omit the flag when none
+is installed or the user declines.
 
 ## Review and merge the first setup PR
 
@@ -196,8 +205,9 @@ root. The initializer refuses Shaka command names left in `.agents/bin/` without
 their configuration, leaves other `.agents/bin/` tools alone, and checks write
 access before writing anything. It defaults to Ask. Add `--merge-preference auto`
 only with established authority, `--base-branch` for another base, and
-`--required-check` for seam-declared checks. Add optional reviewer entries and
-`repo_prefix` by editing the YAML afterward. Set `wip.include_checkout_path` to
+`--required-check` for seam-declared checks, and `--local-review-agent` for each
+accepted reviewer. Add reviewer models, efforts, prompt files, and `repo_prefix`
+by editing the YAML afterward. Set `wip.include_checkout_path` to
 `false` only when the user asks to hide the checkout path.
 If the repository already uses `AGENTS.md`, it may point to its requirements
 there; Shaka does not require that file.

@@ -4,11 +4,14 @@ require 'json'
 require 'optparse'
 require_relative 'private_setup'
 require_relative 'check_report'
+require_relative 'policy_options'
 
 module Shaka
   class Seam
     # Parses local-only setup and recovery commands independently of trusted policy.
     class PrivateCommand
+      include PolicyOptions
+
       OPERATIONS = %w[setup check inspect list restore].freeze
 
       def self.run(arguments)
@@ -94,6 +97,7 @@ module Shaka
           @options[:review_policy] = value
         end
         flags.on('--ci-review-job NAME') { |value| (@options[:ci_review_jobs] ||= []) << value }
+        add_local_review_agent_flag(flags)
       end
     end
   end

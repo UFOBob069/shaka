@@ -31,6 +31,12 @@ module PrivateSetupFixture
     File.open(config_path(root), 'a') { |file| file.puts "# #{note}" }
   end
 
+  def cli_setup_args(root, ref)
+    ['private', 'setup', '--root', root, '--ref', ref,
+     '--setup-command', 'bin/probe', '--validate-command', 'bin/probe',
+     '--test-command', 'bin/probe', '--review-policy', 'none']
+  end
+
   def git(root, *)
     system('git', '-C', root, *, exception: true)
   end
@@ -65,12 +71,6 @@ class PrivateSetupTest < Minitest::Test
       output, = capture_io { assert_equal 0, Shaka::Seam.run(['private', 'inspect', '--root', root]) }
       assert_equal 'private', JSON.parse(output).fetch('status')
     end
-  end
-
-  def cli_setup_args(root, ref)
-    ['private', 'setup', '--root', root, '--ref', ref,
-     '--setup-command', 'bin/probe', '--validate-command', 'bin/probe',
-     '--test-command', 'bin/probe', '--review-policy', 'none']
   end
 
   def assert_exclusion_and_copy(root, ref, exclude, result)
@@ -386,6 +386,25 @@ end
 
 class PrivateCommandTest < Minitest::Test
   include PrivateSetupFixture
+
+  def test_cli_setup_records_local_review_agents
+    with_setup do |root, ref|
+      args = cli_setup_args(root, ref) + ['--local-review-agent', 'openai/codex']
+      capture_io { assert_equal 0, Shaka::Seam.run(args) }
+      config = Shaka::Configuration.private_source(root:, ref:).candidate_config
+      assert_equal [{ 'provider' => 'openai', 'model_family' => 'codex' }],
+                   config.review.fetch('local_review_agents')
+    end
+  end
+
+  def test_cli_setup_rejects_repeated_local_review_agents_before_writing
+    with_setup do |root, ref|
+      args = cli_setup_args(root, ref) + %w[--local-review-agent openai/codex --local-review-agent OpenAI/Codex]
+      _stdout, stderr = capture_io { assert_equal 1, Shaka::Seam.run(args) }
+      assert_includes stderr, 'review.local_review_agents repeats openai/codex'
+      refute_path_exists config_path(root)
+    end
+  end
 
   def test_cli_rejects_missing_setup_ref_and_restore_destination
     with_setup do |root, _ref|

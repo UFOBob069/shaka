@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require_relative '../error'
+require_relative '../reviewer_selection'
 
 module Shaka
   class Seam
-    # Review and merge flags for `shaka seam init`.
+    # Review and merge flags for `shaka seam init`; private setup shares the reviewer flag.
     module PolicyOptions
       private
 
@@ -22,7 +23,14 @@ module Shaka
         flags.on('--review-policy MODE', %w[always meaningful_changes none],
                  'always, meaningful_changes, or none') { |value| @options[:review_policy] = value }
         add_ci_review_job_flag(flags)
+        add_local_review_agent_flag(flags)
         reject_retired_review_flags(flags)
+      end
+
+      def add_local_review_agent_flag(flags)
+        flags.on('--local-review-agent PROVIDER/FAMILY', 'Local reviewer in preference order; repeatable') do |value|
+          (@options[:local_review_agents] ||= []) << ReviewerSelection.parse(value)
+        end
       end
 
       def add_ci_review_job_flag(flags)

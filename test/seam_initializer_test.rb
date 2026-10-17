@@ -755,3 +755,47 @@ class SeamInitializerRequiredCheckTest < Minitest::Test
     end
   end
 end
+
+class SeamInitializerReviewerTest < Minitest::Test
+  include SeamInitializerTestHelpers
+
+  def test_local_review_agents_are_written_in_the_order_given
+    with_repository do |root|
+      arguments = init_arguments(root) + ['--local-review-agent', 'openai/codex',
+                                          '--local-review-agent', 'anthropic/claude']
+      output, error, status = Open3.capture3(*arguments)
+
+      assert_predicate status, :success?, error
+      assert_equal [{ 'provider' => 'openai', 'model_family' => 'codex' },
+                    { 'provider' => 'anthropic', 'model_family' => 'claude' }],
+                   JSON.parse(output).dig('review', 'local_review_agents')
+    end
+  end
+
+  def test_local_review_agents_apply_when_ci_review_is_none
+    with_repository do |root|
+      arguments = init_arguments(root)
+      arguments[arguments.index('meaningful_changes')] = 'none'
+      arguments.slice!(arguments.index('--ci-review-job'), 2)
+      output, error, status = Open3.capture3(*arguments, '--local-review-agent', 'xai/grok')
+
+      assert_predicate status, :success?, error
+      assert_equal [{ 'provider' => 'xai', 'model_family' => 'grok' }],
+                   JSON.parse(output).dig('review', 'local_review_agents')
+    end
+  end
+
+  def test_rejects_malformed_or_repeated_local_review_agents_before_writing
+    [[%w[codex], 'PROVIDER/MODEL_FAMILY'],
+     [%w[openai/codex OpenAI/Codex], 'review.local_review_agents repeats openai/codex']].each do |values, message|
+      with_repository do |root|
+        flags = values.flat_map { |value| ['--local-review-agent', value] }
+        _output, error, status = Open3.capture3(*init_arguments(root), *flags)
+
+        refute_predicate status, :success?
+        assert_includes error, message
+        refute_path_exists File.join(root, '.agents')
+      end
+    end
+  end
+end
