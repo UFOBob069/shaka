@@ -7,6 +7,7 @@ require_relative '../public_comments/reply_guard'
 require_relative 'publication'
 require_relative 'feature_guard'
 require_relative 'managed_region'
+require_relative 'marker_guard'
 require_relative 'merge_warning_region'
 
 module Shaka
@@ -21,7 +22,7 @@ module Shaka
     def description(body: nil)
       current = pull
       existing = current['body'].to_s
-      merged = check_length(merge(existing, publishable(block_given? ? yield(current) : body)))
+      merged = check_length(merge(existing, description_text(block_given? ? yield(current) : body)))
       verify_rendering(merged)
       check_unchanged(existing, current)
       confirmed(api(pull_path, method: 'PATCH', fields: { body: merged }), merged)
@@ -136,6 +137,10 @@ module Shaka
 
     def pull = api(pull_path)
     def pull_path = "repos/#{@repository}/pulls/#{@number}"
+
+    # A quoted marker in description text is a second copy; the next read stops.
+    # Replies and walkthroughs keep the markers this helper writes into comments.
+    def description_text(body) = publishable(body).tap { |text| PublicationMarkers.refuse!(text) }
 
     def publishable(body)
       body = utf8(body)

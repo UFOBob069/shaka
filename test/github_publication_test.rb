@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 require_relative 'github_helper'
+require 'shaka/github/squash_comment'
+require 'shaka/post_implementation/evidence'
+require 'shaka/publication/human_comments'
+require 'shaka/publication/provenance_history'
+require 'shaka/publication/publication'
+require 'shaka/publication/steps_besides_merging'
+require 'shaka/publication_sections'
 
 # Fixtures shared by the description and reply surfaces.
 module PublicationFixtures
@@ -273,6 +280,124 @@ class GitHubReplyPaginationTest < Minitest::Test
   def test_a_comment_listing_that_is_not_an_array_is_reported
     github = client(pull_response(''), viewer_response, response({ 'message' => 'Not Found' }))
     assert_raises(Shaka::Error) { github.reply(body: BODY, key: 'fix-1') }
+  end
+end
+
+# Quoting a marker stores a second copy, and the next description read cannot find its region.
+class DescriptionMarkerTest < Minitest::Test
+  include PublicationFixtures
+
+  MARKERS = [
+    Shaka::Publishing::OPEN_MARK,
+    Shaka::Publishing::CLOSE_MARK,
+    Shaka::MergeWarningRegion::OPEN,
+    Shaka::MergeWarningRegion::CLOSE,
+    Shaka::ProvenanceHistory::PREFIX,
+    Shaka::HumanComments::OPEN_MARK,
+    Shaka::HumanComments::CLOSE_MARK,
+    Shaka::StepsBesidesMerging::MARKER,
+    Shaka::PublicationSections::MARKER,
+    Shaka::UsageRecords::BEGIN_PREFIX,
+    Shaka::UsageRecords::END_MARK,
+    '<!-- shaka:reply:example -->',
+    Shaka::SquashComment::SQUASH_MARK,
+    "<!-- #{Shaka::PostImplementationEvidence::MARK} -->",
+    "<!-- #{Shaka::PostImplementationEvidence::MARK}-disposition Merge -->"
+  ].freeze
+
+  # Break: a summary quoting <!-- shaka:end --> published, then the next update refused the body.
+  def test_a_body_quoting_a_shaka_marker_is_refused_before_writing
+    MARKERS.each do |marker|
+      github = client(pull_response(''))
+      error = assert_raises(Shaka::Error, marker) do
+        github.description(body: "Moves the `#{marker}` marker check.\n")
+      end
+      assert_includes error.message, marker[%r{\A<!-- /?shaka:\S*}], marker
+      assert_equal 1, @calls.size, marker
+    end
+  end
+
+  def test_a_rendered_description_keeps_the_helpers_own_markers
+    rendered = rendered_description
+    managed = "<!-- shaka:begin -->\n#{rendered}<!-- shaka:end -->"
+    github = client(pull_response(''), html_response(html_for(rendered)), html_response(html_for(managed)),
+                    pull_response(''), pull_response(managed))
+
+    assert_equal managed, github.description(body: rendered)['body']
+  end
+
+  def test_a_rendered_description_that_also_quotes_a_marker_is_refused
+    rendered = rendered_description.sub('A summary.', 'A summary quoting <!-- shaka:end --> here.')
+    github = client(pull_response(''))
+    error = assert_raises(Shaka::Error) { github.description(body: rendered) }
+
+    assert_includes error.message, '<!-- shaka:end -->'
+    assert_equal 1, @calls.size
+  end
+
+  # The same string is how a checkpoint comment records its result, so a reply may carry it.
+  def test_a_checkpoint_comment_keeps_the_helpers_attestation
+    attestation = "<!-- #{Shaka::PostImplementationEvidence::MARK} #{'a' * 40} ready -->"
+    body = "Checkpoint.\n\n#{attestation}\n"
+    posted = "<!-- shaka:reply:checkpoint -->\n#{body}"
+    github = client(pull_response(''), viewer_response, response([]), html_response('<p>ok</p>'),
+                    response({ 'id' => 9, 'body' => posted }))
+
+    assert_equal posted, github.reply(body:, key: 'checkpoint')['body']
+  end
+
+  private
+
+  def html_for(text)
+    separators = Shaka::PublicationText.prose(text).lines.count { |line| line.match?(Shaka::Publishing::SEPARATOR) }
+    "<p>A summary.</p>#{'<table></table>' * separators}"
+  end
+
+  def rendered_description
+    Shaka::Publication.description(description_content, nil, description_pull)
+  end
+
+  def description_pull
+    { 'body' => '', 'number' => 42, 'user' => { 'login' => 'ann' },
+      'head' => { 'sha' => 'a' * 40, 'repo' => { 'full_name' => 'owner/repo' } },
+      'base' => { 'repo' => { 'full_name' => 'owner/repo' } } }
+  end
+
+  def description_content
+    { 'identity' => { 'agent' => 'Codex', 'provider' => 'OpenAI', 'model' => 'gpt-5.6-terra', 'effort' => 'low' },
+      'summary' => 'A summary.',
+      'walkthrough' => 'https://github.com/shakacode/shaka/pull/137#pullrequestreview-5258565629',
+      'table' => { 'columns' => %w[Check Commit Result], 'rows' => [%w[bin/validate abc123 pass]] },
+      'intent' => INTENT, 'verification' => VERIFICATION, 'deployment' => 'none',
+      'steps_besides_merging' => [step], 'decisions' => ['Keep the parser?'],
+      'provenance' => provenance, 'usage' => usage, 'details' => [], 'human_comments' => comments }
+  end
+
+  def step
+    { 'when' => 'before merge', 'step' => 'Set the secret', 'who' => 'Maintainer', 'where' => 'GitHub',
+      'verify' => 'The check is green' }
+  end
+
+  def provenance
+    { 'task_source' => 'description', 'initial_prompt' => 'EXCLUDED',
+      'requested_model' => 'gpt-5.6-terra', 'requested_effort' => 'medium',
+      'recommended_model' => 'gpt-5.6-terra', 'recommended_effort' => 'medium',
+      'active_model' => 'gpt-5.6-terra', 'active_effort' => 'medium' }
+  end
+
+  def usage
+    column = { 'label' => 'openai', 'provider' => 'openai', 'model' => 'gpt-test', 'routed' => 'UNKNOWN',
+               'effort' => 'high', 'credits' => 'UNKNOWN', 'usd' => 'UNKNOWN', 'input' => '1',
+               'cached_input' => '0', 'output' => '0', 'reasoning_output' => 'UNKNOWN',
+               'cache_writes' => 'UNKNOWN' }
+    { 'note' => 'Native usage is PARTIAL.',
+      'records' => [USAGE_RECORD.merge('columns' => [column], 'note' => 'Native usage is PARTIAL.')] }
+  end
+
+  def comments
+    url = 'https://github.com/owner/repo/pull/42#issuecomment-1'
+    { 'head' => 'a' * 40, 'review_summaries' => [], 'inline_comments' => [], 'excluded_interactions' => [],
+      'issue_comments' => [{ 'id' => 1, 'author' => 'ann', 'body' => 'Ship this.', 'url' => url }] }
   end
 end
 

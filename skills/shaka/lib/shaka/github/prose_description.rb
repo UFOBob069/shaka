@@ -9,7 +9,7 @@ module Shaka
   module ProseDescription
     def description(body: nil, prose: ProseLimits.new)
       super() do |current|
-        text = check_length(publishable(block_given? ? yield(current) : body))
+        text = check_length(description_text(block_given? ? yield(current) : body))
         prose.verify_publication!(self, text, kind: :description, pull: current)
         text
       end
