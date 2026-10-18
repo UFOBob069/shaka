@@ -22,4 +22,10 @@ class PublicationTableCellTest < Minitest::Test
     assert_equal '`a\\\\b\\|c', Shaka::PublicationText.table_cell('`a\\b|c')
     assert_equal '``a\\\\b` \\|', Shaka::PublicationText.table_cell('``a\\b` |')
   end
+
+  def test_table_cell_text_recovers_the_original_text
+    ['a|b\\c', '`a\\|b` x|y', '`` x`\\d`|y `` and a\\b|c', '`a\\b|c', '``a\\b` |', 'a\\|b'].each do |text|
+      assert_equal text, Shaka::PublicationText.table_cell_text(Shaka::PublicationText.table_cell(text))
+    end
+  end
 end

@@ -55,6 +55,11 @@ class PrWatchFeedbackTest < Minitest::Test
     assert_equal 'ownership_transferred', watch_feedback([frame, transferred], packets).first
   end
 
+  def test_an_owner_with_a_pipe_is_not_read_as_a_transfer
+    owner = 'm1 · Claude Code · jg|main'
+    assert_equal 'timeout', watch_feedback([frame.merge(owner:)], [packet], owner:).first
+  end
+
   def test_head_move_stops_feedback_watch
     assert_equal 'head_moved', watch_feedback([frame, frame(head: MOVED)], [packet]).first
   end

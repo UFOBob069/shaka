@@ -19,6 +19,15 @@ class HandoffWipNoteTest < Minitest::Test
     end
   end
 
+  # https://github.com/shakacode/shaka/issues/659: publication escapes `|` and `\` in cells.
+  def test_an_owner_with_pipes_and_backslashes_reads_back_as_published
+    ['m1 · Claude Code · jg|main', 'm1 · Claude Code · a\\b\\|c', 'm1 · Claude Code · `a\\|b` x|y'].each do |owner|
+      body = HandoffFixtures.description(HandoffFixtures::WIP.merge('owner' => owner))
+
+      assert_equal owner, Shaka::Handoff::WipNote.value(body, 'owner')
+    end
+  end
+
   def test_a_body_saved_with_crlf_line_endings_still_reads
     body = HandoffFixtures.description.gsub("\n", "\r\n")
 

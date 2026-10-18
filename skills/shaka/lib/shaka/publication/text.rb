@@ -8,6 +8,9 @@ module Shaka
     ESCAPE = /\\[nrt]/
     IDENTITY_FIELDS = %w[agent provider model effort].freeze
 
+    # A cell's code spans, unclosed backtick runs, and the text between them.
+    CELL_PARTS = /(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)|`+|[^`]+/m
+
     DISPLAY_NAMES = {
       'agent' => { 'codex' => 'Codex', 'claude' => 'Claude', 'grok' => 'Grok' },
       'provider' => { 'openai' => 'OpenAI', 'anthropic' => 'Anthropic', 'xai' => 'xAI' }
@@ -57,9 +60,14 @@ module Shaka
     # GitHub needs `\|` for a pipe anywhere in a cell. Outside code, escaping each backslash too
     # keeps a cell's own `\|` visible; inside a code span backslashes are already literal.
     def table_cell(text)
-      text.gsub(/(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)|`+|[^`]+/m) do |part|
+      text.gsub(CELL_PARTS) do |part|
         part.gsub(part.start_with?('`') ? '|' : /[\\|]/) { |character| "\\#{character}" }
       end
+    end
+
+    # The text a table_cell came from. Escaping adds no backticks, so the cell splits into the same parts.
+    def table_cell_text(cell)
+      cell.gsub(CELL_PARTS) { |part| part.gsub(part.start_with?('`') ? /\\(\|)/ : /\\([\\|])/, '\\1') }
     end
 
     def checked(value, field)

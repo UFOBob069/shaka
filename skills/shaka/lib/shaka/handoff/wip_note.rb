@@ -22,7 +22,7 @@ module Shaka
         region = Publishing.managed_region(body.to_s.gsub("\r\n", "\n")).to_s
         note = region[NOTE, 1] or return
         cell = cells(note)&.fetch(WipDetails::FIELDS.keys.index(field))
-        cell unless cell.to_s.strip.empty?
+        PublicationText.table_cell_text(cell) unless cell.to_s.strip.empty?
       end
 
       # The Value column in field order, or nil for a partial or reordered table WipDetails did not render.
