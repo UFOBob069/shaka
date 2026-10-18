@@ -12,6 +12,7 @@ require_relative 'steps_besides_merging'
 require_relative 'human_comments'
 require_relative 'skills_used'
 require_relative 'intent_verification'
+require_relative 'quoted_markers'
 require_relative '../publication_sections'
 
 module Shaka
@@ -21,7 +22,7 @@ module Shaka
     def self.description(content, workflow_version = nil, pull = nil, settings = nil)
       new(content, description: true, workflow_version:, pull:, settings:)
         .render(%i[steps intent_verification sections table provenance skills_used details wip credit],
-                lead: %i[lead])
+                lead: %i[lead]).tap { QuotedMarkers.refuse!(content) }
     end
 
     def self.comment(content) = new(content).render([])
