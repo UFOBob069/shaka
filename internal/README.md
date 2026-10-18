@@ -11,5 +11,6 @@ instructions or private company plans.
 - [Experiment index](../eval/README.md) — retained repositories, outcomes, and the next proposed case.
 - [Review outcomes](review-outcomes.md) — proposed record of review decisions and later assessments, not shipped behavior.
 - [Improving Shaka](improving-shaka.md) — maintainer method for investigating observed workflow failures.
+- [Rendering preview](rendering-preview.md) — how an agent shows a rendering change on its own PR.
 - [Conditional workflow loading](conditional-workflow-loading.md) — bounded extraction and Ponytail structure comparison.
 - [Predecessor retirement](retirement.md) — temporary migration record; remove after its acceptance conditions are met.
