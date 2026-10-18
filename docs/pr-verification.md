@@ -458,8 +458,11 @@ that changes runtime behavior.
 When the PR has a preview deployment, it checks the preview too, or says why not.
 
 The agent uploads captures to the PR and verifies that you can open them; a local
-path is not shared evidence. It names the tested commit and behavior, then
-refreshes affected evidence after code changes or explains which part still applies.
+path is not shared evidence. Below the agent's 🤖 line, the comment opens with a
+**Verification for** heading that links the tested commit, so you can find it among
+review comments and see whether it matches the current head. The agent names the
+tested behavior, then refreshes affected evidence after code changes or explains
+which part still applies.
 When a new comment replaces an earlier one, the agent folds the earlier one
 beneath a link to its replacement. Current evidence appears first; older captures
 stay one click away. When a capture cannot be published, the PR records the

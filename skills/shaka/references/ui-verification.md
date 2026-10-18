@@ -26,7 +26,8 @@ change needs. Follow this installed workflow if the current public guide differs
 Check captures for credentials as part of the workflow's privacy inspection.
 Publish them with `gh pr comment NUMBER --body-file BODY_FILE --attach 'CAPTURE#ALT TEXT'` (GitHub CLI 2.99 or
 later; a video uses `--attach CAPTURE`, since video has no alt text). The body file starts
-with the writer identifier required by Explain, followed by the verification note. Label captures with the
+with the writer identifier required by Explain, then a `# Verification for COMMIT`
+heading that links the tested commit, then the verification note. Label captures with the
 tested revision, and read the comment back to confirm each capture became an uploaded
 URL; a local path is not evidence.
 Once you resolve a preview for the description, whether through `deployment: auto` or a
