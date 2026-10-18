@@ -259,11 +259,17 @@ no stacked-PR service is needed.
 ## Combine Shaka with other skills
 
 Use the skills you like for planning and engineering technique, and let Shaka
-deliver the result. Two examples are
+deliver the result. Examples are
 [AI Hero's skills](https://www.aihero.dev/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md),
-which turn an idea into a spec and tickets, and
+which turn an idea into a spec and tickets;
 [pstack](https://github.com/cursor/plugins/tree/main/pstack), which adds
-engineering principles and parallel workers.
+engineering principles and parallel workers;
+[Ponytail](https://github.com/DietrichGebert/ponytail), which keeps each change
+as small as it can be while still complete; and
+[Addy Osmani's agent skills](https://github.com/addyosmani/agent-skills), a
+library of engineering practices from spec to launch. pstack, Ponytail, and Addy
+Osmani's skills have not yet been tried on a full Shaka delivery, so
+[try a new pack](#try-a-new-skill-pack-with-shaka) on one task before relying on it.
 
 ### Hand over a spec and tickets
 
@@ -304,6 +310,43 @@ the PR in its own format, and returns it to you to merge. pstack's "don't block
 on the human" guidance does not turn Ask into Auto. Leave out the subagent
 sentence and the agent does the fan-out steps alone or asks first.
 
+A [community port of pstack for Claude Code and Codex](https://github.com/michael-denyer/pstack-claude)
+turns poteto mode on by itself. At the start of each session it tells the agent
+to use poteto mode for any task that touches more than one file, so you do not
+need to name it.
+
+### Try a new skill pack with Shaka
+
+Try a pack on one real task, one you would merge anyway, before you rely on it:
+
+```text
+$shaka Fix https://github.com/OWNER/REPO/issues/N using SKILL. Go.
+```
+
+When the PR is ready, ask in the same chat:
+
+```text
+Which SKILL instructions did you follow, and where did they conflict with Shaka?
+```
+
+Then check four things:
+
+1. **Does the pack turn itself on?** Some packs load at the start of every
+   session, so they shape tasks you did not name them in. Ponytail and the
+   pstack port work this way.
+2. **Does it change how Shaka delivers?** A pack that skips checks, merges,
+   closes tickets, or replaces Shaka's PR description is its own delivery
+   workflow. Keep it out of Shaka tasks.
+3. **Does it leave marks that reviewers will flag?** Look for comment markers
+   or rule files it adds to the code.
+4. **Do its reports clash with Shaka's?** Compare its closing summary with the
+   PR description and the final report.
+
+Shaka starts its Claude and Codex reviewers without your plugins, skills, and
+hooks. In a check with Ponytail and the pstack port loaded, neither reviewer
+received them, while a normal session did. The Grok reviewer has not been
+checked.
+
 ### What each kind of skill can do
 
 Shaka stays the one owner of delivery, so another skill's output is input to the
@@ -315,8 +358,14 @@ or approve a merge.
 | Planning | AI Hero `to-spec`, `to-tickets` | Its spec and tickets become the task. |
 | Technique or mode | pstack `poteto-mode`, principles, `how`, `tdd` | Shapes how the agent works inside each step. |
 | Parallel workers | pstack `swarm`, `arena`, `interrogate` | Runs only when you say the agent may delegate. Workers never publish or merge. |
+| Same-session review | AI Hero `code-review`, pstack `blast-radius` | Findings the agent weighs and fixes before Shaka's own review. The skill does not replace that review, which runs in a separate session and, when available, with another provider's model. |
 | PR text | AI Hero `pr`, pstack `technical-writing`, `unslop` | Advice on wording and presentation. Shaka's description keeps its own format and required fields. |
-| Its own delivery | AI Hero `implement-spec`, pstack Shipping, Babysit, and Autopilot playbooks | A separate orchestrator that cannot run as a step inside Shaka. Try it as its own experiment: name the scope and say the agent may delegate. |
+| Its own delivery | AI Hero `implement-spec`, pstack Shipping, Babysit, Orchestrate, and Autopilot playbooks | A separate orchestrator that cannot run as a step inside Shaka. Try it as its own experiment: name the scope and say the agent may delegate. |
+
+A rule file that a skill writes into your repository is part of the change
+under review. Shaka still takes its settings, such as reviewers and merge
+rules, from your default branch. Your check scripts run from the branch, so
+review changes to them like any other code.
 
 If a skill you named is not installed, the agent says so, continues the work
 that does not need it, and asks about the rest. It does not install software for
