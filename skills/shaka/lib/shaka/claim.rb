@@ -34,7 +34,14 @@ module Shaka
       parser.parse!(arguments)
       return help(parser) if options[:help]
 
-      [query(arguments, options, parser), File.realpath(options.fetch(:root, Dir.pwd)), options[:branch]]
+      [query(arguments, options, parser), repository_root(options.fetch(:root, Dir.pwd)), options[:branch]]
+    end
+
+    # The settings and `.git` sit at the top level, so a subdirectory must not stand in for it.
+    # A directory outside any repository stays the root.
+    def self.repository_root(directory)
+      output, _error, status = Open3.capture3('git', '-C', directory, 'rev-parse', '--show-toplevel')
+      File.realpath(status.success? ? output.strip : directory)
     end
 
     def self.query(arguments, options, parser)
@@ -73,7 +80,7 @@ module Shaka
       Configuration.worktree(root: root).to_h.dig('branches', 'name')
     end
 
-    private_class_method :parse, :query, :option_parser, :help, :branch_name_for
+    private_class_method :parse, :repository_root, :query, :option_parser, :help, :branch_name_for
 
     def initialize(query:, root:, runner: nil, branch_name: nil, tracker_branch: nil)
       @description = query.slug if query.is_a?(Description)
