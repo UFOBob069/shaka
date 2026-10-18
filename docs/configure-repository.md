@@ -69,9 +69,10 @@ Shaka ships a [Claude review workflow](https://github.com/shakacode/shaka/blob/m
 that reviews PRs opened from branches in your repository, and fits teams where only
 some people use Shaka. It skips drafts, Dependabot, and PRs from forks; review those
 another way.
-When a PR's author already published Shaka's local review of the pushed commit,
-Claude makes a short pass for serious bugs the local reviewers missed. Every other
-PR gets a full review. Both report only issues Claude can tie to a concrete failure,
+When a PR's author already published a Shaka local review of the pushed commit
+with Claude among its reviewers, Claude makes a short pass for serious bugs the
+local reviewers missed. Every other PR gets a full review, including one only
+Codex reviewed locally. Both report only issues Claude can tie to a concrete failure,
 so routine pushes stay quiet.
 
 During [setup](#set-up), the agent offers it. For a repository that already uses

@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
+require_relative 'local_review_comment_test'
 require 'json'
 require 'yaml'
 
 class ReviewDepthWorkflowTest < Minitest::Test
+  include LocalReviewCommentFixture
+
   ROOT = File.expand_path('..', __dir__)
   WORKFLOW = File.join(ROOT, '.github/workflows/claude-code-review.yml')
   TEMPLATE = File.join(ROOT, 'skills/shaka/config/claude-code-review.yml')
@@ -48,6 +51,32 @@ class ReviewDepthWorkflowTest < Minitest::Test
     assert_equal SHAKA, depth([local_review, imitation])
   end
 
+  # A local review without Claude leaves the hosted review as the PR's only Claude review.
+  def test_a_local_review_without_claude_selects_the_full_review_without_waiting
+    codex_only = local_review(reviewers: 'openai/codex')
+
+    assert_equal FULL, depth([codex_only], later: [local_review], wait: 5)
+  end
+
+  # Older Shaka wrote no reviewer line; a report imitating one below the title is not Shaka's.
+  def test_a_missing_or_misplaced_reviewer_line_selects_the_full_review
+    attestation = "REVIEWED #{HEAD} BY openai/codex EFFORT medium FINDINGS 1\n"
+    misplaced = "# Local Adversarial Review\n\nText\n\n<!-- shaka:local-reviewers #{HEAD} anthropic/claude -->\n" \
+                "#{attestation}"
+
+    assert_equal FULL, depth([local_review(body: "# Local Adversarial Review\n\n#{attestation}")])
+    assert_equal FULL, depth([local_review(body: misplaced)])
+  end
+
+  def test_a_published_two_reviewer_comment_selects_the_shaka_pass
+    claude = round(HEAD, reviewer: 'anthropic/claude', report: report(HEAD, reviewer: 'anthropic/claude'))
+    part = Shaka::LocalReviewLoopComment.new({ 'rounds' => [round(HEAD), claude] }, subject: ->(_) { 'S' }).parts.first
+    comment = { 'user' => { 'login' => 'author' }, 'html_url' => REPORT_URL,
+                'body' => "<!-- shaka:reply:#{part.key} -->\n#{part.body}" }
+
+    assert_equal SHAKA, depth([comment])
+  end
+
   def test_unreadable_comments_select_the_full_review
     assert_equal FULL, depth(nil)
   end
@@ -58,8 +87,10 @@ class ReviewDepthWorkflowTest < Minitest::Test
 
   private
 
-  def local_review(head: HEAD, login: 'author', key: 'local-review-loop-b45c4a9e2c80-77e4a72e9aa7', body: nil)
-    body ||= "# Local Adversarial Review\n\nREVIEWED #{head} BY openai/codex EFFORT medium FINDINGS 1\n"
+  def local_review(head: HEAD, login: 'author', key: 'local-review-loop-b45c4a9e2c80-77e4a72e9aa7', body: nil,
+                   reviewers: 'openai/codex anthropic/claude')
+    body ||= "# Local Adversarial Review\n\n<!-- shaka:local-reviewers #{head} #{reviewers} -->\n\n" \
+             "REVIEWED #{head} BY openai/codex EFFORT medium FINDINGS 1\n"
     { 'user' => { 'login' => login }, 'html_url' => REPORT_URL, 'body' => "<!-- shaka:reply:#{key} -->\n#{body}" }
   end
 

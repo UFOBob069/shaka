@@ -39,7 +39,8 @@ jobs:
           # Shaka publishes its local review 13-82s after opening the PR or pushing.
           LOCAL_REVIEW_WAIT_SECONDS: 120
           LOCAL_REVIEW_POLL_SECONDS: 10
-        # A Shaka PR carries its author's local review for this exact head; all others get the full review.
+        # The short pass needs the author's local review of this exact head with Claude among its reviewers,
+        # named on the line Shaka writes under the title. All other PRs get the full review.
         run: |
           set -euo pipefail
           depth=full
@@ -49,13 +50,17 @@ jobs:
           deadline=$((SECONDS + LOCAL_REVIEW_WAIT_SECONDS))
           while :; do
             if gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/issues/$REVIEW_PR/comments" > "$comments" 2> /dev/null &&
-              report=$(jq -r --arg head "$REVIEW_HEAD" --arg author "$PR_AUTHOR" '
+              found=$(jq -r --arg head "$REVIEW_HEAD" --arg author "$PR_AUTHOR" '
                 [.[][] | select(.user.login == $author) | select((.body // "") |
                   startswith("<!-- shaka:reply:local-") and
                   test("(^|\n)REVIEWED " + $head + " BY [^\n ]+ EFFORT [^\n ]+ FINDINGS [0-9]+"))] |
-                last | .html_url // empty
-              ' "$comments" 2> /dev/null) && [ -n "$report" ]; then
-              depth=shaka
+                last // empty |
+                if (.body | test("\\A<!-- shaka:reply:local-[^\n]* -->\n# Local Adversarial Review\n\n" +
+                  "<!-- shaka:local-reviewers " + $head + " ([^\n]* )?anthropic/[^ \n]+( [^\n]*)? -->\n"))
+                then "shaka \(.html_url)" else "full" end
+              ' "$comments" 2> /dev/null) && [ -n "$found" ]; then
+              depth=${found%% *}
+              [ "$depth" = full ] || report=${found#* }
               break
             fi
             [ "$SECONDS" -lt "$deadline" ] || break
@@ -108,8 +113,8 @@ jobs:
             does not already record. Skip the AGENTS.md and CLAUDE.md audit, and do not
             repeat or reargue the local findings.
 
-            When REVIEW DEPTH is full: no local review of this head was published, so this
-            is its only independent review. Read the diff and the code around each change,
+            When REVIEW DEPTH is full: no local Claude review of this head was published, so
+            this is its only Claude review. Read the diff and the code around each change,
             check the applicable AGENTS.md and CLAUDE.md rules, and look for bugs and
             security issues in the changed code.
 

@@ -2,6 +2,7 @@
 
 require_relative '../configuration/paths'
 require_relative '../repository_config/review_schema'
+require_relative '../review_coverage'
 
 module Shaka
   class Seam
@@ -9,7 +10,8 @@ module Shaka
     module ReviewFields
       REVIEW_KEYS = (%w[required] + RepositoryConfig::ReviewSchema::RENAMED.values +
                      [RepositoryConfig::ReviewSchema::PROMPT_FILE,
-                      RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT, 'post_implementation']).uniq.freeze
+                      RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT,
+                      ReviewCoverage::KEY, 'post_implementation']).uniq.freeze
       PREVIOUS_CI_KEY = 'ci_review_agents'
 
       private

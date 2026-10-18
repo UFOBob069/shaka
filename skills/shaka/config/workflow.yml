@@ -360,8 +360,9 @@ phases:
         rather than calling it ready. Record which reviewers ran at which revision in the chat and
         the PR review status line. See
         [choose a local reviewer](<{{package_root}}/skills/shaka/references/review.md#choose-a-local-reviewer>).
-      - `reviewer` returns up to the trusted `review.local_review_count` reviewers, one by default;
-        a user who asks for a different number in this task gets `--count N`. When it lists several,
+      - `reviewer` returns up to the trusted `review.local_review_count` reviewers, one by default,
+        or one per `review.provider_coverage` provider; without coverage, a user who asks for a
+        different number in this task gets `--count N`. When it lists several,
         start each on the same committed head with one shared `--ledger`. Wait until every one
         returns `completed` or a recorded `not_completed`, then triage all their findings together
         in one `review record`, one entry per problem mapping each reviewer that reported it to its

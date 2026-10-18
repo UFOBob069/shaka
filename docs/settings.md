@@ -169,7 +169,8 @@ Meaningful implementation also gets a local adversarial review before push:
   current workflow allows the implementation model in a fresh session.
 - Address findings before pushing.
 - To have several reviewers read each commit, set
-  [`review.local_review_count`](#reviewlocal_review_count).
+  [`review.local_review_count`](#reviewlocal_review_count), or name the providers with
+  [`review.provider_coverage`](#reviewprovider_coverage).
 
 ![A local review runs before push, configured CI review jobs report after push, and the merge check requires a posted review covering the merged commit before the agent merges.](img/review-layers.svg)
 
@@ -316,7 +317,7 @@ review:
 Shaka prefers a different provider from the one that implemented the change,
 then follows your list order among available reviewers. These settings choose
 the available choices; [`local_review_count`](#reviewlocal_review_count) chooses how
-many run. Listing three does not require all three to review every change.
+many run, or [`provider_coverage`](#reviewprovider_coverage) names which providers do. Listing three does not require all three to review every change.
 Each developer reviews with the listed reviewers their machine has: Shaka skips one
 whose CLI is not installed, or DeepSeek when `OPENROUTER_API_KEY` is not set, and
 names the skipped reviewer with setup steps. When none is set up, a fresh session
@@ -436,7 +437,8 @@ records your choice, so no edit is needed.
 ## `review.local_review_count`
 
 **Optional. Default: 1.** How many reviewers from `local_review_agents` read each
-commit before its findings are fixed. With more than one reviewer, the agent starts
+commit before its findings are fixed. To name which providers review instead, use
+[`provider_coverage`](#reviewprovider_coverage); the two cannot both be set. With more than one reviewer, the agent starts
 those reviews concurrently.
 The helper refuses to record findings while a started review is still running.
 The agent combines their findings so a problem two reviewers found is fixed once.
@@ -466,6 +468,40 @@ Each extra reviewer adds cost and may increase elapsed time. The PR's
 review comment shows every reviewer's rounds, and one review of the final commit is
 enough for `shaka merge`. A task can ask for a different number, which wins for that
 task.
+
+## `review.provider_coverage`
+
+**Optional. Default: none.** Name the providers whose reviewers read every commit. Shaka runs
+one local reviewer for each listed provider: the first entry from that provider in
+`local_review_agents` that works on the machine. A provider that did not write the change
+goes first. This replaces [`local_review_count`](#reviewlocal_review_count), so set one or
+the other.
+
+Ask your agent:
+
+> $shaka Have Claude and Codex review every commit.
+
+```yaml
+review:
+  local_review_agents:
+    - provider: anthropic
+      model_family: claude
+    - provider: openai
+      model_family: codex
+  provider_coverage: [anthropic, openai]
+```
+
+When Claude writes the change, Codex reviews it, then a fresh Claude session. Reviewers listed
+in `local_review_agents` from other providers run only when a task asks for one by name.
+
+When a listed provider cannot review, the agent copies Shaka's gap report into the published
+review, which shows it near the top with the reason: that provider is not listed in `local_review_agents`, not set up on the machine, or
+unavailable. Shaka does not substitute another provider, and the gap never blocks merging.
+Writing the change does not count as reviewing it.
+
+To pay for one local review instead, leave this unset and set `local_review_count: 1`. With
+the [hosted Claude review](configure-repository.md#add-hosted-claude-review), a PR that only
+Codex reviewed locally still gets a full Claude review on GitHub.
 
 ## `review.prompt_file`
 

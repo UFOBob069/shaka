@@ -5,6 +5,7 @@ require 'optparse'
 require_relative 'error'
 require_relative 'repository_config'
 require_relative 'reviewer_selection'
+require_relative 'review_coverage'
 require_relative 'configuration'
 require_relative 'doctor/cli_inventory'
 
@@ -38,19 +39,35 @@ module Shaka
     def selection
       review = config.review
       inventory = Doctor::CliInventory.new(root:, environment: ENV).call(review)
-      result = ReviewerSelection.new(reviewers: review[RepositoryConfig::ReviewSchema::LOCAL_REVIEW_AGENTS],
+      unavailable = identities(:unavailable)
+      not_set_up = Doctor::CliInventory.not_set_up(inventory)
+      result = ReviewerSelection.new(reviewers: candidates(review, unavailable + not_set_up),
                                      implementers: identities(:implementers, required: true),
-                                     unavailable: identities(:unavailable),
-                                     not_set_up: Doctor::CliInventory.not_set_up(inventory),
-                                     count: @options.fetch(:count) { count(review) }).call
-      result.merge('setup_notices' => Doctor::CliInventory.setup_notices(inventory))
+                                     unavailable:, not_set_up:, count: count(review)).call
+      result.merge('provider_coverage' => coverage(review, result),
+                   'setup_notices' => Doctor::CliInventory.setup_notices(inventory))
     end
 
-    # A task's --count wins; otherwise use the selected configuration's count.
+    # A task's --count wins unless coverage sets one reviewer per listed provider.
     def count(review)
-      key = RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT
-      review.fetch(key) { Defaults.fetch('review', key) }
+      return ReviewCoverage.count(review) unless @options.key?(:count)
+      raise OptionParser::InvalidArgument, "--count does not apply while review.#{ReviewCoverage::KEY} is set" unless
+        ReviewCoverage.names(covered(review)).empty?
+
+      @options[:count]
     end
+
+    def candidates(review, skipped)
+      entries = review[RepositoryConfig::ReviewSchema::LOCAL_REVIEW_AGENTS] || []
+      usable = ->(entry) { skipped.none? { |other| key(other) == key(entry) } }
+      ReviewCoverage.candidates(entries, covered(review), usable)
+    end
+
+    def key(entry) = entry.values_at('provider', 'model_family').map(&:downcase)
+
+    def coverage(review, selection) = ReviewCoverage.coverage(covered(review), selection)
+
+    def covered(review) = ReviewCoverage.setting(review, ReviewCoverage::KEY)
 
     def identities(key, required: false)
       values = @options.fetch(key, [])

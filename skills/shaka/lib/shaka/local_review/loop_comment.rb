@@ -4,6 +4,7 @@ require_relative 'comment'
 require_relative 'attention'
 require_relative 'comment_part'
 require_relative 'commit_section'
+require_relative '../review_coverage'
 
 module Shaka
   # The whole review loop in one comment: the current outcome once, a row per reviewed commit, one
@@ -28,6 +29,7 @@ module Shaka
         @ledger_id.nil? || @ledger_id.to_s.match?(LEDGER_ID)
 
       @usage_url = usage_url
+      @provider_coverage = content['provider_coverage']
       @commits = @rounds.chunk(&:head).map { |_, rounds| LocalReviewCommitSection.new(rounds, subject, @links) }
       @attention = LocalReviewAttention.new(@rounds, @links, assessments: @assessment_view)
     end
@@ -60,11 +62,19 @@ module Shaka
     end
 
     def header
-      [TITLE, "**Reviewed revision:** #{@links.commit(@rounds.last.head)}", *@attention.visible,
-       *@assessment_view.unavailable, coverage, usage_link, *fallback_notice, *settings_notice,
+      [TITLE, reviewers_marker, "**Reviewed revision:** #{@links.commit(@rounds.last.head)}", *@attention.visible,
+       *@assessment_view.unavailable, coverage, usage_link,
+       *ReviewCoverage.notice(@provider_coverage, final_reviewers, redact: LOCAL_PATH), *fallback_notice,
+       *settings_notice,
        *LocalReviewBound.new(@rounds, @max_rounds, budget: @task_budget).lines,
        *LocalReviewBudget.notice(@task_budget, completed: @rounds.size)]
     end
+
+    # Helper-written right under the title, where the hosted review reads which providers reviewed
+    # this commit; a line a reviewer's report imitates further down does not count.
+    def reviewers_marker = "<!-- shaka:local-reviewers #{@rounds.last.head} #{final_reviewers.join(' ')} -->"
+
+    def final_reviewers = @rounds.select { |round| round.head == @rounds.last.head }.map(&:reviewer).uniq
 
     # Which continuation holds each moved commit section's reports.
     def continuations(moved)

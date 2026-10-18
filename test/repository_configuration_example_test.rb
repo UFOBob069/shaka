@@ -9,7 +9,7 @@ require 'shaka/local_review/runner'
 class RepositoryConfigurationExampleTest < Minitest::Test
   ROOT = File.expand_path('..', __dir__)
   POLICY_KEYS = %w[
-    required ci_review_jobs local_review_agents local_review_count post_implementation prompt_file
+    required ci_review_jobs local_review_agents local_review_count post_implementation prompt_file provider_coverage
   ].freeze
 
   def setup

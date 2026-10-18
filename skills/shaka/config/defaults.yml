@@ -5,7 +5,8 @@
 review:
   ci_review_wait: one # Wait for one configured hosted review report before merge.
   local_max_rounds: 5 # Committed heads one local review ledger may review.
-  local_review_count: 1 # Local reviewers run on each committed head.
+  local_review_count: 1 # Local reviewers run on each committed head; unused when provider_coverage lists providers.
+  provider_coverage: [] # One local reviewer per listed provider, in place of local_review_count.
   post_implementation: # The finished-result checkpoint before merge readiness.
     enabled: true
     reviewer: openai/codex

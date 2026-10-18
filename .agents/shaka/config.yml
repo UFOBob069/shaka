@@ -17,8 +17,9 @@ review:
     - claude-review
   ci_review_wait: one # Default. A word, not a number: none, one, or all CI review reports.
   local_max_rounds: 5 # Default: most commits one local review covers before the agent asks you.
-  # Default 1. We use 2, Claude and Codex: a mistake in Shaka weakens checks on every project.
-  local_review_count: 2
+  # Default: none, so local_review_count (default 1) sets how many review. Ours: Claude and Codex
+  # both review every commit, because a mistake in Shaka weakens checks on every project.
+  provider_coverage: [anthropic, openai]
   # Default: Shaka's built-in prompt. Ours also weighs the cost of instruction changes (README.md).
   prompt_file: .agents/shaka/review-prompt.md
   post_implementation: # Defaults: the final "did we build the right thing?" check before merge.

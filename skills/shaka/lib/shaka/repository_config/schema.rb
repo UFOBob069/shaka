@@ -5,6 +5,7 @@ require_relative '../error'
 require_relative '../prose_limits'
 require_relative '../repo_prefix'
 require_relative '../review_prompt'
+require_relative '../review_coverage'
 require_relative 'branch_schema'
 require_relative 'command_schema'
 require_relative 'merge_schema'
@@ -24,6 +25,9 @@ module Shaka
       REQUIRED = %w[version review merge].freeze
       OPTIONAL = %w[base_branch branches wip pr_description repo_prefix opening_check prose_limits
                     project_guidance].freeze
+      OPTIONAL_REVIEW_KEYS = [ReviewSchema::CI_REVIEW_JOBS, ReviewSchema::LOCAL_REVIEW_AGENTS, ReviewSchema::PROMPT_FILE,
+                              ReviewSchema::LOCAL_REVIEW_COUNT, ReviewCoverage::KEY, ReviewLimit::KEY,
+                              'ci_review_wait', 'post_implementation'].freeze
 
       attr_reader :commands
 
@@ -99,10 +103,9 @@ module Shaka
         review = mapping!(@data['review'], 'review')
         ReviewSchema.retired!(review)
         ReviewSchema.renamed!(review)
-        optional = [ReviewSchema::CI_REVIEW_JOBS, ReviewSchema::LOCAL_REVIEW_AGENTS, ReviewSchema::PROMPT_FILE,
-                    ReviewSchema::LOCAL_REVIEW_COUNT, ReviewLimit::KEY, 'ci_review_wait', 'post_implementation']
-        keys!(review, ['required'], optional, 'review')
+        keys!(review, ['required'], OPTIONAL_REVIEW_KEYS, 'review')
         ReviewSchema.new(review).validate
+        ReviewCoverage.validate!(review)
         count = ReviewSchema::LOCAL_REVIEW_COUNT
         positive_integer!(review[count], "review.#{count}") if review.key?(count)
         local_prompt_files!(review) unless @available_commands

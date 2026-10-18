@@ -442,7 +442,8 @@ Legacy rounds without captured records still accept `model`, `tokens`, `cost`, a
 When `shaka reviewer` did not return `different_provider`, add
 `fallback` with its `outcome` and one `attempts` entry per reviewer tried, copying each
 `reviewer`, `failure_stage`, and `reason` from its `shaka review run` result. Leave
-`attempts` empty when selection tried no other reviewer. The helper replaces each `reason`
+`attempts` empty when selection tried no other reviewer. Copy the last `shaka reviewer`
+result's `provider_coverage` object to the top level unchanged. The helper replaces each `reason`
 from its first absolute or home-directory path onward with `[path]`, so a setup failure does
 not publish a local file location.
 

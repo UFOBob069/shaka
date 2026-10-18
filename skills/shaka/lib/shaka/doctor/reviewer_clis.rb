@@ -3,6 +3,7 @@
 require_relative 'check'
 require_relative '../configuration'
 require_relative 'cli_inventory'
+require_relative '../review_coverage'
 
 module Shaka
   class Doctor
@@ -50,12 +51,29 @@ module Shaka
         return ['Repository configuration unavailable; reviewer readiness is not assessed.'] unless review
 
         configured = entries.select { |entry| entry[:configured] }
-        key = RepositoryConfig::ReviewSchema::LOCAL_REVIEW_COUNT
-        lines = warnings(configured, review.fetch(key) { Defaults.fetch('review', key) })
+        lines = warnings(configured, review)
         lines.concat(CliInventory.setup_notices(configured).map { |notice| notice.fetch('summary') })
         lines << 'Some CLI lookups could not be checked.' if entries.any? { |entry| entry[:unchecked] }
         lines
       end
+
+      # Coverage names the providers that must review, so a count of other providers does not satisfy it.
+      def shortfall(providers, review)
+        return covered_shortfall(providers, review) unless covered(review).empty?
+
+        count = ReviewCoverage.count(review)
+        return [] unless providers.size < count
+
+        ["#{providers.size} provider#{'s' unless providers.one?} available; #{count} reviewers requested."]
+      end
+
+      def covered_shortfall(providers, review)
+        (covered(review) - providers.map(&:downcase)).map do |name|
+          "No configured reviewer is installed for covered provider #{name}."
+        end
+      end
+
+      def covered(review) = ReviewCoverage.names(ReviewCoverage.setting(review, ReviewCoverage::KEY))
 
       def guidance(entries, warnings)
         lines = entries.filter_map { |entry| entry[:guidance] }
@@ -64,13 +82,12 @@ module Shaka
         lines.empty? ? nil : lines.join("\n    ")
       end
 
-      def warnings(entries, count)
-        return [] if entries.empty?
-
+      # Without configured reviewers a fresh host review is healthy, unless coverage names providers.
+      def warnings(entries, review)
         providers = entries.select { |entry| entry[:installed] }.map { |entry| entry[:provider] }.uniq
-        lines = []
-        lines << "#{providers.size} provider#{'s' unless providers.one?} available; #{count} reviewers requested." if
-          providers.size < count
+        return covered_shortfall(providers, review) if entries.empty?
+
+        lines = shortfall(providers, review)
         if providers == [@provider]
           lines << "Only the current host's provider (#{@provider}) is available; no different-provider CLI was found."
         end
