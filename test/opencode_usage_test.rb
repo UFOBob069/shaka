@@ -251,6 +251,19 @@ class OpencodeUsageFailuresTest < Minitest::Test
     end
   end
 
+  def test_time_that_is_not_an_object_is_disclosed_as_unreadable
+    Dir.mktmpdir do |directory|
+      user = user_message(NEW_USER, 0)
+      user['info']['time'] = 'bad'
+      message = assistant_message('resp-new', NEW_USER, 0, 0, tokens(475, 0, 20))
+      message['info']['time'] = 5
+      output = report('--host', 'opencode', '--file', write_export(directory, { 'messages' => [user, message] }))
+      assert_includes output, 'Native usage is PARTIAL'
+      assert_includes output, 'Unreadable or unidentifiable records'
+      refute_includes output, 'SENSITIVE'
+    end
+  end
+
   def test_failed_export_stays_unknown
     Dir.mktmpdir do |directory|
       executable = File.join(directory, 'opencode')

@@ -103,18 +103,22 @@ module Shaka
     end
 
     def created_at(info)
-      created = info.dig('time', 'created')
+      created = message_time(info)['created']
       created.is_a?(Integer) && created >= 0 ? created : -1
     end
 
     def response(info, configured)
       return unless info['role'] == 'assistant'
 
+      time = message_time(info)
       { 'response_id' => info['id'], 'turn_id' => info['parentID'],
-        'timestamp' => iso(info.dig('time', 'completed') || info.dig('time', 'created')),
+        'timestamp' => iso(time['completed'] || time['created']),
         'configuration' => [info['providerID'], configured, info['modelID'], info['variant']],
         'usage' => token_usage(info['tokens']) }
     end
+
+    # A time that is present but not an object is unreadable; a missing one stays UNKNOWN.
+    def message_time(info) = info['time'].nil? || info['time'].is_a?(Hash) ? info['time'].to_h : unreadable
 
     def token_usage(tokens)
       tokens = {} unless tokens.is_a?(Hash)
@@ -124,9 +128,7 @@ module Shaka
         'reasoning_output_tokens' => tokens['reasoning'], 'total_tokens' => tokens['total'] }
     end
 
-    def iso(millis)
-      Time.at(Rational(millis, 1000)).utc.iso8601(3) if millis.is_a?(Integer) && millis >= 0
-    end
+    def iso(millis) = (Time.at(Rational(millis, 1000)).utc.iso8601(3) if millis.is_a?(Integer) && millis >= 0)
 
     def parse(raw)
       record = JSON.parse(raw.to_s)
