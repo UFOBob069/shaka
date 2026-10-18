@@ -32,8 +32,7 @@ module Shaka
       verify_published(published)
       return { 'state' => 'superseded' } unless latest?(published)
 
-      # Ready publications leave warning clearance to the maintainer; they cannot erase a newer blocker.
-      return { 'state' => 'unchanged', 'head' => head } if publication.state == 'ready'
+      return clear(current, head) if publication.state == 'ready'
 
       failure = draft_failure(head)
       update(current, head, publication.summary, published)
@@ -44,12 +43,24 @@ module Shaka
 
     private
 
-    def update(current, head, summary, published)
+    # The latest checkpoint is ready, so only a warning for an earlier head is settled; one naming
+    # this head, or no head, stays for the maintainer. The task owner still marks the PR ready.
+    def clear(current, head)
       body = current['body'].to_s
-      remaining = MergeWarningRegion.remove(body)
-      updated = "#{warning(head, summary, published)}#{remaining}"
+      cleared = ![nil, head].include?(MergeWarningRegion.head(body, @github.repository))
+      replace(current, MergeWarningRegion.remove(body)) if cleared
+      { 'state' => cleared ? 'cleared' : 'unchanged', 'head' => head, 'draft' => current['draft'] }
+    end
+
+    def update(current, head, summary, published)
+      updated = "#{warning(head, summary, published)}#{MergeWarningRegion.remove(current['body'].to_s)}"
       raise Error, 'Merge warning exceeds GitHub description length.' if updated.length > 65_536
 
+      replace(current, updated)
+    end
+
+    def replace(current, updated)
+      body = current['body'].to_s
       @github.verify_rendering(updated) unless updated == body
       FeaturePublication.unchanged!(@github, body, current)
       write(updated) unless updated == body

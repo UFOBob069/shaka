@@ -69,7 +69,7 @@ class PostImplementationMergeWarningLifecycleTest < Minitest::Test
     end
   end
 
-  def test_ready_retains_the_warning_for_deliberate_manual_clearance
+  def test_ready_checkpoint_for_the_blocked_head_keeps_the_warning
     with_result do |result, path|
       github, = publish(block(result.dup), path)
       body = github.description_body
@@ -143,6 +143,70 @@ class PostImplementationMergeWarningLifecycleTest < Minitest::Test
       outcome = publish(result, path, github:)
 
       assert_equal 'superseded', JSON.parse(outcome[2]).dig('merge_safeguard', 'state')
+      assert_equal body, github.description_body
+    end
+  end
+end
+
+class PostImplementationMergeWarningClearanceTest < Minitest::Test
+  include PostImplementationPublicationFixture
+
+  CLOSE = Shaka::PostImplementationMergeWarning::CLOSE
+
+  def block(result) = result.merge('status' => 'not_completed', 'reason' => 'Review execution failed.')
+
+  def advance(github, result, head)
+    github.instance_variable_set(:@head, head)
+    github.walkthrough = head
+    report = JSON.parse(File.read(result['report'])).merge('head' => head)
+    File.write(result['report'], JSON.generate(report))
+    result.merge('head' => head)
+  end
+
+  def test_ready_checkpoint_for_a_new_head_clears_the_warning_and_reports_the_draft
+    with_result do |result, path|
+      github, = publish(block(result.dup), path)
+      outcome = publish(advance(github, result, 'c' * 40), path, github:)
+
+      assert_equal 0, outcome[1]
+      assert_equal({ 'state' => 'cleared', 'head' => 'c' * 40, 'draft' => true },
+                   JSON.parse(outcome[2]).fetch('merge_safeguard'))
+      assert_equal "<!-- shaka:begin -->\nFeature summary\n<!-- shaka:end -->\n\nHuman notes", github.description_body
+    end
+  end
+
+  def test_ready_checkpoint_for_a_new_head_reports_a_malformed_warning
+    with_result do |result, path|
+      github, = publish(block(result.dup), path)
+      body = "#{github.description_body}\n#{CLOSE}"
+      github.instance_variable_set(:@description_body, body)
+      outcome = publish(advance(github, result, 'c' * 40), path, github:)
+
+      assert_equal [1, 'failed'], [outcome[1], JSON.parse(outcome[2]).dig('merge_safeguard', 'state')]
+      assert_equal body, github.description_body
+    end
+  end
+
+  def test_a_summary_quoting_another_head_line_cannot_clear_a_same_head_warning
+    with_result do |result, path|
+      quoted = "· Head [`ddddddd`](https://github.com/example/test/commit/#{'d' * 40}). Passing"
+      github, = publish(result.merge('status' => 'not_completed', 'reason' => quoted), path)
+      body = github.description_body
+      assert_includes body, quoted
+
+      assert_equal 'unchanged', JSON.parse(publish(result, path, github:)[2]).dig('merge_safeguard', 'state')
+      assert_equal body, github.description_body
+    end
+  end
+
+  def test_ready_checkpoint_keeps_a_warning_without_a_recorded_head
+    with_result do |result, path|
+      github = GitHub.new('a' * 40)
+      hold = "Manual hold for [this](https://github.com/example/test/commit/#{'d' * 40})"
+      body = "#{Shaka::PostImplementationMergeWarning::OPEN}\n#{hold}\n#{CLOSE}\n\n#{github.description_body}"
+      github.instance_variable_set(:@description_body, body)
+
+      assert_equal 0, publish(result, path, github:)[1]
       assert_equal body, github.description_body
     end
   end

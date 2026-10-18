@@ -26,7 +26,7 @@ module PostImplementationPublicationFixture
       return { 'login' => viewer_login } if path == 'user'
 
       @description_body = fields.fetch(:body) if method == 'PATCH'
-      { 'state' => 'open', 'head' => { 'sha' => @head }, 'base' => { 'sha' => 'b' * 40 },
+      { 'state' => 'open', 'draft' => @draft, 'head' => { 'sha' => @head }, 'base' => { 'sha' => 'b' * 40 },
         'body' => @description_body }
     end
 
