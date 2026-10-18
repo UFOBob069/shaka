@@ -72,7 +72,14 @@ module Shaka
         return [config.to_h['repo_prefix'], 'seam']
       end
 
-      [Configuration.private_source(root: @root, ref: sha).candidate_config&.to_h&.[]('repo_prefix'), 'individual']
+      [individual_prefix(sha), 'individual']
+    end
+
+    # A display label must not fail where individual settings cannot be inspected, such as a subdirectory root.
+    def individual_prefix(sha)
+      Configuration.private_source(root: @root, ref: sha).candidate_config&.to_h&.[]('repo_prefix')
+    rescue Error
+      nil
     end
   end
 end

@@ -3,9 +3,12 @@
 require_relative 'test_helper'
 require_relative 'configuration_layout_fixture'
 require 'shaka/prefix'
+require 'json'
 
 class PrefixIndividualSettingsTest < Minitest::Test
   include ConfigurationLayoutFixture
+
+  COMMAND = File.expand_path('../skills/shaka/scripts/shaka', __dir__)
 
   def test_complete_individual_settings_supply_the_prefix
     with_individual_settings('repo_prefix' => 'CPF') do |root, ref|
@@ -48,7 +51,34 @@ class PrefixIndividualSettingsTest < Minitest::Test
     end
   end
 
+  def test_a_subdirectory_root_keeps_the_fallback
+    with_individual_settings('repo_prefix' => 'CPF') do |root, ref|
+      subdirectory = File.join(root, 'sub')
+      FileUtils.mkdir_p(subdirectory)
+      assert_equal({ 'prefix' => 'SUB', 'source' => 'fallback' }, prefix(subdirectory, ref))
+    end
+  end
+
+  def test_repos_refresh_catalogs_the_individual_prefix
+    with_individual_settings('repo_prefix' => 'CPF') do |root, _ref|
+      git!(root, 'remote', 'add', 'origin', 'https://github.com/acme/solo.git')
+      git!(root, 'update-ref', 'refs/remotes/origin/main', 'HEAD')
+      git!(root, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main')
+      row = Dir.mktmpdir('shaka-repos-home') { |home| refreshed_row(home, root) }
+      assert_equal %w[CPF individual], row.values_at('prefix', 'prefix_source')
+    end
+  end
+
   private
+
+  def refreshed_row(home, root)
+    env = { 'SHAKA_HOME' => home, 'PATH' => ENV.fetch('PATH') }
+    [%w[add --root] + [root], %w[refresh]].each do |arguments|
+      _output, error, status = Open3.capture3(env, COMMAND, 'repos', *arguments)
+      raise error unless status.success?
+    end
+    JSON.parse(File.read(File.join(home, 'catalog.json'))).fetch('repositories').first
+  end
 
   def prefix(root, ref) = Shaka::Prefix.new(root:, ref:).call
 
