@@ -82,6 +82,7 @@ end
 class WorkflowCommandTest < Minitest::Test
   COMMAND = File.expand_path('../skills/shaka/scripts/shaka', __dir__)
   GUIDE_LINK = /\]\(<([^>]+\.md)(?:#([\w-]+))?>\)/
+  MARKDOWN_LINK_TARGET = /\]\((<[^>]*>|[^)\s]+)/
 
   def test_workflow_command_renders_every_phase_and_boundary
     output, status = Open3.capture2e(COMMAND, 'workflow')
@@ -120,6 +121,15 @@ class WorkflowCommandTest < Minitest::Test
       assert File.file?(path), "#{path} is not a guide"
       assert_includes heading_slugs(path), anchor, "#{path} has no heading for ##{anchor}" if anchor
     end
+  end
+
+  def test_rendered_guide_links_are_absolute_or_web_urls
+    output, status = Open3.capture2e(COMMAND, 'workflow')
+    relative = output.scan(MARKDOWN_LINK_TARGET).flatten.grep(/\.md(?:#|>|\z)/)
+                     .reject { |target| target.start_with?('</', 'https://') }
+
+    assert_predicate status, :success?, output
+    assert_empty relative, 'guide links must start from the installed package or a web URL'
   end
 
   def test_workflow_rejects_unknown_configuration_token
