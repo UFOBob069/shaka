@@ -20,7 +20,7 @@ class LocalReviewCommitPublishTest < Minitest::Test
       { 'message' => path.end_with?(LocalReviewCommentFixture::HEAD) ? 'Clarify review documentation' : 'Add review publication' }
     end
 
-    def reply(body:, key:)
+    def reply(body:, key:, **)
       existing = replies.find { |item| item.first == key }
       existing ? existing[1] = body : super
       { 'id' => replies.index { |item| item.first == key } + 1 }
@@ -236,14 +236,25 @@ class LocalReviewReplyPreflightTest < Minitest::Test
 
   def test_a_later_reply_rendering_failure_prevents_all_writes
     github = LocalReviewCommitPublishTest::Timeline.new
+    content = { 'rounds' => [round(EARLIER), round(report: report(body: "Bad <details>\n\n1. [P2] Missing test.\n"))] }
+    error = assert_raises(Shaka::Error) { Shaka::LocalReviewPublisher.new(content, github, 'o/r').publish }
+    assert_includes error.message, 'leaves its markup open'
+    assert_empty github.replies
+  end
+
+  # https://github.com/shakacode/shaka/issues/646: the inner backtick closes the code span, so GitHub
+  # shows `\n"` outside code. A report is published verbatim, so that alone must not refuse it.
+  def test_a_report_quoting_a_backtick_inside_a_code_span_is_published
+    github = LocalReviewCommitPublishTest::Timeline.new
+    quoted = 'The fixture is `"`\n"`.'
     def github.markdown(body)
       html = super
-      body.include?('Bad \n report') ? html.sub('<table>', '<p>Bad \n report</p><table>') : html
+      body.include?('The fixture') ? html.sub('<p>', '<p><code>"</code>\n"`.</p><p>') : html
     end
-    content = { 'rounds' => [round(EARLIER), round(report: report(body: 'Bad \n report'))] }
-    error = assert_raises(Shaka::Error) { Shaka::LocalReviewPublisher.new(content, github, 'o/r').publish }
-    assert_includes error.message, 'literal escape sequence'
-    assert_empty github.replies
+    content = { 'rounds' => [round(report: report(body: "#{quoted}\n\n1. [P2] Missing test.\n"))] }
+    Shaka::LocalReviewPublisher.new(content, github, 'o/r').publish
+
+    assert_includes github.replies.first.last, quoted
   end
 
   # https://github.com/shakacode/shaka/issues/478: the rendering check counted the literal

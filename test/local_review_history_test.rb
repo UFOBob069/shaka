@@ -24,7 +24,7 @@ module LocalReviewHistoryFixture
     def viewer_login = 'ada'
     def issue_comments = listing || comments.values
 
-    def verify_rendering(body)
+    def verify_rendering(body, **)
       paragraph = "<p>#{body[Shaka::LocalReviewHistory::ATTESTATION].strip.gsub('&', '&amp;')}</p>"
       body.strip.start_with?('REVIEWED ') ? paragraph : "<details><p>Rendered.</p></details>#{paragraph}"
     end
@@ -284,4 +284,45 @@ class LocalReviewAttestationTest < Minitest::Test
     assert_equal PRIOR, found['reviewed']
     assert_equal 'anthropic/claude:fixture', found['reviewer']
   end
+end
+
+# https://github.com/shakacode/shaka/issues/646: a published review quotes its reviewer reports
+# verbatim, so archiving it must not refuse a report GitHub renders with `\n` outside code.
+class LocalReviewQuotedReportHistoryTest < Minitest::Test
+  include LocalReviewHistoryFixture
+
+  QUOTED = 'The fixture is `"`\\n"`.'
+
+  # The real rendering check over a renderer that shows the quoted report's `\n` outside code.
+  class Renderer < LocalReviewHistoryFixture::GitHub
+    def verify_rendering(body, **) = Shaka::Publishing.instance_method(:verify_rendering).bind_call(self, body, **)
+
+    def markdown(text)
+      return '<p>Quoted text.</p>' unless text.match?(Shaka::LocalReviewHistory::ATTESTATION)
+
+      html = LocalReviewHistoryFixture::GitHub.instance_method(:verify_rendering).bind_call(self, text)
+      text.include?(QUOTED) ? "<p><code>\"</code>\\n\"`.</p>#{html}" : html
+    end
+  end
+
+  def test_an_earlier_review_quoting_an_escape_is_archived_and_can_be_retargeted
+    prior = quoted(comment(1))
+    github = Renderer.new([prior, comment(2, head: HEAD)])
+    assert_equal [[1], []], collapse(github, github.comments[2]).values_at('collapsed', 'unavailable')
+    assert_includes prior['body'], QUOTED
+
+    assert_equal [[1, 2], []], add_new_review(github).values_at('collapsed', 'unavailable')
+    assert_archived(prior['body'], 3)
+  end
+
+  def test_the_archive_wrapper_keeps_the_escape_check
+    github = Renderer.new([quoted(comment(1)), comment(2, head: HEAD)])
+    def github.markdown(text) = "#{super}#{'<p>\\n</p>' if text.include?(Shaka::LocalReviewHistory::MARKER)}"
+
+    assert_includes collapse(github, github.comments[2])['unavailable'].join, 'escape sequence'
+  end
+
+  private
+
+  def quoted(row) = row.merge('body' => row['body'].sub('Documented risk', "#{QUOTED}\n\nDocumented risk"))
 end

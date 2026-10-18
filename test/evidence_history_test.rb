@@ -20,7 +20,7 @@ module EvidenceHistoryFixture
 
     def viewer_login = 'ada'
 
-    def verify_rendering(_body)
+    def verify_rendering(_body, **)
       rendering_failure ? '<details></details><p>Outside the archive.</p>' : '<details><p>Rendered.</p></details>'
     end
 

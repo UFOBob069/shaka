@@ -35,7 +35,7 @@ module PostImplementationPublicationFixture
       { 'convertPullRequestToDraft' => { 'pullRequest' => snapshot.slice('id', 'isDraft', 'headRefOid') } }
     end
 
-    def verify_rendering(body) = body
+    def verify_rendering(body, **) = body
 
     def api_list(path)
       return walkthroughs if path.include?('/reviews')

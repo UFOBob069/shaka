@@ -21,7 +21,7 @@ class LocalReviewPublishCleanupSupport < Minitest::Test
     def viewer_login = 'agent'
     def issue_comments = @comments.values.map(&:dup)
 
-    def reply(body:, key:)
+    def reply(body:, key:, **)
       result = super
       id = result.fetch('id')
       @comments[id] = { 'id' => id, 'user' => { 'login' => viewer_login },
@@ -69,7 +69,7 @@ class LocalReviewPublishCleanupSupport < Minitest::Test
       comment.dup
     end
 
-    def verify_rendering(body)
+    def verify_rendering(body, **)
       return super unless body.include?(Shaka::LocalReviewHistory::MARKER) || body.start_with?("\nREVIEWED ")
 
       attestation = body.lines.reverse.find { |line| line.start_with?('REVIEWED ') }.strip

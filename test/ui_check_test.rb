@@ -29,7 +29,7 @@ module UiCheckFixture
     def snapshot = { 'state' => 'OPEN', 'headRefOid' => head }
     def viewer_login = 'ada'
     def issue_comments = comments.map(&:dup)
-    def verify_rendering(_body) = '<details><p>Rendered.</p></details>'
+    def verify_rendering(_body, **) = '<details><p>Rendered.</p></details>'
 
     def post_comment(body, attachments: [])
       @posts << body

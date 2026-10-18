@@ -8,14 +8,14 @@ require_relative 'publication'
 require_relative 'feature_guard'
 require_relative 'managed_region'
 require_relative 'merge_warning_region'
+require_relative 'rendered_prose'
 
 module Shaka
   # Publishes rendered Markdown, checking GitHub's own rendering before anything is written
   # and confirming the stored bytes afterwards.
   module Publishing
-    ESCAPE = /\\[nrt]/
+    VERBATIM = 'Quoted text.'
     REPLY_PAGES = 20
-    SEPARATOR = /\A\s*\|[\s|:-]*-{3}[\s|:-]*\|\s*\z/
 
     # A block builds the body from the pull request it replaces, using this same read.
     def description(body: nil)
@@ -27,14 +27,15 @@ module Shaka
       confirmed(api(pull_path, method: 'PATCH', fields: { body: merged }), merged)
     end
 
-    def reply(body:, key:, comment: nil, trust_config: nil,
+    # `verbatim` names quoted text the rendering check leaves to the caller; see verify_rendering.
+    def reply(body:, key:, comment: nil, trust_config: nil, verbatim: [], # rubocop:disable Metrics/ParameterLists
               machine_path: PublicComments::TrustConfig::MACHINE_PATH)
       mark = reply_mark(key)
       content = "#{mark}\n#{publishable(body)}"
       target = positive_integer(comment) if comment
       pull
       existing = prepared_reply(target, mark, trust_config, machine_path)
-      verify_rendering(content)
+      verify_rendering(content, verbatim:)
       confirmed(write_reply(existing, content, target), content)
     end
 
@@ -52,18 +53,15 @@ module Shaka
       listed.find { |reply| ours?(reply, mark, account) && (!target || reply['in_reply_to_id'] == target) }
     end
 
-    # A body GitHub will not render correctly must never reach the pull request.
-    def verify_rendering(body)
+    # A body GitHub will not render correctly must never reach the pull request. Each `verbatim`
+    # text, such as a reviewer report, is published as written, so only the text around it gets
+    # the escape and table checks; the caller checks how the whole rendering keeps its structure.
+    # Each text stands in for its first occurrence only, so a copy in surrounding text stays checked.
+    def verify_rendering(body, verbatim: [])
       html = markdown(body)
-      if bare_html(html).match?(ESCAPE)
-        raise Error, 'Rendered output contains a literal escape sequence; supply real line breaks.'
-      end
-
-      expected = PublicationText.prose(body).lines.count { |line| line.match?(SEPARATOR) }
-      rendered = html.scan('<table').size
-      return html if rendered >= expected
-
-      raise Error, "GitHub rendered #{rendered} of #{expected} table(s); check the separator column count."
+      checked = verbatim.reject(&:empty?).reduce(body) { |text, quoted| text.sub(quoted) { VERBATIM } }
+      RenderedProse.check!(checked, checked == body ? html : markdown(checked))
+      html
     end
 
     def markdown(text)
@@ -72,9 +70,6 @@ module Shaka
     end
 
     private
-
-    # Escapes GitHub preserved inside a code element were written on purpose.
-    def bare_html(html) = html.gsub(%r{<pre\b.*?</pre>}m, '').gsub(%r{<code\b.*?</code>}m, '')
 
     # Only a comment this account wrote, whose body opens with the marker, is ours to replace.
     def ours?(comment, mark, account)

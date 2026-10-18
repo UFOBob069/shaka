@@ -43,6 +43,9 @@ module Shaka
 
     def footer(_content) = ''
 
+    # Earlier text the archive keeps unchanged and need not pass the escape and table checks again.
+    def quoted(_source) = []
+
     def order(comment)
       time = WalkthroughText.submitted_at(comment.merge('submitted_at' => comment['created_at']))
       id = comment['id']
@@ -118,7 +121,7 @@ module Shaka
     end
 
     def verify_history_rendering(body, source)
-      html = @github.verify_rendering(body)
+      html = @github.verify_rendering(body, verbatim: quoted(source))
       return if archived?(source)
 
       ending = footer(source)

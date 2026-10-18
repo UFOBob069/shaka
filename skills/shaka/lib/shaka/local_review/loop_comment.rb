@@ -56,7 +56,7 @@ module Shaka
       blocks = [*header, commit_table(continuations(@commits.take(moved))), findings, *shown.map(&:to_s),
                 @rounds.last.attestation]
       LocalReviewCommentPart.new(key, "#{blocks.join("\n\n")}\n", @rounds.last.attestation,
-                                 [FINDINGS, *shown.flat_map(&:summaries)])
+                                 [FINDINGS, *shown.flat_map(&:summaries)], reports_of(shown))
     end
 
     def header
@@ -95,8 +95,10 @@ module Shaka
                 'Local Adversarial Review comment.',
                 *group.map(&:to_s), attestation]
       LocalReviewCommentPart.new("#{key}-#{number}", "#{blocks.join("\n\n")}\n", attestation,
-                                 group.flat_map(&:summaries))
+                                 group.flat_map(&:summaries), reports_of(group))
     end
+
+    def reports_of(commits) = commits.flat_map(&:rounds).map(&:published_report)
 
     def check_size!(part)
       return if part.size <= (part.key == key ? LIMIT : LIMIT - ARCHIVE_ROOM)

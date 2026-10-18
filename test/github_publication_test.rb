@@ -237,6 +237,44 @@ class GitHubReplyTest < Minitest::Test
   end
 end
 
+# Reviewer reports are quoted verbatim, so only the text around them gets the escape check.
+class GitHubVerbatimReplyTest < Minitest::Test
+  include PublicationFixtures
+
+  # https://github.com/shakacode/shaka/issues/646: a reviewer report's backtick closed its code span
+  # early, so GitHub showed a literal `\n` outside code and the whole review comment was refused.
+  def test_a_verbatim_report_may_render_an_escape_outside_code
+    report = 'The fixture is `"`\\n"`.'
+    posted = "<!-- shaka:reply:review -->\n#{BODY}\n#{report}\n"
+    github = client(pull_response(''), viewer_response, response([]), html_response('<p><code>"</code>\\n"`.</p>'),
+                    html_response('<p>ok</p>'), response({ 'id' => 9, 'body' => posted }))
+    github.reply(body: "#{BODY}\n#{report}\n", key: 'review', verbatim: [report])
+    checked = JSON.parse(@calls[4].last)['text']
+    assert_equal ['POST', false, true], [sent_method(5), checked.include?(report), checked.include?('A summary.')]
+  end
+
+  def test_text_around_a_verbatim_report_keeps_the_escape_check
+    report = 'The fixture is `"`\\n"`.'
+    github = client(pull_response(''), viewer_response, response([]), html_response('<p>ok</p>'),
+                    html_response('<p>Shaka \\n text</p>'))
+    error = assert_raises(Shaka::Error) do
+      github.reply(body: "#{BODY}\nShaka \\n text\n\n#{report}\n", key: 'review', verbatim: [report])
+    end
+    assert_includes error.message, 'escape sequence'
+    assert_equal 5, @calls.size
+  end
+
+  def test_an_empty_or_repeated_verbatim_text_cannot_hide_surrounding_text
+    github = client(pull_response(''), viewer_response, response([]), html_response('<p>ok</p>'),
+                    html_response('<p>Shaka \\n quoted</p>'))
+    assert_raises(Shaka::Error) do
+      github.reply(body: "#{BODY}\nquoted\n\nShaka \\n quoted\n", key: 'review', verbatim: ['', 'quoted'])
+    end
+    checked = JSON.parse(@calls[4].last)['text']
+    assert_equal [false, true], [checked.include?("\nquoted\n"), checked.include?('Shaka \\n quoted')]
+  end
+end
+
 # The reply listing must page with flags gh actually accepts.
 class GitHubReplyPaginationTest < Minitest::Test
   include PublicationFixtures

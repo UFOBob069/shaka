@@ -4,8 +4,9 @@ require 'cgi'
 require_relative '../error'
 
 module Shaka
-  # One review comment to publish. `summaries` lists every disclosure summary in the order GitHub must show them.
-  LocalReviewCommentPart = Struct.new(:key, :body, :attestation, :summaries) do
+  # One review comment to publish. `summaries` lists every disclosure summary in the order GitHub must show them;
+  # `reports` lists the reviewer reports it quotes verbatim.
+  LocalReviewCommentPart = Struct.new(:key, :body, :attestation, :summaries, :reports) do
     def size = "<!-- shaka:reply:#{key} -->\n#{body}".length
 
     # Reports are published verbatim, so a stray fence or disclosure tag in one can swallow the rest

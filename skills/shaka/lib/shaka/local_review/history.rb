@@ -130,5 +130,12 @@ module Shaka
     end
 
     def footer(content) = "\n#{attestation(content)[0].strip}\n"
+
+    # A review quotes its reviewer reports verbatim, so the archive checks its own wrapper and leaves
+    # the earlier review, kept unchanged beneath any old pointer, to the structural archive check.
+    def quoted(source)
+      content = parts(source).last
+      [(archived?(source) ? content.split("\n", 2).last.to_s : content).rstrip]
+    end
   end
 end

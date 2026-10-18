@@ -18,8 +18,8 @@ module Shaka
     def publish
       summary = LocalReviewComment.new(@content).loop_summary
       parts = loop_comment.parts
-      parts.each { |part| part.check_rendering!(@github.verify_rendering(part.body)) }
-      results = parts.map { |part| @github.reply(body: part.body, key: part.key) }
+      parts.each { |part| part.check_rendering!(@github.verify_rendering(part.body, verbatim: part.reports)) }
+      results = parts.map { |part| @github.reply(body: part.body, key: part.key, verbatim: part.reports) }
       { 'comments' => results, 'summary' => summary, 'cleanup' => cleanup(results, parts.size) }
     end
 
