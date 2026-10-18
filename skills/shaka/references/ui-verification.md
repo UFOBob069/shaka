@@ -24,12 +24,21 @@ change needs. Follow this installed workflow if the current public guide differs
 ## Publish UI evidence
 
 Check captures for credentials as part of the workflow's privacy inspection.
-Publish them with `gh pr comment NUMBER --body-file BODY_FILE --attach 'CAPTURE#ALT TEXT'` (GitHub CLI 2.99 or
-later; a video uses `--attach CAPTURE`, since video has no alt text). The body file starts
-with the writer identifier required by Explain, then a `# Verification for COMMIT`
-heading that links the tested commit, then the verification note. Label captures with the
-tested revision, and read the comment back to confirm each capture became an uploaded
-URL; a local path is not evidence.
+Publish them with the saved helper's
+`ui-check OWNER/REPO NUMBER --head SHA --content-file PATH` (GitHub CLI 2.99 or later). The
+content JSON holds `identity`, the Explain writer fields; `body`, the verification note;
+`captures`, each `PATH#ALT TEXT` (a video takes its path alone, since it has no alt text);
+and optional `retire` and `earlier`. List in `earlier` the comment IDs of this PR's open UI
+checks posted before this command, which it cannot recognize alone. To place a capture, reference its path in `body` as a Markdown image; an unreferenced one
+is appended. The command adds the writer line and the heading that links
+the head, confirms each capture uploaded, and folds this account's earlier UI checks.
+Label captures with the tested revision.
+A UI check for a newer head carries all of the PR's current UI evidence. For a view the
+newer commits leave unchanged, say so and embed its earlier uploaded captures, labeled with
+the revision they show, or repeat the note recording why a capture could not be published;
+a link to the older comment does not replace it. The command refuses a check that leaves
+out a capture an open earlier check shows; embed it, or list its URL in `retire` when a new
+capture replaces it. When the result lists `unavailable` folds, fold those with `review collapse`.
 Once you resolve a preview for the description, whether through `deployment: auto` or a
 URL you supply, repeat the manual pass against it, or record on the PR why not.
 

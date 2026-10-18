@@ -15,7 +15,7 @@ module Shaka
     # Only these names are recorded, so a mistyped call cannot put an argument in the log.
     COMMANDS = %w[attention checkpoint claim comments description doctor enforcement evidence handoff install
                   issue-create merge post-implementation pr prefix recommendation reply repos resolve review
-                  review-prompt reviewer seam squash-message trial update-check usage walkthrough work
+                  review-prompt reviewer seam squash-message trial ui-check update-check usage walkthrough work
                   workflow].freeze
     # Commands whose second word selects the operation; any other second word is an argument.
     # A test keeps them equal to each command's own list.

@@ -38,6 +38,13 @@ module Shaka
       confirmed(write_reply(existing, content, target), content)
     end
 
+    # gh uploads each "PATH#ALT TEXT" attachment, rewriting a body reference to the file;
+    # the REST API alone cannot upload images.
+    def post_comment(body, attachments: [])
+      argv = %W[gh pr comment #{@number} --repo #{@repository} --body-file -]
+      capture(argv + attachments.flat_map { |attachment| ['--attach', attachment] }, input: publishable(body))
+    end
+
     def prepared_reply(target, mark, trust_config, machine_path)
       account = viewer
       listed = replies(target)
