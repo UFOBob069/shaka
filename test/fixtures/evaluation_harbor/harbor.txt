@@ -1,0 +1,46 @@
+require 'json'
+require 'fileutils'
+require 'digest'
+if ARGV == ['--version']
+  puts '0.24.0'
+  exit
+end
+config = JSON.parse(File.read(ARGV.fetch(3)))
+root = File.dirname(__dir__)
+mode = File.read(File.join(root, 'fake-mode'))
+File.write(File.join(root, 'observed.json'), JSON.generate({ 'env' => ENV.to_h, 'cwd' => Dir.pwd, 'config' => config,
+  'credential_mode' => ENV['CODEX_AUTH_JSON_PATH'] && File.stat(ENV['CODEX_AUTH_JSON_PATH']).mode & 0777 }))
+name = config.fetch('trial_name')
+entries = %w[container network volume].flat_map do |kind|
+  verifier = name + '__verifier__' + 'long-key-' * 20
+  verifier = verifier[0, 53].sub(/[-._]+\z/, '') + '__' + Digest::SHA1.hexdigest(verifier)[0, 8] if verifier.size > 63
+  [name + '__env', verifier, name + '-unrelated__env'].map.with_index do |project, index|
+    labels = { 'com.docker.compose.project' => project }
+    { 'kind' => kind, 'Id' => kind + index.to_s, 'Name' => kind + index.to_s,
+      'Config' => { 'Labels' => labels }, 'Labels' => labels, 'Image' => 'sha256:' + 'a' * 64 }
+  end
+end
+File.write(File.join(root, 'resources.json'), JSON.generate(entries))
+trial = File.join(config.fetch('trials_dir'), name)
+FileUtils.mkdir_p(File.join(trial, 'agent/sessions/nested/subagents'))
+File.write(File.join(trial, 'agent/sessions/first.jsonl'), '{}')
+File.write(File.join(trial, 'agent/sessions/nested/subagents/second.jsonl'), '{}')
+exception = mode == 'exception' ? { 'exception_message' => 'private-native-error' } : nil
+File.write(File.join(trial, 'result.json'), JSON.generate({ 'trial_name' => name, 'exception_info' => exception }))
+FileUtils.rm(File.join(trial, 'result.json')) if mode == 'missing-result'
+if mode == 'foreign-session'
+  FileUtils.rm(File.join(trial, 'agent/sessions/first.jsonl'))
+  File.symlink(File.join(root, 'credential'), File.join(trial, 'agent/sessions/first.jsonl'))
+end
+if mode == 'foreign-session-root'
+  foreign = File.join(root, 'foreign-sessions')
+  FileUtils.mv(File.join(trial, 'agent/sessions'), foreign)
+  File.symlink(foreign, File.join(trial, 'agent/sessions'))
+end
+if mode == 'timeout'
+  child = fork { trap('TERM') {}; sleep 60 }
+  File.write(File.join(root, 'child-pid'), child.to_s)
+  trap('TERM') { exit 0 }
+  sleep 60
+end
+exit(mode == 'exit' ? 1 : 0)

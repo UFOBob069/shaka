@@ -1,0 +1,16 @@
+require 'json'
+root = File.dirname(__dir__)
+state = File.join(root, 'resources.json')
+entries = File.exist?(state) ? JSON.parse(File.read(state)) : []
+kind, operation = ARGV
+case operation
+when 'ls'
+  puts entries.select { |entry| entry['kind'] == kind }.map { |entry| entry.fetch('Id') }
+when 'inspect'
+  puts JSON.generate(entries.select { |entry| ARGV.drop(2).include?(entry['Id']) })
+when 'rm'
+  exit 1 if kind == 'container' && File.read(File.join(root, 'fake-mode')) == 'cleanup-error'
+  ids = ARGV.drop(2).reject { |value| value.start_with?('-') }
+  File.open(File.join(root, 'removed.jsonl'), 'a') { |file| file.puts(JSON.generate(ids)) }
+  File.write(state, JSON.generate(entries.reject { |entry| ids.include?(entry['Id']) }))
+end
