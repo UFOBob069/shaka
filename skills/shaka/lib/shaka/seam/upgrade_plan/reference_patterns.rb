@@ -11,9 +11,16 @@ module Shaka
           line.match?(directory_pattern(PATHS::COMMAND_DIRECTORY, "(?:/(?![[:alnum:]_-])|#{directory_end})"))
         end
 
-        # A terminal `**` still covers every moved path, so only partial globs block.
         def layout_glob_reference?(line)
-          line.match?(directory_pattern(PATHS::DIRECTORY, '/(?:\?|\*(?!\*(?![[:alnum:]_./*?\[{-])))'))
+          remaining = line.gsub(whole_directory_glob_entry, '\k<prefix>')
+          remaining.match?(directory_pattern(PATHS::DIRECTORY, '/(?:\\*|\\?)'))
+        end
+
+        # A `.agents/**` entry standing alone in a pattern list or ignore file still covers every moved path.
+        def whole_directory_glob_entry
+          key = %q{(?:["']?[\w.-]+["']?[ \t]*[:=][ \t]*)?}
+          item = %q(["']?[^\s"',\]]+["']?[ \t]*,[ \t]*)
+          %r{^(?<prefix>[ \t]*(?:-[ \t]*)?#{key}(?:\[[ \t]*)?(?:#{item})*["']?/?)#{Regexp.escape(PATHS::DIRECTORY)}/\*\*(?![[:alnum:]_./*?\[\{-])}o
         end
 
         def directory_pattern(path, ending)

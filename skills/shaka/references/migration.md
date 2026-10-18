@@ -30,7 +30,8 @@ values, script modes, and command arguments. Recognized root calculations use Gi
 instead of a fixed number of parent directories. Ambiguous moved commands, tracked
 scripts with shebangs that refer to old paths, computed path prefixes, and directory-wide
 patterns such as `.agents/*` or `.agents/bin/**` block for explicit repair. A
-whole-directory `.agents/**` glob stays as written. Other unambiguous tracked text references to moved
+whole-directory `.agents/**` entry in a pattern list, ignore file, or CODEOWNERS stays
+as written. Other unambiguous tracked text references to moved
 files, including CI and guide references, are rewritten. Historical changelog lines
 stay as written. Historical-sounding guide lines block for explicit repair, because
 a current instruction can appear later in the same line. Existing new-layout files,

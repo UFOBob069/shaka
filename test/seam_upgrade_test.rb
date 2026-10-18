@@ -2027,6 +2027,26 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     end
   end
 
+  def test_whole_directory_glob_entries_in_ignore_files_stay_as_written
+    { '.gitignore' => ".agents/**\n", '.github/CODEOWNERS' => "/.agents/** @maintainers\n" }.each do |name, source|
+      with_repository do |root|
+        write_tracked(root, name, source)
+        assert_equal 'ready', report(root).fetch('status'), name
+      end
+    end
+  end
+
+  def test_double_star_glob_in_commands_still_blocks
+    { 'ci.rb' => "Dir.glob('.agents/**').each { |path| puts path }\n",
+      'ci.sh' => "#!/bin/sh\nls .agents/**\n",
+      '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n" }.each do |name, source|
+      with_repository do |root|
+        write_tracked(root, name, source)
+        assert_blocked_with(root, 'old layout-directory pattern')
+      end
+    end
+  end
+
   def test_partial_layout_globs_still_block
     ['.agents/*', '.agents/**/agent-workflow.yml', '.agents/**/bin/test', '.agents/**.yml'].each do |glob|
       with_repository do |root|
@@ -2036,11 +2056,13 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     end
   end
 
-  def write_workflow(root, source)
-    path = File.join(root, '.github/workflows/ci.yml')
+  def write_workflow(root, source) = write_tracked(root, '.github/workflows/ci.yml', source)
+
+  def write_tracked(root, name, source)
+    path = File.join(root, name)
     FileUtils.mkdir_p(File.dirname(path))
     File.write(path, source)
-    commit_fixture(root, 'workflow glob')
+    commit_fixture(root, name)
     path
   end
 
@@ -2062,7 +2084,8 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'ci.rb' => "dir = File.join(root, '.agents')\nsystem(File.join(dir, 'custom-tool'))\n",
     'concat.rb' => "dir = root + '/.agents'\nsystem(\"\#{dir}/custom-tool\")\n",
     'paths.py' => "AGENTS = ROOT / \".agents\"\nrun(AGENTS / \"custom-tool\")\n",
-    'setup.md' => "Run `AGENT_DIR=$ROOT/.agents $AGENT_DIR/custom-tool`.\n"
+    'setup.md' => "Run `AGENT_DIR=$ROOT/.agents $AGENT_DIR/custom-tool`.\n",
+    'guide.md' => "Load it:\n\n```ruby\ndir = root + '/.agents'\nload(\"\#{dir}/custom-tool\")\n```\n"
   }.freeze
 
   def test_assigned_directory_values_without_command_names_block
