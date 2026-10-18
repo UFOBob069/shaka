@@ -24,7 +24,7 @@ module Shaka
   class LocalReviewComment
     KEY = 'local-adversarial-review'
     TITLE = '# Local Adversarial Review'
-    COLUMNS = %w[Round Commit Reviewer Model Effort Prompt Findings Tokens Cost].freeze
+    COLUMNS = %w[Round Commit Reviewer Findings Tokens Cost].freeze
     OUTCOMES = %w[different_provider same_provider same_model].freeze
     SETUP_GUIDE = 'https://github.com/shakacode/shaka/blob/main/docs/settings.md#add-a-second-reviewer'
     CLOSING = LocalReviewEvidence::CLOSING
@@ -121,8 +121,10 @@ module Shaka
       @rounds.chunk(&:head).flat_map { |_head, batch| LocalReviewTriage.details(batch) }
     end
 
+    # Every round usually shares one prompt, so it is named once below the table rather than per row.
     def table
-      [line(COLUMNS), line(['---'] * COLUMNS.size), *@rounds.map { |round| line(round.cells(@links)) }].join("\n")
+      rows = [line(COLUMNS), line(['---'] * COLUMNS.size), *@rounds.map { |round| line(round.cells(@links)) }]
+      "#{rows.join("\n")}\n\n#{LocalReviewSummary.prompts(@rounds, @links)}"
     end
 
     # Escaping backslashes first keeps a supplied `\|` from ending its cell early.
@@ -184,9 +186,11 @@ module Shaka
         check_count!
       end
 
+      # The reviewer cell leads with the identity the attestation names; `review reply` reads it back.
+      # Line breaks keep each setting whole when GitHub narrows the column.
       def cells(links)
         effort, = @report.match(CLOSING).captures
-        [@number.to_s, links.commit(@head), @reviewer, optional('model'), effort, prompt(links),
+        [@number.to_s, links.commit(@head), "#{@reviewer}<br>model #{optional('model')}<br>effort #{effort}",
          finding_count, usage_record ? LocalReviewUsage.tokens(usage_record) : optional('tokens'), cost]
       end
 
@@ -223,6 +227,16 @@ module Shaka
       # Identifies the ledger this round opened: its report never changes once written.
       def report_digest = Digest::SHA256.hexdigest(@report)
 
+      def prompt(links)
+        source = optional('prompt_source', 'Shaka default')
+        ref = @spec['criteria_ref']
+        return "#{source} · criteria not supplied" if ref.nil?
+        raise Error, "Round #{@number} criteria_ref must be a full commit SHA." unless
+          ref.to_s.match?(LocalReviewEvidence::SHA)
+
+        "#{source} · criteria #{links.criteria(ref)}"
+      end
+
       def check_fixes_follow!
         return unless @findings.any? { |finding| finding.fixed? && finding.commit == @head }
 
@@ -257,16 +271,6 @@ module Shaka
 
         estimate = value('estimate')
         value('cost') || (estimate ? "#{estimate} est." : 'UNKNOWN')
-      end
-
-      def prompt(links)
-        source = optional('prompt_source', 'Shaka default')
-        ref = @spec['criteria_ref']
-        return "#{source} · criteria not supplied" if ref.nil?
-        raise Error, "Round #{@number} criteria_ref must be a full commit SHA." unless
-          ref.to_s.match?(LocalReviewEvidence::SHA)
-
-        "#{source} · criteria #{links.criteria(ref)}"
       end
 
       def field(name) = PublicationText.single_line(@spec[name], "round #{@number} #{name}").strip

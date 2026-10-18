@@ -112,7 +112,9 @@ module Shaka
       # A heading or ledger cell is copied into the reply, so it cannot carry Markdown or a mention.
       HEADING = /^\#{1,6} ([A-Za-z0-9][A-Za-z0-9 ._-]*)$/
       TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._+-]*\z/
-      COLUMNS = %w[Commit Reviewer Model].freeze
+      COLUMNS = %w[Commit Reviewer].freeze
+      # The reviewer cell reads `PROVIDER/FAMILY<br>model MODEL<br>effort EFFORT`.
+      MODEL = /\A\s*model (.*)\z/
 
       def self.line(body:, url:, author: nil) = new(body, url, author).line
 
@@ -178,32 +180,37 @@ module Shaka
       end
 
       def ledger_rows
-        rows = first_table
-        header = rows.find { |cells| (COLUMNS - cells).empty? }
-        return [] unless header
+        rows = ledger_table
+        return [] if rows.empty?
 
-        indexes = COLUMNS.to_h { |name| [name, header.index(name)] }
-        rows.drop(rows.index(header) + 1).filter_map { |cells| record(cells, indexes) }
+        indexes = rows.first.each_with_index.to_h
+        rows.drop(1).filter_map { |cells| record(cells, indexes) }
       end
 
+      # Comments published before the reviewer cell held the model carry a separate Model column.
       def record(cells, indexes)
         return if cells.all? { |cell| cell.match?(/\A:?-+:?\z/) }
-        return if indexes.each_value.any? { |index| cells[index].nil? }
+        return if COLUMNS.any? { |name| cells[indexes[name]].nil? }
 
-        { commit: cells[indexes['Commit']], reviewer: cells[indexes['Reviewer']],
-          model: cells[indexes['Model']] }
+        reviewer, *settings = cells[indexes['Reviewer']].split('<br>')
+        { commit: cells[indexes['Commit']], reviewer: reviewer.to_s.strip, model: model(cells, indexes, settings) }
       end
 
-      # The round ledger is the first table. A later table can sit inside the embedded report.
-      def first_table
-        rows = []
-        @body.each_line do |row|
-          cells = split_cells(row.rstrip)
-          break if rows.any? && cells.nil?
+      def model(cells, indexes, settings)
+        return cells[indexes['Model']] if indexes['Model']
 
-          rows << cells if cells
-        end
-        rows
+        settings.filter_map { |part| part[MODEL, 1] }.first
+      end
+
+      # The round ledger is the first table with Commit and Reviewer columns; a reviewed-commits
+      # table can precede it. A later table can sit inside an embedded report, so only the first counts.
+      def ledger_table
+        tables.find { |rows| (COLUMNS - rows.first).empty? } || []
+      end
+
+      def tables
+        @body.each_line.map { |row| split_cells(row.rstrip) }.chunk_while { |row, after| row && after }
+             .map(&:compact).reject(&:empty?)
       end
 
       def split_cells(row)

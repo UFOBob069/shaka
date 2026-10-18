@@ -33,7 +33,7 @@ class LocalReviewUsageBridgeTest < Minitest::Test
       assert_codex_counters(content.dig('rounds', 0, 'usage_record'))
       assert_includes Shaka::LocalReviewComment.new(content).loop_summary, 'totals not combined'
       body = publish_twice(content)
-      assert_includes body, '158,831 input; 134,528 cached input; 0 cache writes; 1,265 output'
+      assert_includes body, '158,831 input<br>134,528 cached input<br>0 cache writes<br>1,265 output'
       refute_includes body, '160,096 tokens'
     end
   end
@@ -82,7 +82,7 @@ class LocalReviewUsageBridgeTest < Minitest::Test
     assert_equal 'shared: claude-opus-5-5, claude-sonnet-4-5', round['model']
     assert_equal 'UNKNOWN', round.dig('usage_record', 'columns', 0, 'routed')
     body = publish_twice(content)
-    assert_includes body, '6 input; UNKNOWN cached input; 26,042 cache writes; 4,521 output'
+    assert_includes body, '6 input<br>UNKNOWN cached input<br>26,042 cache writes<br>4,521 output'
     assert_includes body, 'cost UNKNOWN'
   end
 

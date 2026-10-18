@@ -68,15 +68,16 @@ module Shaka
       ledger && File.file?(ledger) ? LocalReviewLedger.new(ledger).rounds : [result]
     end
 
+    # One category per line, since the cell sits in a narrow table column.
     def tokens(record)
       record.fetch('columns').map do |column|
         values = METRICS.map do |key, label|
           value = column.fetch(key)
           value = UsageNumbers.grouped(value.to_i) if value.match?(/\A\d+\z/)
           "#{value} #{label}"
-        end.join('; ')
-        record['columns'].one? ? values : "#{column.fetch('label')}: #{values}"
-      end.join(' · ')
+        end.join('<br>')
+        record['columns'].one? ? values : "#{column.fetch('label')}:<br>#{values}"
+      end.join('<br>')
     end
 
     def cost(record)

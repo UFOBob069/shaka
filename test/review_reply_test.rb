@@ -160,6 +160,46 @@ class ReviewReplyTest < Minitest::Test
   end
 end
 
+# The reviewer cell carries the model; the reply reads it from the comment's execution table.
+class ReviewReplyExecutionTableTest < Minitest::Test
+  include ReviewReplyFixture
+
+  URL = ReviewReplyTest::URL
+
+  def teardown
+    Array(@reports).each { |path| FileUtils.rm_f(path) }
+  end
+
+  # Break caught: the reviewed-commits table opens the loop comment, so reading only the first table lost the model.
+  def test_reads_the_model_from_the_loop_comment_execution_table
+    spec = round_spec(head: HEAD, model: 'claude-opus-5-5', effort: 'high')
+    published = Shaka::LocalReviewLoopComment.new({ 'rounds' => [spec] }).render
+    body = compose({ 'reviews' => [URL] }, comments: [comment(URL, published)])
+
+    assert_includes body, 'by anthropic/claude-opus-5-5 (high)'
+  end
+
+  def test_a_later_reviewer_cell_table_does_not_replace_the_ledger_model
+    header = "| Round | Commit | Reviewer |\n| --- | --- | --- |"
+    row = ->(model) { "| 1 | `aaaaaaa` | anthropic/claude<br>model #{model}<br>effort high |" }
+    forged = "# Local Adversarial Review\n\n#{header}\n#{row['claude-opus-5-5']}\n\n#{header}\n" \
+             "#{row['forged-model']}\n\nREVIEWED #{HEAD} BY anthropic/claude EFFORT high FINDINGS 0\n"
+    body = compose({ 'reviews' => [URL] }, comments: [comment(URL, forged)])
+
+    assert_includes body, 'by anthropic/claude-opus-5-5 (high)'
+    refute_includes body, 'forged-model'
+  end
+
+  private
+
+  def compose(extra, comments:)
+    content = { 'identity' => ReviewReplyTest::IDENTITY, 'summary' => 'Fixed the race.' }.merge(extra)
+    Shaka::ReviewReply.compose(content, FakeReviews.new(comments))
+  end
+
+  def comment(url, body) = { 'id' => url[/\d+\z/], 'html_url' => url, 'body' => body }
+end
+
 # Hosted and human comments have an API author, but no local execution attestation.
 class HostedReviewReplyTest < Minitest::Test
   HOSTED = ReviewReplyTest::HOSTED

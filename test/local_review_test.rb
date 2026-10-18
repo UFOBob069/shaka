@@ -1850,7 +1850,8 @@ class LocalReviewClaudeModelTest < Minitest::Test
       record_claude_usage(ledger, 'UNKNOWN')
       rounds = JSON.parse(File.read(ledger)).fetch('rounds')
       assert_equal MODEL, rounds.first.fetch('model')
-      assert_includes Shaka::LocalReviewComment.render('rounds' => rounds), "| anthropic/claude | #{MODEL} |"
+      assert_includes Shaka::LocalReviewComment.render('rounds' => rounds),
+                      "| anthropic/claude<br>model #{MODEL}<br>effort"
     end
   end
 
@@ -1861,7 +1862,8 @@ class LocalReviewClaudeModelTest < Minitest::Test
       record_claude_usage(ledger, 'UNKNOWN')
       rounds = JSON.parse(File.read(ledger)).fetch('rounds')
       assert_equal model, rounds.first.fetch('model')
-      assert_includes Shaka::LocalReviewComment.render('rounds' => rounds), "| anthropic/claude | #{model} |"
+      assert_includes Shaka::LocalReviewComment.render('rounds' => rounds),
+                      "| anthropic/claude<br>model #{model}<br>effort"
     end
   end
 

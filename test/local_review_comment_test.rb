@@ -66,9 +66,10 @@ class LocalReviewCommentTest < Minitest::Test
   def test_opens_with_a_title_and_a_summary_row_for_the_round
     body = render('rounds' => [round])
 
-    assert body.start_with?("# Local Adversarial Review\n\n| Round | Commit | Reviewer | Model |")
-    assert_includes body, '| 1 | `aaaaaaa` | openai/codex | gpt-6-sol | UNKNOWN | ' \
-                          'Shaka default · criteria `ccccccc` | 1 (1 documented) | 41,200 | UNKNOWN |'
+    assert body.start_with?("# Local Adversarial Review\n\n| Round | Commit | Reviewer | Findings | Tokens | Cost |")
+    assert_includes body, '| 1 | `aaaaaaa` | openai/codex<br>model gpt-6-sol<br>effort UNKNOWN | ' \
+                          '1 (1 documented) | 41,200 | UNKNOWN |'
+    assert_includes body, "|\n\n**Prompt:** Shaka default · criteria `ccccccc`\n"
   end
 
   def test_collapses_each_report_and_closes_with_the_last_attestation
@@ -94,13 +95,20 @@ class LocalReviewCommentTest < Minitest::Test
   def test_keeps_a_supplied_backslash_and_pipe_inside_one_cell
     body = render('rounds' => [round(model: 'a\\|b')])
 
-    assert_includes body, '| a\\\\\\|b |'
+    assert_includes body, '| openai/codex<br>model a\\\\\\|b<br>effort UNKNOWN |'
   end
 
   def test_names_missing_criteria_and_a_configured_prompt
     body = render('rounds' => [round(criteria_ref: nil, prompt_source: 'review.prompt_file .agents/p.md')])
 
-    assert_includes body, '| review.prompt_file .agents/p.md · criteria not supplied |'
+    assert_includes body, '**Prompt:** review.prompt_file .agents/p.md · criteria not supplied'
+  end
+
+  def test_names_each_prompt_with_its_rounds_when_rounds_differ
+    body = render('rounds' => [round(EARLIER), round(prompt_source: 'review.prompt_file .agents/p.md')])
+
+    assert_includes body, '**Prompt:** Shaka default · criteria `ccccccc` (round 1); ' \
+                          'review.prompt_file .agents/p.md · criteria `ccccccc` (round 2)'
   end
 
   def test_explains_a_fallback_with_each_attempt_and_the_setup_guide
@@ -447,10 +455,10 @@ class LocalReviewSummaryTest < Minitest::Test
     end
   end
 
-  def test_defines_the_prompt_column_and_links_the_criteria
+  def test_defines_the_prompt_line_and_links_the_criteria
     body = Shaka::LocalReviewComment.new({ 'rounds' => [round] }, repository: 'o/r').render
 
     assert_includes body, "criteria [`ccccccc`](https://github.com/o/r/tree/#{TRUSTED})"
-    assert_includes body, '**Prompt:** `Shaka default` is Shaka\'s [review instructions]'
+    assert_includes body, '**Prompt sources:** `Shaka default` is Shaka\'s [review instructions]'
   end
 end

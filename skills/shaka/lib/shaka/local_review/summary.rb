@@ -42,13 +42,24 @@ module Shaka
   end
 
   # The lines under the summary table: what the loop cost, why it stopped, and what the prompt
-  # column means.
+  # line means.
   class LocalReviewSummary
     INSTRUCTIONS = 'https://github.com/shakacode/shaka/blob/main/skills/shaka/config/review-prompt.md'
     RULES = 'https://github.com/shakacode/shaka/blob/main/skills/shaka/lib/shaka/review_prompt.rb'
     NUMBER = /\A\d{1,3}(?:,\d{3})*\z|\A\d+\z/
     # `shaka usage` marks an estimate that leaves some responses unpriced as `(partial)`.
     MONEY = /\A\$?(\d+(?:\.\d+)?)( \(partial\))?\z/
+
+    # Each distinct prompt once, with its rounds named only when the rounds used different prompts.
+    def self.prompts(rounds, links)
+      groups = rounds.group_by { |round| round.prompt(links) }
+      return "**Prompt:** #{groups.keys.first}" if groups.one?
+
+      texts = groups.map do |text, grouped|
+        "#{text} (#{grouped.one? ? 'round' : 'rounds'} #{grouped.map(&:number).join(', ')})"
+      end
+      "**Prompt:** #{texts.join('; ')}"
+    end
 
     def initialize(rounds) = @rounds = rounds
 
@@ -119,7 +130,7 @@ module Shaka
     end
 
     def prompt
-      "**Prompt:** `Shaka default` is Shaka's [review instructions](#{INSTRUCTIONS}) plus its " \
+      "**Prompt sources:** `Shaka default` is Shaka's [review instructions](#{INSTRUCTIONS}) plus its " \
         "[fixed rules](#{RULES}); a `review.prompt_file` entry names the repository file used instead. " \
         '`criteria SHA` means the reviewer also received the trusted `AGENTS.md` files from that commit.'
     end
