@@ -29,8 +29,10 @@ approval because a published version cannot be replaced.
    gem specification shaka-VERSION.gem
    ```
 
-5. Prepare and review `RELEASE_NOTES.md`, then obtain explicit maintainer approval for
-   the registry publication. Stop here until that approval is recorded.
+5. Confirm the version's `CHANGELOG.md` entry merged with the version change: a short
+   summary, then breaking changes with upgrade steps. Save that entry's body as
+   `RELEASE_NOTES.md`, then obtain explicit maintainer approval for the registry
+   publication. Stop here until that approval is recorded.
 
 6. Set the approved version and confirm it is absent from RubyGems, GitHub releases,
    and remote tags. The first command lists existing prereleases; the latter commands
@@ -56,12 +58,13 @@ approval because a published version cannot be replaced.
    gem push "shaka-$shaka_version.gem"
    ```
 
-9. Create the GitHub release from the verified tag and reviewed notes. Use
+9. Create the GitHub release from the verified tag and reviewed notes. GitHub appends
+   the merged PRs, grouped by label as `.github/release.yml` defines. Use
    `--prerelease` only for a prerelease version; omit it for a stable version:
 
    ```bash
    gh release create "v$shaka_version" --verify-tag --prerelease \
-     --title "shaka $shaka_version" --notes-file RELEASE_NOTES.md
+     --title "shaka $shaka_version" --notes-file RELEASE_NOTES.md --generate-notes
    ```
 
 10. Verify RubyGems and GitHub, then install the exact version into a temporary
