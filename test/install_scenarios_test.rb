@@ -32,6 +32,36 @@ class InstallScenariosTest < Minitest::Test
     assert_includes report['findings'].map { |item| item['id'] }, 'B1'
   end
 
+  # A record that still reaches one host keeps working there, so it must not be called an orphan.
+  def test_a_record_with_one_moved_link_is_not_an_orphan
+    root = default_install('--agent', 'codex', '--agent', 'claude')
+    File.unlink(File.join(@home, '.claude/skills/shaka'))
+    run_install(@root, '--directory', @root, '--repository', @remote, '--agent', 'claude')
+    report = status(root)
+    assert_equal 'B9', report['state']
+    refute_includes report['findings'].map { |item| item['id'] }, 'C1'
+    assert_includes report['decision'], 'Choose which install'
+  end
+
+  def test_a_link_to_another_skill_in_the_checkout_is_repointed
+    root = default_install('--with-rct')
+    link = File.join(@home, '.agents/skills/shaka')
+    File.unlink(link)
+    File.symlink(File.join(root, 'skills/rct'), link)
+    report = status(root)
+    assert_equal 'B9', report['state']
+    assert_includes report['next_command'],
+                    "ln -sfn #{Shellwords.escape(File.join(File.realpath(root), 'skills/shaka'))}"
+  end
+
+  def test_a_missing_tracking_ref_is_not_called_a_rewrite
+    root = default_install
+    git('-C', root, 'update-ref', '-d', 'refs/remotes/origin/main')
+    report = status(root)
+    refute_includes report['findings'].map { |item| item['id'] }, 'B6'
+    assert_includes report['next_command'], 'fetch origin main'
+  end
+
   def test_an_unreadable_record_asks_a_person
     root = default_install
     File.write(File.join(root, '.git/shaka-install.json'), '{')

@@ -63,8 +63,9 @@ Use the registered helper with your chosen path:
 Verification checks checkout identity, cleanliness, links, and Ruby without changes.
 When verification or update refuses, or the user asks which install is in use, run the
 registered helper's `install --status` (`--json` for tools) and relay its state, location,
-and next step. Status is read-only and offline; run the next command it names only with
-the user's approval.
+and next step. When the helper stops because its recorded Ruby is unavailable, run
+`ruby DIR/bin/install --status` with Ruby 3.4 or later instead. Status is read-only and
+offline; run the next command it names only with the user's approval.
 Update validates the fetched tree before advancing the recorded origin branch. Dirty tracked or untracked files, unexpected checkout changes,
 and divergent updates stop it. After a manual pull of the registered branch,
 `install --update` records the pulled revision; local commits still stop it. Preserve changes in a development checkout;

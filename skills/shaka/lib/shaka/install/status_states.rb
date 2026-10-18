@@ -26,6 +26,7 @@ module Shaka
         'B8' => ['Recorded Ruby removed', 'attention'],
         'B9' => ['Link deleted or repointed', 'attention'],
         'B10' => ['Unsafe file modes', 'attention'],
+        'B11' => ['Checkout behind its recorded revision', 'attention'],
         'C1' => ['Orphan installation record', 'attention'],
         'C3' => ['Source checkout also used for development', 'attention'],
         'C4' => ['Managed copies, Codex aliases, and links together', 'ok'],
@@ -34,7 +35,7 @@ module Shaka
 
       # The first problem in this order is the one to fix first: later checks read state an
       # earlier problem can make misleading, such as a revision on a switched branch.
-      PROBLEMS = %w[B10 C1 B9 C5 B5 B4 B3 B6 B2 B1 B7 B8 C3 A9].freeze
+      PROBLEMS = %w[B10 C1 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 C3 A9].freeze
       HEALTHY = %w[C4 A5 A4 A3 A6 A2 A1 A7 A8].freeze
 
       module_function

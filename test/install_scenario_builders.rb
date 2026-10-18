@@ -100,6 +100,16 @@ module BrokenInstallScenarios
     { from: root, location: link, next: 'bin/install' }
   end
 
+  def build_b11
+    root = default_install
+    pull(root)
+    record = File.join(root, '.git/shaka-install.json')
+    head = git('-C', root, 'rev-parse', 'HEAD').strip
+    File.write(record, JSON.generate(JSON.parse(File.read(record)).merge('revision' => head)))
+    git('-C', root, 'reset', '-q', '--hard', 'HEAD~1')
+    problem(root, "merge --ff-only #{head}")
+  end
+
   def build_b10
     root = default_install
     File.chmod(0o775, root)

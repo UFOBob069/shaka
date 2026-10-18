@@ -17,38 +17,56 @@ module Shaka
 
       private
 
+      # A record is an orphan only when none of its links still reach it; one moved link is a B9.
       def recorded(checkout)
+        links = named_links(checkout)
+        moved = links.reject { |path, name| exact?(checkout, path, name) }
+        taken = moved.find { |path, _name| other_checkout?(checkout, owner_of(path)) }
+        return [orphan(checkout, *taken)] if taken && moved.size == links.size
+
+        moved.map { |path, name| link(checkout, path, name) }
+      end
+
+      def named_links(checkout)
         checkout.record['targets'].flat_map do |target|
-          target['names'].filter_map { |name| link(checkout, File.join(target['directory'], name)) }
+          target['names'].map { |name| [File.join(target['directory'], name), name] }
         end
       end
 
-      def link(checkout, path)
+      def link(checkout, path, name)
         return finding('B9', path, 'link is missing', command: checkout.installer) unless present?(path)
         return finding('B9', path, 'is not a link', decision: 'Move this path aside, then rerun bin/install.') unless
           File.symlink?(path)
 
-        owner = @inventory.owner(@inventory.link_at(path))
-        return if owner == checkout.root
-
-        elsewhere(checkout, path, owner)
+        elsewhere(checkout, path, name, owner_of(path))
       end
 
-      def elsewhere(checkout, path, owner)
-        return orphan(checkout, path, owner) if @inventory.checkouts.key?(owner)
+      def elsewhere(checkout, path, name, owner)
+        expected = File.join(checkout.root, 'skills', name)
+        if owner == checkout.root
+          return finding('B9', path, "points to #{File.readlink(path)}, not #{expected}",
+                         command: "ln -sfn #{Shellwords.escape(expected)} #{Shellwords.escape(path)}")
+        end
         return finding('B9', path, "points to managed copy #{owner}", command: checkout.installer) if
           @inventory.managed?(owner)
 
         finding('B9', path, "points to #{File.readlink(path)}, which this checkout does not own",
-                decision: "Remove or keep #{path} yourself, then run #{checkout.installer}.")
+                decision: "Choose which install #{path} should use, then run that install's bin/install.")
       end
 
-      def orphan(checkout, path, owner)
+      def orphan(checkout, path, _name)
         record = Shellwords.escape(File.join(checkout.root, '.git', Checkout::RECORD))
-        retired = "#{record}.retired-#{Time.now.utc.strftime('%Y%m%dT%H%M%SZ')}"
-        finding('C1', checkout.root, "#{path} belongs to the registered checkout #{owner}, so this record owns nothing",
-                command: "mv #{record} #{retired}")
+        finding('C1', checkout.root, "#{path} belongs to the registered checkout #{owner_of(path)}, and no link " \
+                                     'this record names reaches it',
+                command: "mv #{record} #{record}.retired-$(date -u +%Y%m%dT%H%M%SZ)")
       end
+
+      def exact?(checkout, path, name)
+        File.symlink?(path) && @inventory.real(path) == File.join(checkout.root, 'skills', name)
+      end
+
+      def other_checkout?(checkout, owner) = owner != checkout.root && @inventory.checkouts.key?(owner)
+      def owner_of(path) = @inventory.owner(@inventory.link_at(path))
 
       def unreadable
         @inventory.unreadable.map do |root, message|

@@ -3,6 +3,7 @@
 require 'shellwords'
 require_relative 'official'
 require_relative 'status_git'
+require_relative 'status_revision'
 require_relative 'directory_safety'
 require_relative 'status_states'
 
@@ -11,6 +12,7 @@ module Shaka
     # Reads one registered checkout's Git state without changing it or reaching the network.
     class StatusCheckout
       include StatusGit
+      include StatusRevision
       include DirectorySafety
 
       attr_reader :root, :record
@@ -71,33 +73,6 @@ module Shaka
                 decision: 'Keep or discard these edits yourself; move kept work to a development checkout.')
       end
 
-      def revision
-        head = value('rev-parse', 'HEAD')
-        return if head.nil? || head == @record['pending_revision']
-        return rewritten unless ancestor?(recorded, tracking)
-        return if head == recorded
-        return pulled(head) if ancestor?(recorded, head) && ancestor?(head, tracking)
-
-        local_commits(head)
-      end
-
-      def local_commits(head)
-        finding('B2', "checkout #{head[0, 7]} has commits that #{tracking_name} lacks (recorded #{recorded[0, 7]})",
-                decision: "Keep these commits in a development checkout, then return #{@record['branch']} " \
-                          "to #{recorded[0, 7]}.")
-      end
-
-      def rewritten
-        finding('B6', "#{tracking_name} no longer contains the recorded revision #{recorded[0, 7]}; " \
-                      'offline status sees this only after a fetch',
-                decision: "Origin history was rewritten; decide which revision #{@record['branch']} should use.")
-      end
-
-      def pulled(head)
-        finding('B1', "checkout #{head[0, 7]} is a pull of #{tracking_name} past the recorded #{recorded[0, 7]}",
-                command: "#{helper} install --update")
-      end
-
       def pending
         target = @record['pending_revision']
         return unless target
@@ -135,9 +110,6 @@ module Shaka
         "local branches #{listed(extra)}" if extra.any?
       end
 
-      def recorded = @record['revision']
-      def tracking = "refs/remotes/origin/#{@record['branch']}"
-      def tracking_name = "origin/#{@record['branch']}"
       def git_command = "git -C #{command(@root)}"
       def command(text) = Shellwords.escape(text)
 
