@@ -228,8 +228,9 @@ review:
   ci_review_wait: one
 ```
 
-The agent reads reports according to `ci_review_wait`; a green job alone does not
-prove review completed. GitHub's required merge checks are configured separately.
+The [hosted Claude review](configure-repository.md#add-hosted-claude-review) workflow
+Shaka ships produces `claude-review`. The agent reads reports according to
+`ci_review_wait`; a green job alone does not prove review completed. GitHub's required merge checks are configured separately.
 
 ## `review.ci_review_wait`
 

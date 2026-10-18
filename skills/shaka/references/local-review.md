@@ -584,10 +584,9 @@ and inline threads from the pinned `claude[bot]` report author, address demonstr
 defects, and recheck fixes before merge.
 ```
 
-The [React on Rails review workflow](https://github.com/shakacode/react_on_rails/blob/e3d95bebc743ea9f9ab322f4b370667393c7627a/.github/workflows/claude-code-review.yml)
-is an example: it posts comments and inspects Claude's execution result because
-an unsuccessful review can otherwise report a successful action. Its separate
-`@claude` workflow is a different capability, not required by this ordinary path.
+The packaged [Claude review workflow](../config/claude-code-review.yml) is an example:
+it inspects Claude's execution result, because an unsuccessful review can otherwise report a
+successful action, and runs a short pass when the PR author published a local review of the head.
 
 When later evidence challenges a recommendation, including after merge, follow
 [record later review evidence](review-assessments.md). Assessments preserve the

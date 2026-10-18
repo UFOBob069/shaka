@@ -63,6 +63,32 @@ You do not need to edit configuration files by hand. Start with the
 [settings guide](settings-guide.md); use the [reference](settings.md) when you
 need exact options and defaults.
 
+## Add hosted Claude review
+
+Shaka ships a [Claude review workflow](https://github.com/shakacode/shaka/blob/main/skills/shaka/config/claude-code-review.yml)
+that reviews PRs opened from branches in your repository, and fits teams where only
+some people use Shaka. It skips drafts, Dependabot, and PRs from forks; review those
+another way.
+When a PR's author already published Shaka's local review of the pushed commit,
+Claude makes a short pass for serious bugs the local reviewers missed. Every other
+PR gets a full review. Both report only issues Claude can tie to a concrete failure,
+so routine pushes stay quiet.
+
+During [setup](#set-up), the agent offers it. For a repository that already uses
+Shaka, ask:
+
+```text
+$shaka Add the hosted Claude review workflow from
+https://github.com/shakacode/shaka/blob/main/skills/shaka/config/claude-code-review.yml
+and list claude-review as a CI review job.
+```
+
+The agent adds the workflow and lists the `CLAUDE_CODE_OAUTH_TOKEN` repository
+secret you need to create. The workflow waits up to two minutes for the local
+review before choosing the full review; edit `LOCAL_REVIEW_WAIT_SECONDS` in it to
+change that. Only the PR author's own comment selects the short pass, so another
+person's comment cannot weaken review of someone else's PR.
+
 
 ## Files the agent prepares
 
