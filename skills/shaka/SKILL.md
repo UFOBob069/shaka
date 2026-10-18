@@ -22,6 +22,10 @@ follow the [retrospective procedure](references/retrospective.md) and stop at it
 For a request to review documentation together, one topic at a time, follow the
 [guided documentation review](references/guided-documentation-review.md) and stop after each
 topic.
+For a request to install or update Shaka itself, follow
+[official installation](references/official-installation.md), or for a fork install or
+its update, the [fork procedure](references/installation.md#install-from-a-personal-fork),
+and stop after verification.
 For a task, continue below.
 
 Run the trusted helper's `workflow` command now and follow the complete validated procedure it
