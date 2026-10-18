@@ -10,6 +10,7 @@ require_relative 'check'
 require_relative 'machine_alias'
 require_relative 'usage_source'
 require_relative 'reviewer_clis'
+require_relative 'installation_state'
 
 module Shaka
   class Doctor
@@ -32,7 +33,7 @@ module Shaka
         seam = repository_seam
         [ruby_runtime, github_cli, repository_access, seam, reviewer_settings(seam), @reviewer_clis.call(seam),
          MachineAlias.new(@environment, host_name: @system.host_name).call,
-         UsageSourceCheck.new(host: @host, system: @system).call]
+         UsageSourceCheck.new(host: @host, system: @system).call, InstallationState.new(system: @system).call]
       end
 
       private

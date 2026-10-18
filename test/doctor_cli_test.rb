@@ -2,6 +2,7 @@
 
 require_relative 'test_helper'
 require 'shaka/doctor'
+require_relative 'doctor_helper'
 require 'stringio'
 
 class DoctorCliTest < Minitest::Test
@@ -20,7 +21,7 @@ class DoctorCliTest < Minitest::Test
   def test_a_stated_host_replaces_detection
     system = Shaka::Doctor::System.new(runner: ->(*) { ['', 'stub', false] },
                                        host_name: 'test-machine', ruby_version: RUBY_VERSION,
-                                       executable: ->(*) { false },
+                                       executable: ->(*) { false }, installation_status: DoctorHelper::INSTALLED_STATE,
                                        usage_source: ->(host) { host == 'opencode' ? [__FILE__] : [] })
     subject = Shaka::Doctor.new(root: File.expand_path('..', __dir__), host: 'opencode',
                                 environment: {}, system: system)

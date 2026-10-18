@@ -35,6 +35,11 @@ The code in this directory handles four parts of that installation:
   selected paths have clean Git status, raw file bytes and executable modes
   match `HEAD`, and no selected file is world-writable. Otherwise, it records a
   development installation with a content hash and, when available, a base revision.
+- `Status` answers `install --status` without writing or fetching. `StatusInventory`
+  finds links, records, managed copies, and trials; `StatusCheckout` and
+  `StatusLinks` turn what they find into findings; `StatusStates` orders them so
+  the first one is the state to fix first. State IDs match the install-state
+  matrix in [#683](https://github.com/shakacode/shaka/issues/683).
 - `Version` reads the Shaka product version from `skills/shaka/lib/shaka/version.rb`
   without running that file. It does not read a repository workflow setting.
 

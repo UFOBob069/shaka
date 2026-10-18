@@ -84,6 +84,22 @@ This command changes nothing in the checkout or your skill links:
 It confirms that the checkout comes from the recorded origin, has no local
 changes, and is the target of each skill link, and that the recorded Ruby still exists.
 
+When verification or an update refuses, or you are not sure which checkout your
+agents use, ask for the installation state. It also changes nothing and works
+offline:
+
+```bash
+"$HOME/.agents/shaka/skills/shaka/scripts/shaka" install --status
+```
+
+It prints one state, where it found it, and either the one command to run next
+or the decision you need to make. For example, after a `git pull` inside the
+checkout it reports a manual pull and names `install --update`. When an older
+checkout still holds an install record but your links point at another
+checkout, it reports an orphan record and names the command that renames that
+record aside. Below that it lists every Shaka link, checkout, older copy, and PR
+trial it found. `shaka doctor` shows the same state as its Install state check.
+
 Shaka tells you when an update is available once your installation is three
 commits behind, or when the oldest change you lack is a day old, so a busy
 day on `main` does not interrupt every new chat. Finish active Shaka chats,

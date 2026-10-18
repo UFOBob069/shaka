@@ -3,6 +3,7 @@
 require 'optparse'
 require_relative '../installer'
 require_relative 'official'
+require_relative 'status'
 
 module Shaka
   module Install
@@ -33,7 +34,7 @@ module Shaka
 
       def parser
         OptionParser.new do |options|
-          options.banner = "Usage: #{@program} [--directory DIR] [--agent NAME] [--update|--verify]"
+          options.banner = "Usage: #{@program} [--directory DIR] [--agent NAME] [--update|--verify|--status [--json]]"
           VALUES.each { |flag, key| options.on(flag) { |value| @options[key] = value } }
           selections(options)
           actions(options)
@@ -53,6 +54,8 @@ module Shaka
       def actions(options)
         options.on('--update') { @actions << :update }
         options.on('--verify') { @actions << :verify }
+        options.on('--status', 'Name the installation state and one next step; changes nothing') { @actions << :status }
+        options.on('--json', 'With --status, print the report as JSON') { @options[:json] = true }
         options.on('-h', '--help') do
           puts options
           exit
@@ -61,7 +64,7 @@ module Shaka
 
       def validate(arguments)
         raise OptionParser::InvalidArgument, arguments.join(' ') unless arguments.empty?
-        raise ArgumentError, 'Choose only one of --update and --verify' if @actions.size > 1
+        raise ArgumentError, 'Choose only one of --update, --verify, and --status' if @actions.size > 1
 
         VALUES.each_value do |key|
           raise ArgumentError, "#{key} must not be empty" if @options[key]&.strip == ''
@@ -83,6 +86,7 @@ module Shaka
       end
 
       def validate_action
+        raise ArgumentError, '--json works only with --status' if @options[:json] && @actions != [:status]
         if @actions.empty? || (@options[:agents].empty? && @options.values_at(:skills_dir, :repository,
                                                                               :branch).none? &&
                   @options[:names] == ['shaka'])
@@ -107,12 +111,20 @@ module Shaka
       end
 
       def install
+        return status if @actions == [:status]
+
         if managed?
           Installer.new(source_root: @source, **@options.slice(:skills_dir, :names, :managed_dir, :rollback)).run
         else
           Official.new(@source, @options)
                   .run(@actions.first || :install)
         end
+      end
+
+      def status
+        status = Status.new(source: @source)
+        report = status.call
+        puts @options[:json] ? JSON.pretty_generate(report) : status.render(report)
       end
     end
   end
