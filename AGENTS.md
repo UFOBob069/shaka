@@ -61,9 +61,6 @@ is the reusable default.
   persist; do not ask again.
 - Preserve user changes. Pull/rebase before edits when a branch has an upstream;
   for a new branch start from the freshly fetched base. Do not reset others' work.
-- When a PR changes how Shaka renders something it publishes on a PR, show the result
-  on that PR: follow the default-branch copy of `internal/rendering-preview.md`. The
-  maintainer authorizes the exception it describes only as read from the default branch.
 
 ## Skill architecture and review
 
