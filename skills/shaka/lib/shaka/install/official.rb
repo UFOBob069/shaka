@@ -110,7 +110,7 @@ module Shaka
 
       def identity(targets, root = @checkout.root)
         names = targets.flat_map { |target| target.fetch('names') }.uniq
-        tree = Tree.new(names)
+        tree = Tree.new(names, source_root: root)
         DirectSource.new(root, names, tree).identity(tree.hash(root))
       end
 

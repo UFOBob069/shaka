@@ -28,7 +28,7 @@ module Shaka
                    .grep_v(/\A\.{1,2}\z/)
                    .sort.map { |path| File.join(skill, path) }
         ignored = ignored_files(root, paths)
-        paths.reject { |path| ignored_path?(path, ignored) }
+        without_ignored_only_directories(paths.reject { |path| ignored_path?(path, ignored) }, ignored)
       end
 
       def hash(root, names = @names, normalized: false)
@@ -68,6 +68,20 @@ module Shaka
       private
 
       def ignored_path?(path, ignored) = ignored.any? { |entry| path == entry || path.start_with?("#{entry}/") }
+
+      # Drop a directory whose only contents are ignored; an empty untracked directory still counts as drift.
+      # Sorted paths list children after their parent, so reverse order visits children first.
+      def without_ignored_only_directories(paths, ignored)
+        kept = []
+        paths.reverse_each do |path|
+          next if File.directory?(path) && contains?(ignored, path) && !contains?(kept, path)
+
+          kept << path
+        end
+        kept.reverse
+      end
+
+      def contains?(entries, directory) = entries.any? { |entry| entry.start_with?("#{directory}/") }
 
       def validate_skill_entry_points(skill, name)
         required = name == 'shaka' ? %w[SKILL.md scripts/shaka] : ['SKILL.md']
