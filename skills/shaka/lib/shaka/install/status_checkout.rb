@@ -56,11 +56,23 @@ module Shaka
 
       def branch
         current = value('branch', '--show-current').to_s
-        return if current == @record['branch']
+        return upstream if current == @record['branch']
 
         finding('B4', "checkout is on #{current.empty? ? 'a detached HEAD' : current}; " \
                       "the record expects #{@record['branch']}",
                 command: "#{git_command} switch #{command(@record['branch'])}")
+      end
+
+      # Verification and update both require this upstream. Reading the config, not the ref, leaves
+      # a missing tracking ref to the revision check, which asks for a fetch.
+      def upstream
+        name = @record['branch']
+        remote, merge = %w[remote merge].map { |key| value('config', '--get', "branch.#{name}.#{key}") }
+        return if remote == 'origin' && merge == "refs/heads/#{name}"
+
+        tracked = remote ? "#{remote}/#{merge.to_s.delete_prefix('refs/heads/')}" : 'no upstream'
+        finding('B4', "#{name} tracks #{tracked}, not origin/#{name}",
+                command: "#{git_command} branch --set-upstream-to origin/#{command(name)}")
       end
 
       def dirty
@@ -77,7 +89,7 @@ module Shaka
         target = @record['pending_revision']
         return unless target
 
-        finding('B7', "an update to #{target[0, 7]} did not finish", command: "#{helper} install --update")
+        finding('B7', "an update to #{target[0, 7]} did not finish", command: "#{installer} --update")
       end
 
       def ruby
@@ -85,8 +97,9 @@ module Shaka
         recorded = File.file?(path) ? File.read(path).strip : nil
         return if recorded && File.executable?(recorded)
 
-        finding('B8', "recorded Ruby #{recorded || 'is missing'}#{' is unavailable' if recorded}",
-                command: "#{installer} (run it with Ruby 3.4 or later)")
+        finding('B8', "recorded Ruby #{recorded || 'is missing'}#{' is unavailable' if recorded}; " \
+                      'run the next command with Ruby 3.4 or later first on PATH',
+                command: installer)
       rescue SystemCallError => e
         finding('B8', "recorded Ruby cannot be read: #{e.message}", command: installer)
       end

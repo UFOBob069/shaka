@@ -56,6 +56,8 @@ module InstallScenarioSupport
     return assert_nil report['next_command'], 'expected a decision for a person' if expected.nil?
 
     assert_includes report['next_command'].to_s, expected
+    _output, syntax = Open3.capture2e('sh', '-n', '-c', report['next_command'])
+    assert_predicate syntax, :success?, "next command is not valid shell: #{report['next_command']}"
   end
 
   def pull(root)

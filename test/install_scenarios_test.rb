@@ -62,6 +62,33 @@ class InstallScenariosTest < Minitest::Test
     assert_includes report['next_command'], 'fetch origin main'
   end
 
+  # The update step runs bin/install, which records a working Ruby, so it is still the first fix.
+  def test_an_update_step_runs_without_the_recorded_ruby
+    root = default_install
+    pull(root)
+    File.write(File.join(root, '.git/shaka-ruby'), "/nonexistent/ruby\n")
+    report = status(root)
+    assert_equal 'B1', report['state']
+    assert_equal "#{Shellwords.escape(File.join(File.realpath(root), 'bin/install'))} --update", report['next_command']
+  end
+
+  def test_a_branch_without_its_upstream_is_named
+    root = default_install
+    git('-C', root, 'branch', '-q', '--unset-upstream')
+    report = status(root)
+    assert_equal 'B4', report['state']
+    assert_includes report['next_command'], 'branch --set-upstream-to origin/main'
+  end
+
+  def test_a_record_whose_links_were_all_removed_is_an_orphan
+    orphan = default_install
+    File.unlink(File.join(@home, '.agents/skills/shaka'))
+    run_install(@root, '--directory', @root, '--repository', @remote, '--agent', 'claude')
+    report = status(@root)
+    assert_equal 'C1', report['state']
+    assert_equal File.realpath(orphan), report['location']
+  end
+
   def test_an_unreadable_record_asks_a_person
     root = default_install
     File.write(File.join(root, '.git/shaka-install.json'), '{')

@@ -19,7 +19,7 @@ module Shaka
         'B1' => ['Manual pull of the registered branch', 'attention'],
         'B2' => ['Local commits in the source checkout', 'attention'],
         'B3' => ['Dirty tree', 'attention'],
-        'B4' => ['Branch switched or detached', 'attention'],
+        'B4' => ['Branch switched, detached, or untracked', 'attention'],
         'B5' => ['Origin URL changed', 'attention'],
         'B6' => ['Origin rewritten', 'attention'],
         'B7' => ['Update interrupted', 'attention'],
@@ -34,7 +34,8 @@ module Shaka
       }.freeze
 
       # The first problem in this order is the one to fix first: later checks read state an
-      # earlier problem can make misleading, such as a revision on a switched branch.
+      # earlier problem can make misleading, such as a revision on a switched branch. Steps that
+      # update use bin/install, not the helper, so they still run when the recorded Ruby is gone.
       PROBLEMS = %w[B10 C1 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 C3 A9].freeze
       HEALTHY = %w[C4 A5 A4 A3 A6 A2 A1 A7 A8].freeze
 

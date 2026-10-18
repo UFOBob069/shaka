@@ -46,7 +46,7 @@ module Shaka
 
       def pulled(head)
         finding('B1', "checkout #{head[0, 7]} is a pull of #{tracking_name} past the recorded #{recorded[0, 7]}",
-                command: "#{helper} install --update")
+                command: "#{installer} --update")
       end
 
       def recorded = @record['revision']

@@ -17,12 +17,12 @@ module Shaka
 
       private
 
-      # A record is an orphan only when none of its links still reach it; one moved link is a B9.
+      # A record is an orphan only when none of its links reach it and another registered checkout
+      # serves the hosts; relinking it would move them back to an abandoned checkout.
       def recorded(checkout)
         links = named_links(checkout)
         moved = links.reject { |path, name| exact?(checkout, path, name) }
-        taken = moved.find { |path, _name| other_checkout?(checkout, owner_of(path)) }
-        return [orphan(checkout, *taken)] if taken && moved.size == links.size
+        return [orphan(checkout, moved.first.first)] if moved.size == links.size && superseded?(checkout)
 
         moved.map { |path, name| link(checkout, path, name) }
       end
@@ -54,15 +54,25 @@ module Shaka
                 decision: "Choose which install #{path} should use, then run that install's bin/install.")
       end
 
-      def orphan(checkout, path, _name)
+      def orphan(checkout, path)
         record = Shellwords.escape(File.join(checkout.root, '.git', Checkout::RECORD))
-        finding('C1', checkout.root, "#{path} belongs to the registered checkout #{owner_of(path)}, and no link " \
-                                     'this record names reaches it',
+        finding('C1', checkout.root, "no link this record names reaches it (#{path} is #{describe(path)}); " \
+                                     'another registered checkout serves the hosts',
                 command: "mv #{record} #{record}.retired-$(date -u +%Y%m%dT%H%M%SZ)")
       end
 
       def exact?(checkout, path, name)
         File.symlink?(path) && @inventory.real(path) == File.join(checkout.root, 'skills', name)
+      end
+
+      def superseded?(checkout)
+        @inventory.links.any? { |entry| other_checkout?(checkout, @inventory.owner(entry)) }
+      end
+
+      def describe(path)
+        return 'missing' unless present?(path)
+
+        File.symlink?(path) ? "linked to #{File.readlink(path)}" : 'not a link'
       end
 
       def other_checkout?(checkout, owner) = owner != checkout.root && @inventory.checkouts.key?(owner)
