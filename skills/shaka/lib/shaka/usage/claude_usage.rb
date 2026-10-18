@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative 'claude_iterations'
 require_relative 'response_count'
 
 module Shaka
@@ -147,6 +148,7 @@ module Shaka
   class ClaudeUsage
     include ResponseCount
     include ClaudePrintResult
+    include ClaudeIterations
 
     HOST = 'Claude Code'
     NOTE = 'Anthropic input excludes cached input and cache writes; reasoning output is part of output.'
@@ -198,10 +200,14 @@ module Shaka
     def response(record, turn)
       message = record['message'].is_a?(Hash) ? record['message'] : {}
       @versions << record['version'] if record['version'].is_a?(String)
-      { message['id'] => { 'response_id' => message['id'], 'turn_id' => turn, 'timestamp' => record['timestamp'],
-                           'configuration' => ['anthropic', 'UNKNOWN', message['model'], record['effort']],
-                           'billing_mode' => speed(message['usage']),
-                           'usage' => tokens(message['usage']) } }
+      base = { 'response_id' => message['id'], 'turn_id' => turn, 'timestamp' => record['timestamp'] }
+      { message['id'] => executor(base, message, record['effort']) }
+        .merge(advisor_responses(message['id'], message['usage'], base))
+    end
+
+    def executor(base, message, effort)
+      base.merge('configuration' => ['anthropic', 'UNKNOWN', message['model'], effort],
+                 'billing_mode' => speed(message['usage']), 'usage' => tokens(message['usage']))
     end
 
     # Fast mode is billed at its own rates, so an unrecognized speed must not price as standard.
@@ -221,10 +227,11 @@ module Shaka
     def tokens(usage)
       return {} unless usage.is_a?(Hash)
 
+      split = executor_write_split(usage) || [nested(usage, 'cache_creation', 'ephemeral_5m_input_tokens'),
+                                              nested(usage, 'cache_creation', 'ephemeral_1h_input_tokens')]
       { 'input_tokens' => usage['input_tokens'], 'cached_input_tokens' => usage['cache_read_input_tokens'],
         'output_tokens' => usage['output_tokens'], 'cache_write_input_tokens' => usage['cache_creation_input_tokens'],
-        'cache_write_5m_input_tokens' => nested(usage, 'cache_creation', 'ephemeral_5m_input_tokens'),
-        'cache_write_1h_input_tokens' => nested(usage, 'cache_creation', 'ephemeral_1h_input_tokens'),
+        'cache_write_5m_input_tokens' => split[0], 'cache_write_1h_input_tokens' => split[1],
         'reasoning_output_tokens' => nested(usage, 'output_tokens_details', 'thinking_tokens'),
         'web_search_requests' => server_tool_requests(usage, 'web_search_requests'),
         'inference_geo' => usage['inference_geo'] }

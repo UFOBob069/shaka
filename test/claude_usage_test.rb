@@ -458,3 +458,100 @@ class ClaudeNativeCostTest < Minitest::Test
     end
   end
 end
+
+# Responses that consulted the advisor tool, shaped as the advisor tool documentation describes
+# `usage.iterations`. Real transcripts also carry each iteration's `cache_creation` TTL split.
+class ClaudeUsageAdvisorTest < Minitest::Test
+  include ClaudeUsageFixture
+
+  SPLIT_ZERO = { ephemeral_5m_input_tokens: 0, ephemeral_1h_input_tokens: 0 }.freeze
+
+  def iteration(input, output, writes: 0, split: nil)
+    { type: 'message', input_tokens: input, cache_read_input_tokens: 0,
+      cache_creation_input_tokens: writes, output_tokens: output, cache_creation: split }.compact
+  end
+
+  def advisor = iteration(823, 1612).merge(type: 'advisor_message', model: 'claude-opus-5-5')
+
+  def advised(*iterations, **usage)
+    reply = priced_reply('m1', 100)
+    reply[:message][:usage].merge!(iterations: iterations, **usage)
+    reply
+  end
+
+  def documented
+    advised(iteration(40, 8), advisor, iteration(60, 12), cache_creation_input_tokens: 0, cache_creation: SPLIT_ZERO)
+  end
+
+  def served(*replies)
+    Dir.mktmpdir do |directory|
+      report('--host', 'claude-code', '--file', transcript(directory, 'session.jsonl', [prompt('new'), *replies]))
+    end
+  end
+
+  def test_an_advisor_iteration_is_its_own_response_priced_at_its_own_model
+    output = served(documented)
+    assert_metric output, 'Routed model', 'claude-opus-5', 'claude-opus-5-5'
+    assert_metric output, 'Input', 100, 823
+    assert_metric output, 'Output', 20, 1612
+    assert_metric output, 'Effort', 'high', 'UNKNOWN'
+    assert_metric output, 'USD estimate', '$0.001020', '$0.035532'
+    assert_includes output, '2 responses'
+    refute_includes output, 'Unreadable or unidentifiable records'
+  end
+
+  # The top-level TTL split records only the first executor iteration, so it never matches the total.
+  def test_the_cache_write_split_is_rebuilt_from_every_executor_iteration
+    first = { ephemeral_5m_input_tokens: 1, ephemeral_1h_input_tokens: 2 }
+    second = { ephemeral_5m_input_tokens: 2, ephemeral_1h_input_tokens: 2 }
+    output = served(advised(iteration(40, 8, writes: 3, split: first), advisor,
+                            iteration(60, 12, writes: 4, split: second), cache_creation: first))
+    assert_metric output, 'Cache writes', 7, 0
+    assert_metric output, 'USD estimate', '$0.001079', '$0.035532'
+    refute_includes output, 'Inconsistent token subsets'
+  end
+
+  # Without per-iteration splits the recorded one still prices a response it accounts for.
+  def test_iterations_without_a_split_keep_the_recorded_split
+    output = served(advised(iteration(40, 8, writes: 7), advisor))
+    assert_metric output, 'USD estimate', '$0.001079', '$0.035532'
+    output = served(advised(iteration(40, 8, writes: 3), advisor, iteration(60, 12, writes: 4)))
+    assert_metric output, 'USD estimate', '$0.001079', '$0.035532'
+    refute_includes output, 'Cache-write TTL split UNKNOWN'
+  end
+
+  def test_an_advised_response_without_an_identity_adds_no_advisor_response
+    unidentified = documented
+    unidentified[:message].delete(:id)
+    output = served(priced_reply('m0', 100), unidentified)
+    assert_metric output, 'Routed model', 'claude-opus-5'
+    assert_includes output, '1 responses'
+    assert_includes output, 'Unreadable or unidentifiable records'
+  end
+
+  # Fast mode is requested for the executor; whether it reaches the advisor is not recorded.
+  def test_a_fast_request_leaves_the_advisor_rate_unknown
+    fast = documented
+    fast[:message][:usage][:speed] = 'fast'
+    output = served(fast)
+    assert_metric output, 'USD estimate', '$0.002040', 'UNKNOWN'
+    assert_includes output, 'Billing speed UNKNOWN'
+  end
+
+  def test_streamed_copies_of_an_advised_response_count_once
+    output = served(documented, documented)
+    assert_metric output, 'Input', 100, 823
+    assert_includes output, '2 responses'
+  end
+
+  def test_unreadable_iterations_add_no_responses
+    unreadable = advised
+    unreadable[:message][:usage][:iterations] = 'unreadable'
+    output = served(unreadable)
+    assert_metric output, 'USD estimate', '$0.001079'
+    assert_includes output, '1 responses'
+    output = served(advised(1, advisor))
+    assert_metric output, 'USD estimate', '$0.001079', '$0.035532'
+    assert_includes output, '2 responses'
+  end
+end
