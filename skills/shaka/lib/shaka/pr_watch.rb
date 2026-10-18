@@ -7,12 +7,14 @@ require_relative 'pr_watch/review_gate'
 require_relative 'public_comments'
 require_relative 'status'
 require_relative 'pr_watch/feedback'
+require_relative 'pr_watch/pr_change'
 
 module Shaka
   # Polls one PR head without agent turns and exits when the owner has work to do.
   class PrWatch
     include ReviewGate
     include Feedback
+    include PrChange
 
     DEFAULT_INTERVAL = Defaults.fetch('runtime', 'pr_watch', 'interval_seconds')
     DEFAULT_TIMEOUT = Defaults.fetch('runtime', 'pr_watch', 'timeout_seconds')
@@ -34,21 +36,13 @@ module Shaka
     end
 
     def call
-      opening = opening_reason
-      return opening if opening
+      reason = pr_change_reason || seed_comments
+      return reason if reason
 
-      @seen = comment_ids(@baseline || @comments.call)
       wait_until(@clock.call + @timing.fetch(:timeout))
     end
 
     private
-
-    def opening_reason
-      opening = @github.snapshot
-      return 'head_moved' if opening['headRefOid'] != @head
-
-      'closed' unless opening['state'] == 'OPEN'
-    end
 
     def wait_until(deadline)
       loop do
@@ -83,8 +77,12 @@ module Shaka
     end
 
     def observe
-      return observe_feedback if @comments_only
+      @comments_only ? observe_feedback : observe_checks
+    rescue Error => e
+      changed_during_read(e)
+    end
 
+    def observe_checks
       snapshot = @status.call
       return 'head_moved' if snapshot['headRefOid'] != @head
       return 'closed' unless snapshot['state'] == 'OPEN'
