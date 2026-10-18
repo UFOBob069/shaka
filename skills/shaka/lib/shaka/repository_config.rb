@@ -71,7 +71,7 @@ module Shaka
     end
 
     def command(name)
-      commands.fetch(name.to_s)
+      commands.fetch(name.to_s) { raise Error, "#{name} is not configured for this repository" }
     end
 
     # Callers read this as the effective contract, so defaults belong in it.
