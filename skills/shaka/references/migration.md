@@ -29,7 +29,8 @@ and moves Shaka's standard commands into `.agents/shaka/bin/`. It leaves unrelat
 values, script modes, and command arguments. Recognized root calculations use Git
 instead of a fixed number of parent directories. Ambiguous moved commands, tracked
 scripts with shebangs that refer to old paths, computed path prefixes, and directory-wide
-patterns block for explicit repair. Other unambiguous tracked text references to moved
+patterns such as `.agents/*` or `.agents/bin/**` block for explicit repair. A
+whole-directory `.agents/**` glob stays as written. Other unambiguous tracked text references to moved
 files, including CI and guide references, are rewritten. Historical changelog lines
 stay as written. Historical-sounding guide lines block for explicit repair, because
 a current instruction can appear later in the same line. Existing new-layout files,

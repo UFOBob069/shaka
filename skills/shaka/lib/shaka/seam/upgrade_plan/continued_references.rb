@@ -102,7 +102,9 @@ module Shaka
         def alias_reference?(text)
           return true if bare_directory_dependency?(text)
 
-          assignment = %r{\b[A-Za-z_]\w*\s*[+?:]?=[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
+          # The directory must sit in the assigned value: whitespace may appear only inside quotes or parentheses.
+          value = %q{(?:[^\s"'(]|"[^"\r\n]*"|'[^'\r\n]*')*(?:"[^"\r\n]*|'[^'\r\n]*|\([^\r\n]*?)?}
+          assignment = %r{\b[A-Za-z_]\w*\s*[+?:]?=[ \t]*#{value}#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
           mapping = %r{\b[A-Za-z_]\w*\s*:[ \t]+[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}/?(?=[ \t\r\n#'";]|$)}o
           [text, normalize_shell_fragments(text)].any? { |source| source.match?(assignment) || source.match?(mapping) }
         end

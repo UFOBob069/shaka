@@ -2011,3 +2011,59 @@ class SeamUpgradeDirectoryReferenceTest < Minitest::Test
     end
   end
 end
+
+class SeamUpgradeCorrectReferenceTest < Minitest::Test
+  include SeamUpgradeFixture
+
+  def test_whole_directory_double_star_glob_stays_as_written
+    ['  - ".agents/**"', '  - .agents/**', "paths-ignore: ['.agents/**', 'docs/**']"].each do |entry|
+      with_repository do |root|
+        path = write_workflow(root, "on:\n  push:\n    paths-ignore:\n#{entry}\n")
+        before = File.read(path)
+        assert_equal 'ready', report(root).fetch('status'), entry
+        apply_upgrade(root)
+        assert_equal before, File.read(path)
+      end
+    end
+  end
+
+  def test_partial_layout_globs_still_block
+    ['.agents/*', '.agents/**/agent-workflow.yml', '.agents/**/bin/test', '.agents/**.yml'].each do |glob|
+      with_repository do |root|
+        write_workflow(root, "on:\n  push:\n    paths-ignore:\n      - \"#{glob}\"\n")
+        assert_blocked_with(root, 'old layout-directory pattern')
+      end
+    end
+  end
+
+  def write_workflow(root, source)
+    path = File.join(root, '.github/workflows/ci.yml')
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, source)
+    commit_fixture(root, 'workflow glob')
+    path
+  end
+
+  def test_prose_assignment_before_directory_mention_stays_as_written
+    with_repository do |root|
+      path = File.join(root, 'NOTES.md')
+      File.write(path, "The purge ran, LEFT=0, and the `.agents/skills` folder stays.\n")
+      commit_fixture(root, 'prose assignment')
+      assert_equal 'ready', report(root).fetch('status')
+      apply_upgrade(root)
+      assert_equal "The purge ran, LEFT=0, and the `.agents/skills` folder stays.\n", File.read(path)
+    end
+  end
+
+  def test_assigned_directory_values_without_command_names_block
+    { 'ci.sh' => "#!/bin/sh\nagent_dir=$(dirname \"$0\")/.agents\nexec \"$agent_dir/custom-tool\"\n",
+      'quoted.sh' => "#!/bin/sh\nagent_dir=\"$HOME/my repo/.agents\"\nexec \"$agent_dir/custom-tool\"\n",
+      'ci.rb' => "dir = File.join(root, '.agents')\nsystem(File.join(dir, 'custom-tool'))\n" }.each do |name, source|
+      with_repository do |root|
+        File.write(File.join(root, name), source)
+        commit_fixture(root, 'assigned directory')
+        assert_blocked_with(root, 'aliased old-layout directory')
+      end
+    end
+  end
+end
