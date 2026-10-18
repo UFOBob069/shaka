@@ -31,11 +31,11 @@ module Shaka
     end
     private_class_method :alphanumeric_segments
 
-    def self.display(configured:, repository_name:)
+    def self.display(configured:, repository_name:, source: 'seam')
       if configured.nil?
         { 'prefix' => fallback(repository_name), 'source' => 'fallback' }
       else
-        { 'prefix' => validate!(configured), 'source' => 'seam' }
+        { 'prefix' => validate!(configured), 'source' => source }
       end
     end
   end

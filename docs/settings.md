@@ -898,6 +898,9 @@ Use 1–6 uppercase ASCII letters or digits, such as `repo_prefix: SHOP`, to lab
 chat titles: `SHOP PR #42 · Fix checkout`. The
 [repository catalog](repository-catalog.md) reports duplicate prefixes.
 
+Shared settings on the default branch supply the prefix. Without them, complete
+individual settings supply it. Incomplete or invalid individual settings use the default label.
+
 ## `version`
 
 **Required. Currently `1`.** This identifies the configuration format, not the

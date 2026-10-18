@@ -58,10 +58,21 @@ module Shaka
     def call
       ref = @ref || Configuration.default_ref(root: @root)
       sha = Configuration.resolve_commit(root: @root, ref:, label: 'prefix ref')
-      preview = Configuration::SettingsPreview.ref(root: @root)
-      config = Configuration.resolve_source(root: @root, ref: sha, candidate_commands: false).first.to_h if
-        preview || Configuration::Layout.commit(root: @root, sha:, allow_missing: true)
-      RepoPrefix.display(configured: config&.[]('repo_prefix'), repository_name: GitOrigin.repository_name(root: @root))
+      configured, source = configured_prefix(sha)
+      RepoPrefix.display(configured:, source:, repository_name: GitOrigin.repository_name(root: @root))
+    end
+
+    private
+
+    # Shared settings win; complete individual settings apply only when the repository has none.
+    def configured_prefix(sha)
+      if Configuration::SettingsPreview.ref(root: @root) ||
+         Configuration::Layout.commit(root: @root, sha:, allow_missing: true)
+        config = Configuration.resolve_source(root: @root, ref: sha, candidate_commands: false).first
+        return [config.to_h['repo_prefix'], 'seam']
+      end
+
+      [Configuration.private_source(root: @root, ref: sha).candidate_config&.to_h&.[]('repo_prefix'), 'individual']
     end
   end
 end

@@ -65,12 +65,14 @@ class PrivateOnboardingTest < Minitest::Test
     end
   end
 
-  def test_prefix_works_before_setup_without_candidate_policy
+  def test_prefix_works_before_setup_and_then_uses_individual_settings
     with_setup do |root, ref|
       assert_fallback_prefix(root, ref)
       setup_private(root, ref)
       File.write(config_path(root), "#{File.read(config_path(root))}repo_prefix: LOCAL\n")
-      assert_fallback_prefix(root, ref)
+      output, error, status = cli(root, 'prefix', '--ref', ref)
+      assert_predicate status, :success?, error
+      assert_equal({ 'prefix' => 'LOCAL', 'source' => 'individual' }, JSON.parse(output))
     end
   end
 

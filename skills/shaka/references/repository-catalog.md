@@ -39,9 +39,10 @@ shaka repos refresh
 
 For each registered root, refresh reads `origin` for identity and canonical URL,
 then loads the trusted default-branch seam from `origin/HEAD`, falling back to
-`origin/main` or `origin/master` when that symbolic ref is missing. It does not trust
-a candidate working tree. The effective prefix is the seam `repo_prefix` when
-present, otherwise the [documented fallback](https://github.com/shakacode/shaka/blob/main/docs/settings.md#repo_prefix).
+`origin/main` or `origin/master` when that symbolic ref is missing. It reads no
+tracked candidate files. Without a trusted seam, it reads complete individual settings,
+which label the repository and grant no authority. The effective prefix follows the
+[`repo_prefix` setting](https://github.com/shakacode/shaka/blob/main/docs/settings.md#repo_prefix).
 
 Stdout and `catalog.json` use the same object:
 
@@ -79,5 +80,6 @@ exits non-zero.
 catalog. Removing `catalog.json` does not remove seam metadata.
 
 `prefix_source` records how the prefix was obtained: `seam` means explicit trusted
-configuration; `fallback` means a name derived from the repository. Keep that
+configuration; `individual` means complete individual settings in a repository without
+shared settings; `fallback` means a name derived from the repository. Keep that
 distinction so a cached suggestion cannot be mistaken for a configured prefix.
