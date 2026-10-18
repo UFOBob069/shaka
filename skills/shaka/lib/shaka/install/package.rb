@@ -21,6 +21,10 @@ module Shaka
         "#{version}-#{source.fetch('content_sha256')}-#{Digest::SHA256.hexdigest(JSON.generate(source))}"
       end
 
+      # Known skills in ALLOWED order, without duplicates, so flag order cannot change the package.
+      # Unknown names stay at the end for valid_skills? to refuse.
+      def self.ordered_skills(names) = (ALLOWED & names) | names
+
       def self.valid_skills?(names)
         names.is_a?(Array) && names.include?('shaka') && names.uniq == names && (names - ALLOWED).empty?
       end
@@ -33,6 +37,8 @@ module Shaka
       end
 
       def prepare(source_root)
+        raise ArgumentError, 'Managed package skills are invalid' unless self.class.valid_skills?(@names)
+
         ensure_managed_root
         hash = @tree.hash(source_root, normalized: true)
         identity = @source.identity(hash)
@@ -46,7 +52,8 @@ module Shaka
 
         path = File.join(@root, id)
         metadata = verified_metadata(path)
-        raise ArgumentError, 'Rollback flags must match the package skills' unless metadata.fetch('skills') == @names
+        recorded = metadata.fetch('skills')
+        raise ArgumentError, 'Rollback flags must match the package skills' unless recorded.sort == @names.sort
 
         path
       end

@@ -16,7 +16,7 @@ module Shaka
       @source_alias = File.expand_path(source_root)
       @source_root = File.realpath(source_root)
       @skills_dir = canonical(skills_dir)
-      @names = names
+      @names = Install::Package.ordered_skills(names)
       @rollback = rollback
       @managed = canonical(managed_dir || File.join(Dir.home, '.local/share/shaka/installs'))
       refuse_overlap
