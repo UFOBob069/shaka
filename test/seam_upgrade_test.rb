@@ -2016,7 +2016,7 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
   include SeamUpgradeFixture
 
   def test_whole_directory_double_star_glob_stays_as_written
-    ['  - ".agents/**"', '  - .agents/**', "paths-ignore: ['.agents/**', 'docs/**']"].each do |entry|
+    ['      - ".agents/**"', '      - .agents/**', "paths-ignore: ['.agents/**', 'docs/**']"].each do |entry|
       with_repository do |root|
         path = write_workflow(root, "on:\n  push:\n    paths-ignore:\n#{entry}\n")
         before = File.read(path)
@@ -2049,7 +2049,9 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
       "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\\n            .agents/**\n",
     '.github/workflows/heredoc.yml' =>
       "steps:\n  - run: |\n    ruby <<'RUBY'\n    opts = { include: ['.agents/**'] }\n    RUBY\n",
-    '.github/workflows/folded.yml' => "steps:\n  - run: >-\n    tar czf out.tgz\n    - .agents/**\n"
+    '.github/workflows/folded.yml' => "steps:\n  - run: >-\n    tar czf out.tgz\n    - .agents/**\n",
+    '.github/workflows/anchored.yml' => "steps:\n  - run: &archive >-\n      tar czf out.tgz\n      - .agents/**\n",
+    '.github/workflows/matrix.yml' => "strategy:\n  matrix:\n    pattern: ['.agents/**']\n"
   }.freeze
 
   def test_double_star_glob_in_commands_still_blocks

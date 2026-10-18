@@ -30,12 +30,11 @@ values, script modes, and command arguments. Recognized root calculations use Gi
 instead of a fixed number of parent directories. Ambiguous moved commands, tracked
 scripts with shebangs that refer to old paths, computed path prefixes, and directory-wide
 patterns such as `.agents/*` or `.agents/bin/**` block for explicit repair. A
-whole-directory `.agents/**` stays as written when it is a list entry in a GitHub Actions
-workflow outside a block scalar such as `run: |`, or a line of an ignore or CODEOWNERS
-file. A variable set to an old directory blocks, except in Markdown. Other unambiguous
-tracked text references to moved files, including CI and guide references, are
-rewritten. Historical changelog lines
-stay as written. Historical-sounding guide lines block for explicit repair, because
+whole-directory `.agents/**` stays as written under `paths:` or `paths-ignore:` in a
+GitHub Actions workflow, or as a line of an ignore or CODEOWNERS file. A variable set to
+an old directory blocks, except in Markdown. Other unambiguous tracked text references
+to moved files, including CI and guide references, are rewritten. Historical changelog
+lines stay as written. Historical-sounding guide lines block for explicit repair, because
 a current instruction can appear later in the same line. Existing new-layout files,
 including ignored private files, are never overwritten.
 Old-path references inside the contract or repository allowlist block instead of

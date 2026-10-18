@@ -18,24 +18,32 @@ module Shaka
           end
         end
 
-        # A list entry inside a workflow block scalar, such as a `run: |` script, is command text, so it still blocks.
-        def scan_workflow_block_glob(path, text)
-          return unless workflow_file?(path)
-          return unless block_scalar_lines(text).any? { |line| line.match?(workflow_glob_entry) }
+        # In a workflow only a `paths:` or `paths-ignore:` filter is a path pattern. A list-shaped entry anywhere
+        # else, such as a matrix value or a line of a `run:` script, may reach a command, so it still blocks.
+        def scan_workflow_glob_context(path, text)
+          return unless workflow_file?(path) && unfiltered_glob_entry?(text)
 
-          @references << { 'path' => path, 'kind' => 'workflow block glob', 'paths' => [PATHS::DIRECTORY] }
+          @references << { 'path' => path, 'kind' => 'workflow glob outside a path filter', 'paths' => [PATHS::DIRECTORY] }
           @blockers << "#{path}: old layout-directory pattern needs explicit repair"
         end
 
-        def block_scalar_lines(text)
-          indent = nil
-          text.each_line.select do |line|
-            width = line[/\A */].size
-            inside = indent && (line.strip.empty? || width > indent)
-            indent = nil unless inside
-            indent = width if !inside && line.match?(/:[ \t]*[|>][-+0-9]*[ \t]*(?:#.*)?$/)
-            inside
+        def unfiltered_glob_entry?(text)
+          filter = nil
+          text.each_line.any? do |line|
+            filter = filter_indent(filter, line)
+            next false if line.match?(/\A[ \t]*paths(?:-ignore)?[ \t]*:/)
+
+            line.match?(workflow_glob_entry) && !(filter && line.lstrip.start_with?('-'))
           end
+        end
+
+        # The indentation of the `paths:` key whose list this line belongs to, or nil outside one.
+        def filter_indent(filter, line)
+          width = line[/\A */].size
+          return width if line.match?(/\A[ \t]*paths(?:-ignore)?[ \t]*:/)
+          return filter if filter.nil? || line.strip.empty?
+
+          width > filter || (width == filter && line.lstrip.start_with?('-')) ? filter : nil
         end
 
         def workflow_file?(path) = path.to_s.match?(%r{\A\.github/workflows/[^/]+\.ya?ml\z})

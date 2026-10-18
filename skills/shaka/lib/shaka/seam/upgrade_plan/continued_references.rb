@@ -13,7 +13,7 @@ module Shaka
           scan_continued_reference(path, text)
           scan_shell_fragmented_reference(path, text)
           scan_alias_reference(path, text)
-          scan_workflow_block_glob(path, text)
+          scan_workflow_glob_context(path, text)
           scan_unsupported_path_reference(path, text)
         end
 
