@@ -48,6 +48,14 @@
     },
     {
       "type": "category",
+      "label": "Articles",
+      "collapsed": true,
+      "items": [
+        "articles/review-process-study"
+      ]
+    },
+    {
+      "type": "category",
       "label": "Advanced",
       "collapsed": true,
       "items": [
