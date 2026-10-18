@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative 'checkout_drift'
 require_relative 'checkout_git'
 require_relative 'directory_safety'
 require_relative 'package'
@@ -11,6 +12,7 @@ module Shaka
     class Checkout
       include DirectorySafety
       include CheckoutGit
+      include CheckoutDrift
 
       REPOSITORY = 'https://github.com/shakacode/shaka.git'
       RECORD = 'shaka-install.json'
@@ -24,6 +26,7 @@ module Shaka
       end
 
       def prepare(action)
+        @action = action
         prepare_directory(action)
         @record = read_record
         raise ArgumentError, 'Register this installation first with bin/install' if action != :install && !@record
@@ -126,9 +129,8 @@ module Shaka
       def validate_revision
         raise ArgumentError, 'Installation checkout is dirty; use a separate development checkout' unless
           git('status', '--porcelain', '--untracked-files=all').empty?
-        return unless @record && revision != @record['revision'] && !pending?
 
-        raise ArgumentError, 'Installation revision changed outside the update procedure'
+        refuse_drift
       end
     end
   end
