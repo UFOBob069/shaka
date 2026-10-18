@@ -11,6 +11,8 @@ require_relative 'repos/home'
 module Shaka
   # Rebuildable install-local index of repository prefixes. Not an authority source.
   class Repos
+    OPERATIONS = %w[add refresh].freeze
+
     def self.run(arguments)
       new(arguments).run
     rescue OptionParser::ParseError, SystemCallError, Shaka::Error, Psych::Exception => e
@@ -37,7 +39,7 @@ module Shaka
     private
 
     def valid?(operation)
-      %w[add refresh].include?(operation) && @arguments.empty? &&
+      OPERATIONS.include?(operation) && @arguments.empty? &&
         (operation == 'refresh' || @options.key?(:root))
     end
 

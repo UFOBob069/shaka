@@ -20,9 +20,7 @@ module Shaka
       CONTRACT = Configuration::Paths::CONTRACT
 
       def self.run(arguments)
-        arguments = arguments.dup
-        arguments.shift if arguments.first == 'migrate'
-        new(arguments).run
+        new(arguments.dup).run
       rescue OptionParser::ParseError, SystemCallError, Shaka::Error => e
         warn "shaka: #{e.message}"
         1

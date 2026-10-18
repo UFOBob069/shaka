@@ -19,6 +19,12 @@ module Shaka
   class Seam
     include PolicyOptions
 
+    # Operations whose own command reads the arguments after the operation name.
+    COMMANDS = { 'migrate' => Migrator, 'upgrade' => Upgrader, 'private' => PrivateCommand,
+                 'preview' => PreviewCommand }.freeze
+    REPORTS = %w[check init pointer].freeze
+    OPERATIONS = [*REPORTS, *COMMANDS.keys].freeze
+
     def self.run(arguments)
       new(arguments).run
     rescue OptionParser::ParseError, SystemCallError, Shaka::Error => e
@@ -32,9 +38,8 @@ module Shaka
     end
 
     def run
-      return Migrator.run(@arguments) if @arguments.first == 'migrate'
-      return Upgrader.run(@arguments) if @arguments.first == 'upgrade'
-      return run_local_mode if %w[private preview].include?(@arguments.first)
+      command = COMMANDS[@arguments.first]
+      return command.run(@arguments.drop(1)) if command
 
       parser = option_parser
       parser.parse!(@arguments)
@@ -47,10 +52,6 @@ module Shaka
 
     private
 
-    def run_local_mode
-      { 'private' => PrivateCommand, 'preview' => PreviewCommand }.fetch(@arguments.shift).run(@arguments)
-    end
-
     def validate_operation(operation, parser)
       raise OptionParser::InvalidArgument, parser.to_s unless known_operation?(operation)
       return Pointer.refuse_foreign_options(@options) if operation == 'pointer'
@@ -58,7 +59,7 @@ module Shaka
       operation == 'check' ? validate_check_options : validate_init_options
     end
 
-    def known_operation?(operation) = %w[check init pointer].include?(operation) && @arguments.empty?
+    def known_operation?(operation) = REPORTS.include?(operation) && @arguments.empty?
 
     def validate_check_options
       init_keys = %i[base_branch setup_command validate_command test_command review_policy ci_review_jobs

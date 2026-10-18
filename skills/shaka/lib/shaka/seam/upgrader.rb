@@ -52,7 +52,6 @@ module Shaka
       end
 
       def parse_request!
-        @arguments.shift if @arguments.first == 'upgrade'
         parser.parse!(@arguments)
         return if @options[:help]
 

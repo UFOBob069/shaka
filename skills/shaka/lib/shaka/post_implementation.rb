@@ -14,6 +14,7 @@ module Shaka
   # Runs and publishes one product checkpoint on the existing PR.
   class PostImplementation
     KEY = 'post-implementation'
+    ACTIONS = %w[run publish].freeze
 
     def self.run(arguments, github: nil)
       new(arguments, github:).run
@@ -30,7 +31,7 @@ module Shaka
 
     def run
       action = @arguments.shift
-      raise Error, 'Usage: shaka post-implementation (run|publish) [options]' unless %w[run publish].include?(action)
+      raise Error, "Usage: shaka post-implementation (#{ACTIONS.join('|')}) [options]" unless ACTIONS.include?(action)
 
       flags = parser(action)
       flags.parse!(@arguments)

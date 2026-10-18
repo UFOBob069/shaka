@@ -9,6 +9,7 @@ module Shaka
   module Trial
     # Preparation is local; report is the explicit authorization to publish field feedback.
     module Command
+      ACTIONS = %w[prepare report].freeze
       ERRORS = [Error, ArgumentError, SystemCallError, OptionParser::ParseError,
                 JSON::ParserError, URI::InvalidURIError].freeze
 
@@ -16,7 +17,7 @@ module Shaka
         action = arguments.shift
         options, parser = options(arguments, action)
         return print_help(parser) if options[:help]
-        raise OptionParser::InvalidArgument, parser.to_s unless arguments.one? && %w[prepare report].include?(action)
+        raise OptionParser::InvalidArgument, parser.to_s unless arguments.one? && ACTIONS.include?(action)
 
         result = execute(action, arguments.first, options)
         puts JSON.pretty_generate(result)

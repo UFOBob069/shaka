@@ -18,9 +18,12 @@ module Shaka
                   review-prompt reviewer seam squash-message trial update-check usage walkthrough work
                   workflow].freeze
     # Commands whose second word selects the operation; any other second word is an argument.
+    # A test keeps them equal to each command's own list.
     OPERATIONS = { 'evidence' => %w[run bind verify guard], 'post-implementation' => %w[run publish],
-                   'pr' => %w[watch], 'review' => %w[run check record publish collapse],
-                   'seam' => %w[check init pointer preview private upgrade], 'trial' => %w[prepare] }.freeze
+                   'pr' => %w[watch], 'repos' => %w[add refresh],
+                   'review' => %w[run check record assess publish collapse],
+                   'seam' => %w[check init pointer migrate upgrade private preview],
+                   'trial' => %w[prepare report] }.freeze
     # The fixed commands `evidence run` accepts; any other `--command` value is not recorded.
     CHECKS = %w[setup test validate validate_local trigger_hosted_ci].freeze
 
