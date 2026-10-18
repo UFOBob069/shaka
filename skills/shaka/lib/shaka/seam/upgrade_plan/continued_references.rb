@@ -5,8 +5,6 @@ module Shaka
     class UpgradePlan
       # Conservatively blocks old paths split across shell physical lines.
       module ContinuedReferences
-        include AliasReferences
-
         private
 
         def scan_complex_references(path, text)
@@ -15,6 +13,7 @@ module Shaka
           scan_continued_reference(path, text)
           scan_shell_fragmented_reference(path, text)
           scan_alias_reference(path, text)
+          scan_workflow_block_glob(path, text)
           scan_unsupported_path_reference(path, text)
         end
 
@@ -99,6 +98,16 @@ module Shaka
 
           @references << { 'path' => path, 'kind' => 'aliased old-layout directory', 'paths' => [PATHS::DIRECTORY] }
           @blockers << "#{path}: aliased old-layout directory needs explicit repair"
+        end
+
+        # Markdown is not executed, so a variable assigned the old directory there is not an alias.
+        def alias_reference?(text, path = nil)
+          return false if path.to_s.match?(/\.(?:md|markdown|mdx)\z/i)
+          return true if bare_directory_dependency?(text)
+
+          assignment = %r{\b[A-Za-z_]\w*\s*[+?:]?=[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
+          mapping = %r{\b[A-Za-z_]\w*\s*:[ \t]+[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}/?(?=[ \t\r\n#'";]|$)}o
+          [text, normalize_shell_fragments(text)].any? { |source| source.match?(assignment) || source.match?(mapping) }
         end
 
         def scan_shell_fragmented_reference(path, text)

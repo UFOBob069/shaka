@@ -18,6 +18,26 @@ module Shaka
           end
         end
 
+        # A list entry inside a workflow block scalar, such as a `run: |` script, is command text, so it still blocks.
+        def scan_workflow_block_glob(path, text)
+          return unless workflow_file?(path)
+          return unless block_scalar_lines(text).any? { |line| line.match?(workflow_glob_entry) }
+
+          @references << { 'path' => path, 'kind' => 'workflow block glob', 'paths' => [PATHS::DIRECTORY] }
+          @blockers << "#{path}: old layout-directory pattern needs explicit repair"
+        end
+
+        def block_scalar_lines(text)
+          indent = nil
+          text.each_line.select do |line|
+            width = line[/\A */].size
+            inside = indent && (line.strip.empty? || width > indent)
+            indent = nil unless inside
+            indent = width if !inside && line.match?(/:[ \t]*[|>][-+0-9]*[ \t]*(?:#.*)?$/)
+            inside
+          end
+        end
+
         def workflow_file?(path) = path.to_s.match?(%r{\A\.github/workflows/[^/]+\.ya?ml\z})
 
         def ignore_or_owners_file?(path)

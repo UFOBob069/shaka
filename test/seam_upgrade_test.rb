@@ -2046,7 +2046,10 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'wrapped.sh' => "#!/bin/sh\ntar czf out.tgz \\\n  .agents/**\n",
     '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n",
     '.github/workflows/block.yml' =>
-      "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\\n            .agents/**\n"
+      "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\\n            .agents/**\n",
+    '.github/workflows/heredoc.yml' =>
+      "steps:\n  - run: |\n    ruby <<'RUBY'\n    opts = { include: ['.agents/**'] }\n    RUBY\n",
+    '.github/workflows/folded.yml' => "steps:\n  - run: >-\n    tar czf out.tgz\n    - .agents/**\n"
   }.freeze
 
   def test_double_star_glob_in_commands_still_blocks
@@ -2095,15 +2098,8 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'ci.rb' => "dir = File.join(root, '.agents')\nsystem(File.join(dir, 'custom-tool'))\n",
     'concat.rb' => "dir = root + '/.agents'\nsystem(\"\#{dir}/custom-tool\")\n",
     'paths.py' => "AGENTS = ROOT / \".agents\"\nrun(AGENTS / \"custom-tool\")\n",
-    'setup.md' => "Run `AGENT_DIR=$ROOT/.agents $AGENT_DIR/custom-tool`.\n",
-    'guide.md' => "Load it:\n\n```ruby\ndir = root + '/.agents'\nload(\"\#{dir}/custom-tool\")\n```\n",
-    'nested.md' => "1. Load it:\n\n    ```ruby\n    dir = root + '/.agents'\n    ```\n",
-    'quoted.md' => "> ```ruby\n> dir = root + '/.agents'\n> ```\n",
-    'indented.md' => "Load it:\n\n    dir = root + '/.agents'\n",
     'guide.rst' => ".. code-block:: ruby\n\n   dir = root + '/.agents'\n",
-    'guide.adoc' => "----\ndir = root + '/.agents'\n----\n",
-    'nested-fence.md' => "````markdown\n```ruby\ndir = root + '/.agents'\n```\n````\n",
-    'inline.md' => "Set `agents = root + '/.agents'`, then call `\#{agents}/custom-tool`.\n"
+    'guide.adoc' => "----\ndir = root + '/.agents'\n----\n"
   }.freeze
 
   def test_assigned_directory_values_without_command_names_block
@@ -2113,6 +2109,16 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
         commit_fixture(root, 'assigned directory')
         assert_blocked_with(root, 'aliased old-layout directory')
       end
+    end
+  end
+
+  def test_markdown_is_not_checked_for_directory_aliases
+    source = "Load it:\n\n```ruby\ndir = root + '/.agents'\nload(\"\#{dir}/custom-tool\")\n```\n"
+    with_repository do |root|
+      path = write_tracked(root, 'guide.md', source)
+      assert_equal 'ready', report(root).fetch('status')
+      apply_upgrade(root)
+      assert_equal source, File.read(path)
     end
   end
 end

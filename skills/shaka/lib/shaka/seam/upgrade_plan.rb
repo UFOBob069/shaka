@@ -15,7 +15,6 @@ require_relative 'upgrade_plan/symlink_chain'
 require_relative 'upgrade_plan/reference_dependencies'
 require_relative 'upgrade_plan/indexed_references'
 require_relative 'upgrade_plan/private_tools'
-require_relative 'upgrade_plan/alias_references'
 require_relative 'upgrade_plan/continued_references'
 require_relative 'upgrade_plan/references'
 
