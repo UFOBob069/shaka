@@ -3,7 +3,7 @@
 module Shaka
   class Seam
     class UpgradePlan
-      # Removes `.agents/**` entries that still cover every moved path: a list entry in a GitHub Actions
+      # Removes old-directory `**` entries that still cover every moved path: a list entry in a GitHub Actions
       # workflow, or a line of an ignore or CODEOWNERS file.
       module WholeDirectoryGlobs
         private

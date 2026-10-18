@@ -2043,9 +2043,10 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'list.rb' => "['.agents/**'].flat_map { |pattern| Dir.glob(pattern) }\n",
     'keyword.rb' => "files(\n  pattern: '.agents/**'\n)\n",
     'ci.sh' => "#!/bin/sh\nls .agents/**\n",
-    'wrapped.sh' => "#!/bin/sh\ntar czf out.tgz \\n  .agents/**\n",
+    'wrapped.sh' => "#!/bin/sh\ntar czf out.tgz \\\n  .agents/**\n",
     '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n",
-    '.github/workflows/block.yml' => "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\n            .agents/**\n"
+    '.github/workflows/block.yml' =>
+      "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\\n            .agents/**\n"
   }.freeze
 
   def test_double_star_glob_in_commands_still_blocks
@@ -2100,7 +2101,9 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'quoted.md' => "> ```ruby\n> dir = root + '/.agents'\n> ```\n",
     'indented.md' => "Load it:\n\n    dir = root + '/.agents'\n",
     'guide.rst' => ".. code-block:: ruby\n\n   dir = root + '/.agents'\n",
-    'guide.adoc' => "----\ndir = root + '/.agents'\n----\n"
+    'guide.adoc' => "----\ndir = root + '/.agents'\n----\n",
+    'nested-fence.md' => "````markdown\n```ruby\ndir = root + '/.agents'\n```\n````\n",
+    'inline.md' => "Set `agents = root + '/.agents'`, then call `\#{agents}/custom-tool`.\n"
   }.freeze
 
   def test_assigned_directory_values_without_command_names_block

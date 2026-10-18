@@ -20,14 +20,31 @@ module Shaka
           [text, normalize_shell_fragments(text)].any? { |source| source.match?(assignment) || source.match?(mapping) }
         end
 
+        # Splits Markdown into code (fenced or indented blocks, plus inline code spans) and the remaining prose.
         def fenced_code_split(text)
-          fenced = false
+          code, prose = code_block_partition(text)
+          spans = prose.scan(/(`+)(.+?)\1/).map(&:last)
+          [[code, *spans].join("\n"), prose]
+        end
+
+        def code_block_partition(text)
+          opening = nil
           text.each_line.partition do |line|
             body = line.sub(/\A(?:[ \t]*>)*/, '')
-            fence = body.match?(/\A[ \t]*(?:```|~~~)/)
-            fenced = !fenced if fence
-            fenced || fence || body.match?(/\A(?: {4}|\t)/)
+            marker = body[/\A[ \t]*(`{3,}|~{3,})/, 1]
+            code = opening || marker || body.match?(/\A(?: {4}|\t)/)
+            opening = next_fence(opening, body, marker)
+            code
           end.map(&:join)
+        end
+
+        # A fence closes only on a bare fence of the same character and at least the opening length.
+        def next_fence(opening, body, marker)
+          return marker unless opening
+
+          closing = marker&.start_with?(opening[0]) && marker.length >= opening.length &&
+                    body.match?(/\A[ \t]*[`~]+[ \t]*$/)
+          closing ? nil : opening
         end
 
         def code_assignment
