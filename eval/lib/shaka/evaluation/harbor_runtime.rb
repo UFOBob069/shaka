@@ -8,6 +8,7 @@ module Shaka
     # Operator-owned controller and prepared tasks; never take these paths from an agent.
     class HarborRuntime
       REVISION = 'b53b8134e1241686dca7759af188f987ecc48e8b'
+      VERSION = '0.24.0'
 
       def initialize(tools:, credential:, skill:, profile:, path: ENV.fetch('PATH'))
         @harbor, @source, @docker, @credential, @skill = [*tools.values_at('harbor', 'source', 'docker'),
@@ -30,9 +31,9 @@ module Shaka
         clean = process.capture(['git', '-C', @source, 'status', '--porcelain']).strip.empty?
         revision = process.capture(['git', '-C', @source, 'rev-parse', 'HEAD']).strip
         version = process.capture([@harbor, '--version']).strip
-        return if clean && revision == REVISION && version == '0.24.0'
+        return if clean && revision == REVISION && version == VERSION
 
-        raise ArgumentError, 'Expected clean pinned Harbor 0.24.0'
+        raise ArgumentError, "Expected clean pinned Harbor #{VERSION}"
       end
 
       def config(task:, name:, directory:)

@@ -2,6 +2,7 @@
 
 require 'tmpdir'
 require_relative 'harbor_runtime'
+require_relative 'harbor_environment'
 require_relative 'runner'
 
 module Shaka
@@ -41,11 +42,17 @@ module Shaka
       def account(record, capture)
         record['usage'] = capture.fetch('usage')
         record.fetch('fingerprint')['rate_card_hash'] = @usage.rate_card_hash
+        record.fetch('fingerprint')['execution_framework'] = framework(capture)
         if capture.fetch('harness_error')
           record['outcome'] = { 'state' => 'HARNESS_ERROR', 'harness_error' => 'Harbor trial failed' }
           record['score'] = 'UNKNOWN'
         end
         record
+      end
+
+      def framework(capture)
+        { 'name' => 'Harbor', 'version' => HarborRuntime::VERSION,
+          'environment_digest' => capture.fetch('environment').fetch('digest') }
       end
 
       def planned?(task)
@@ -72,6 +79,7 @@ module Shaka
             'project' => entry.dig('Config', 'Labels', 'com.docker.compose.project') }
         end
         { 'result' => native, 'images' => images,
+          'environment' => HarborEnvironment.capture(resources.fetch('container'), name: name),
           'usage' => usage(trial),
           'harness_error' => !success || !native || !native['exception_info'].nil? }
       end

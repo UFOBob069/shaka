@@ -33,5 +33,11 @@ cannot use `N/A` to become eligible. Other `N/A` values retain the record schema
 meaning: the field does not apply. The checker relies on the trusted record producer
 to establish that applicability and the truth of captured values.
 
+Harbor records also need a known `execution_framework.environment_digest` from
+the [native container readback](harbor-trials.md). Version 1 records written before
+this field remain valid but provisional. Any change to the environment digest
+refuses all axes, including tier comparisons. The checker does not reconstruct
+or attest the private manifest from its digest.
+
 Output names fields and fixed reason codes. It omits task IDs, model values,
 machine aliases, paths, record contents, and nested keys. Keep the input files private.

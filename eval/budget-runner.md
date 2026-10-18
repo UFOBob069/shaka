@@ -6,8 +6,9 @@ its trial record privately before settling the charge. Ask your agent:
 > Integrate my native trial driver with the budgeted batch runner. Keep the approved pilot limits and save records privately.
 
 This is an integration API under `eval/lib/shaka/evaluation/`, outside the product
-runtime. Harbor execution, native usage conversion, fingerprint capture, and the
-`run` and `nightly` commands remain unbuilt. A completed batch is not a quality
+runtime. [Harbor execution](harbor-trials.md) and [native usage conversion](native-usage.md)
+are available as integration APIs. Complete fingerprint capture and the `run` and
+`nightly` commands remain unbuilt. A completed batch is not a quality
 verdict or evidence that a release is clean.
 
 The operator supplies `limits` explicitly; omitting them rejects the call.

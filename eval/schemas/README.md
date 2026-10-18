@@ -27,6 +27,10 @@ Version 1 contains every D1 section and D2 fingerprint field. Content digests us
 Neither is a missing key, an empty string, or zero. Applicability and comparison
 eligibility belong to the later fingerprint/comparison checks.
 
+`execution_framework` accepts an optional `environment_digest`. The native Harbor
+wrapper supplies it from container readbacks. Older records remain valid; Harbor
+comparisons require a known digest before they can be eligible.
+
 Usage is normalized per model: `input_tokens` includes cached reads and writes;
 those counters are subsets. `output_tokens` includes `reasoning_tokens`.
 Unknown counters and dollar estimates remain `UNKNOWN`. Times are seconds.

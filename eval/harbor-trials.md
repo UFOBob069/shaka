@@ -50,7 +50,24 @@ pending. After a controller crash or forced termination, inspect and remove that
 reservation's resources and reconcile its charge before clearing pending state.
 
 The capture contains Harbor's native result, image identities, normalized usage,
-and a harness-error flag. Session collection includes descendant JSONL files and
+an environment manifest and a harness-error flag. The manifest identifies each
+retained agent, verifier and sidecar by Compose role and service, actual image ID,
+container user, CPU/memory limits, init, capability and security options, process
+limit, sysctls, tmpfs options and mount destinations/write access. Generated IDs,
+host mount sources and environment variables are omitted. Ordering does not affect
+its SHA-256 digest. Verifier project truncation can add a reservation-dependent
+hash; the manifest normalizes one verifier group to the verifier role. Multiple
+verifier groups, missing required readbacks, duplicate services, or no agent or
+separate verifier main container leave the manifest and digest `UNKNOWN`.
+
+The wrapper replaces the builder's `execution_framework` with the pinned Harbor
+version and this `environment_digest`. The digest covers retained container
+readbacks; it does not attest network rules, task contents, host kernel, or every
+earlier runtime state. Task qualification still establishes isolation. Keep the
+manifest private. A changed digest refuses every comparison axis; an old Harbor
+record without a known digest remains structurally valid but provisional.
+
+Session collection includes descendant JSONL files and
 rejects paths resolving outside the trial. The wrapper replaces the builder's
 usage and rate-card hash with native-reader results. A nonzero exit, timeout,
 missing or mismatched result, or native exception forces `HARNESS_ERROR` and an
@@ -65,3 +82,8 @@ publication graders, calibrated judging, paired statistics and D9 release
 decisions remain unbuilt. The lifecycle tests use disposable native subprocesses
 and synthetic Docker responses; they make no model calls and do not requalify
 the container recipe.
+
+The [merged-controller Linux qualification](reports/harbor-launch-qualification.md)
+passed one Codex trial under the pilot caps. Its authentication recovery and
+accounting limits are recorded there; it does not qualify the Claude profile or
+arbitrary tasks.

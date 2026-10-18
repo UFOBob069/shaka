@@ -89,7 +89,10 @@
     },
     "framework": {
       "type": "object", "additionalProperties": false, "required": ["name", "version"],
-      "properties": { "name": { "$ref": "#/$defs/text" }, "version": { "$ref": "#/$defs/text" } }
+      "properties": {
+        "name": { "$ref": "#/$defs/text" }, "version": { "$ref": "#/$defs/text" },
+        "environment_digest": { "$ref": "#/$defs/digest" }
+      }
     },
     "outcome": { "anyOf": [
       {

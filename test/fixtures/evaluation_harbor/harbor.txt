@@ -15,9 +15,13 @@ entries = %w[container network volume].flat_map do |kind|
   verifier = name + '__verifier__' + 'long-key-' * 20
   verifier = verifier[0, 53].sub(/[-._]+\z/, '') + '__' + Digest::SHA1.hexdigest(verifier)[0, 8] if verifier.size > 63
   [name + '__env', verifier, name + '-unrelated__env'].map.with_index do |project, index|
-    labels = { 'com.docker.compose.project' => project }
+    labels = { 'com.docker.compose.project' => project, 'com.docker.compose.service' => 'main' }
     { 'kind' => kind, 'Id' => kind + index.to_s, 'Name' => kind + index.to_s,
-      'Config' => { 'Labels' => labels }, 'Labels' => labels, 'Image' => 'sha256:' + 'a' * 64 }
+      'HostConfig' => { 'NanoCpus' => 2_000_000_000, 'Memory' => 2_147_483_648,
+                        'ReadonlyRootfs' => true, 'Init' => true, 'PidsLimit' => 256,
+                        'CapDrop' => ['ALL'], 'CapAdd' => nil, 'SecurityOpt' => ['no-new-privileges:true'] },
+      'Mounts' => [],
+      'Config' => { 'User' => 'agent', 'Labels' => labels }, 'Labels' => labels, 'Image' => 'sha256:' + 'a' * 64 }
   end
 end
 File.write(File.join(root, 'resources.json'), JSON.generate(entries))

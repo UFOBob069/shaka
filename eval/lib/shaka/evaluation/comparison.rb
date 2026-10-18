@@ -82,10 +82,19 @@ module Shaka
         arms.flat_map do |arm|
           arm.values.flatten.flat_map do |record|
             record.fetch('fingerprint').filter_map do |key, value|
-              key if unknown?(value) || (value == 'N/A' && REQUIRED.include?(key))
+              key if provisional?(key, value)
             end
           end
         end.uniq.sort
+      end
+
+      def provisional?(key, value)
+        unknown?(value) || (value == 'N/A' && REQUIRED.include?(key)) || incomplete_framework?(key, value)
+      end
+
+      def incomplete_framework?(key, value)
+        key == 'execution_framework' && value.is_a?(Hash) && value['name'].casecmp?('harbor') &&
+          !/\Asha256:[0-9a-f]{64}\z/.match?(value['environment_digest'].to_s)
       end
 
       def unknown?(value)

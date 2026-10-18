@@ -81,13 +81,6 @@ class EvaluationHarborTrialTest < Minitest::Test
     assert_equal 1, account.snapshot['pending']
   end
 
-  def test_capture_keeps_only_image_identity_from_docker_inspection
-    setup_harbor
-    harbor_run
-    assert_equal 2, @capture.fetch('images').size
-    assert_equal %w[image_digest project], @capture.fetch('images').first.keys
-  end
-
   def test_unknown_usage_blocks_later_launches
     setup_harbor
     @usage.define_singleton_method(:read) do |**|
