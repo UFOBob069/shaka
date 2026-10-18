@@ -93,21 +93,31 @@ module Shaka
         end
 
         def scan_alias_reference(path, text)
-          return unless alias_reference?(text)
+          return unless alias_reference?(text, path)
 
           @references << { 'path' => path, 'kind' => 'aliased old-layout directory', 'paths' => [PATHS::DIRECTORY] }
           @blockers << "#{path}: aliased old-layout directory needs explicit repair"
         end
 
-        def alias_reference?(text)
+        def alias_reference?(text, path = nil)
           return true if bare_directory_dependency?(text)
 
-          # The directory must sit in the assigned value: whitespace may appear only inside quotes or parentheses.
-          value = %q{(?:[^\s"'(]|"[^"\r\n]*"|'[^'\r\n]*')*(?:"[^"\r\n]*|'[^'\r\n]*|\([^\r\n]*?)?}
-          assignment = %r{\b[A-Za-z_]\w*\s*[+?:]?=[ \t]*#{value}#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
+          assignment = prose_file?(path) ? prose_assignment : code_assignment
           mapping = %r{\b[A-Za-z_]\w*\s*:[ \t]+[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}/?(?=[ \t\r\n#'";]|$)}o
           [text, normalize_shell_fragments(text)].any? { |source| source.match?(assignment) || source.match?(mapping) }
         end
+
+        def code_assignment
+          %r{\b[A-Za-z_]\w*\s*[+?:]?=[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
+        end
+
+        # In prose the directory must sit in the assigned value, with whitespace only inside quotes or parentheses.
+        def prose_assignment
+          value = %q{(?:[^\s"'(]|"[^"\r\n]*"|'[^'\r\n]*')*(?:"[^"\r\n]*|'[^'\r\n]*|\([^\r\n]*?)?}
+          %r{\b[A-Za-z_]\w*\s*[+?:]?=[ \t]*#{value}#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
+        end
+
+        def prose_file?(path) = path.to_s.match?(/\.(?:md|markdown|mdx|txt|rst|adoc)\z/i)
 
         def scan_shell_fragmented_reference(path, text)
           return unless shell_fragmented_reference?(text)

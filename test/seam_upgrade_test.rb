@@ -2055,10 +2055,18 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     end
   end
 
+  ASSIGNED_DIRECTORY_SOURCES = {
+    'ci.sh' => "#!/bin/sh\nagent_dir=$(dirname \"$0\")/.agents\nexec \"$agent_dir/custom-tool\"\n",
+    'quoted.sh' => "#!/bin/sh\nagent_dir=\"$HOME/my repo/.agents\"\nexec \"$agent_dir/custom-tool\"\n",
+    'tick.sh' => "#!/bin/sh\nagent_dir=`git rev-parse --show-toplevel`/.agents\nexec \"$agent_dir/custom-tool\"\n",
+    'ci.rb' => "dir = File.join(root, '.agents')\nsystem(File.join(dir, 'custom-tool'))\n",
+    'concat.rb' => "dir = root + '/.agents'\nsystem(\"\#{dir}/custom-tool\")\n",
+    'paths.py' => "AGENTS = ROOT / \".agents\"\nrun(AGENTS / \"custom-tool\")\n",
+    'setup.md' => "Run `AGENT_DIR=$ROOT/.agents $AGENT_DIR/custom-tool`.\n"
+  }.freeze
+
   def test_assigned_directory_values_without_command_names_block
-    { 'ci.sh' => "#!/bin/sh\nagent_dir=$(dirname \"$0\")/.agents\nexec \"$agent_dir/custom-tool\"\n",
-      'quoted.sh' => "#!/bin/sh\nagent_dir=\"$HOME/my repo/.agents\"\nexec \"$agent_dir/custom-tool\"\n",
-      'ci.rb' => "dir = File.join(root, '.agents')\nsystem(File.join(dir, 'custom-tool'))\n" }.each do |name, source|
+    ASSIGNED_DIRECTORY_SOURCES.each do |name, source|
       with_repository do |root|
         File.write(File.join(root, name), source)
         commit_fixture(root, 'assigned directory')
