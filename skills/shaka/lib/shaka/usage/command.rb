@@ -63,7 +63,7 @@ module Shaka
         flags.banner = 'Usage: shaka usage --commit SHA[,SHA] --contribution NAME [options]'
         source_options(flags, options)
         UsageJsonReport.format_option(flags, options)
-        flags.on('--commit SHA', 'Affected full commit SHAs, comma separated') { |v| options[:commit] = v }
+        commit_option(flags, options)
         flags.on('--contribution NAME', 'Contribution category (see guide)') { |v| options[:contribution] = v }
         flags.on('--rate-root DIR', 'Implementation rate-card checkout') { |value| options[:rate_root] = value }
         flags.on('-h', '--help') { options[:help] = true }

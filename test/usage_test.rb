@@ -477,6 +477,19 @@ class UsageFailuresTest < Minitest::Test
   end
 end
 
+class UsageCommitTest < Minitest::Test
+  include UsageFixture
+
+  def test_abbreviated_commit_names_the_full_sha_requirement
+    ['HEAD', 'a' * 7, "#{COMMIT},HEAD", ''].each do |commit|
+      _output, error, status = Open3.capture3(COMMAND, 'usage', '--commit', commit,
+                                              '--contribution', 'implementation')
+      refute_predicate status, :success?
+      assert_includes error, 'full 40-character commit SHA'
+    end
+  end
+end
+
 class UsageTurnSelectionTest < Minitest::Test
   include UsageFixture
 

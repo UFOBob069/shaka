@@ -184,7 +184,7 @@ setting keeps installed skill descriptions out of the reviewer's instructions to
 description-based routing to an unrelated installed skill. The report is created outside the checkout.
 It does not use `--ephemeral`, so the session remains saved. `--json` reports its thread ID,
 and the result's `usage` names that saved session under `CODEX_HOME` (default `~/.codex`);
-run `shaka usage --host codex --file USAGE --commit HEAD --contribution review --all-turns`
+run `shaka usage --host codex --file USAGE --commit "$(git rev-parse HEAD)" --contribution review --all-turns`
 on it. A missing `usage` means the session file was not found, and review usage stays UNKNOWN.
 `codex exec review --base REF` cannot accept the custom review prompt, so the helper uses `exec`.
 
@@ -209,7 +209,7 @@ Apply the same failure-cause check before marking `claude` unavailable.
 The helper runs `claude -p --permission-mode plan --permission-prompts none --restricted
 --safe-mode --strict-mcp-config --effort EFFORT --output-format json -`. It rejects an error,
 empty result, or wrong-head attestation. `-p` prints and exits; JSON holds the review text and
-native token counters. Run `shaka usage --host claude-code --file PATH --commit HEAD
+native token counters. Run `shaka usage --host claude-code --file PATH --commit "$(git rev-parse HEAD)"
 --contribution review` on the corresponding Claude session. `--permission-mode plan` with
 `--permission-prompts none` withholds edits
 and denies anything that would prompt. `--restricted` removes command-running tools.
