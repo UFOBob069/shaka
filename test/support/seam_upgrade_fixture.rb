@@ -103,6 +103,16 @@ module SeamUpgradeFixture
     "#{File.realpath(first.strip)}\n#{rest.join}"
   end
 
+  def write_workflow(root, source) = write_tracked(root, '.github/workflows/ci.yml', source)
+
+  def write_tracked(root, name, source)
+    path = File.join(root, name)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, source)
+    commit_fixture(root, name)
+    path
+  end
+
   def assert_blocked_with(root, reason)
     preview = report(root)
     assert_equal 'blocked', preview.fetch('status')

@@ -2015,18 +2015,6 @@ end
 class SeamUpgradeCorrectReferenceTest < Minitest::Test
   include SeamUpgradeFixture
 
-  def test_whole_directory_double_star_glob_stays_as_written
-    ['      - ".agents/**"', '      - .agents/**', "paths-ignore: ['.agents/**', 'docs/**']"].each do |entry|
-      with_repository do |root|
-        path = write_workflow(root, "on:\n  push:\n    paths-ignore:\n#{entry}\n")
-        before = File.read(path)
-        assert_equal 'ready', report(root).fetch('status'), entry
-        apply_upgrade(root)
-        assert_equal before, File.read(path)
-      end
-    end
-  end
-
   def test_whole_directory_glob_entries_in_ignore_files_stay_as_written
     { '.gitignore' => ".agents/**\n", '.github/CODEOWNERS' => "/.agents/** @maintainers\n" }.each do |name, source|
       with_repository do |root|
@@ -2045,12 +2033,6 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'ci.sh' => "#!/bin/sh\nls .agents/**\n",
     'wrapped.sh' => "#!/bin/sh\ntar czf out.tgz \\\n  .agents/**\n",
     '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n",
-    '.github/workflows/block.yml' =>
-      "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\\n            .agents/**\n",
-    '.github/workflows/heredoc.yml' =>
-      "steps:\n  - run: |\n    ruby <<'RUBY'\n    opts = { include: ['.agents/**'] }\n    RUBY\n",
-    '.github/workflows/folded.yml' => "steps:\n  - run: >-\n    tar czf out.tgz\n    - .agents/**\n",
-    '.github/workflows/anchored.yml' => "steps:\n  - run: &archive >-\n      tar czf out.tgz\n      - .agents/**\n",
     '.github/workflows/matrix.yml' => "strategy:\n  matrix:\n    pattern: ['.agents/**']\n"
   }.freeze
 
@@ -2070,16 +2052,6 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
         assert_blocked_with(root, 'old layout-directory pattern')
       end
     end
-  end
-
-  def write_workflow(root, source) = write_tracked(root, '.github/workflows/ci.yml', source)
-
-  def write_tracked(root, name, source)
-    path = File.join(root, name)
-    FileUtils.mkdir_p(File.dirname(path))
-    File.write(path, source)
-    commit_fixture(root, name)
-    path
   end
 
   def test_prose_assignment_before_directory_mention_stays_as_written
@@ -2121,6 +2093,84 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
       assert_equal 'ready', report(root).fetch('status')
       apply_upgrade(root)
       assert_equal source, File.read(path)
+    end
+  end
+end
+
+class SeamUpgradeWorkflowGlobTest < Minitest::Test
+  include SeamUpgradeFixture
+
+  FILTER_WORKFLOWS = [<<~QUOTED, <<~MIXED, <<~INLINE].freeze
+    on:
+      push:
+        paths-ignore:
+          - ".agents/**"
+  QUOTED
+    on:
+      push:
+        paths-ignore:
+          - .agents/**
+      pull_request:
+        paths: ["!.agents/**", 'docs/**']
+  MIXED
+    on:
+      push:
+        paths-ignore: ['.agents/**', 'docs/**']
+    jobs:
+      a:
+        steps:
+          - run: make test
+  INLINE
+
+  def test_event_path_filters_stay_as_written
+    FILTER_WORKFLOWS.each do |source|
+      with_repository do |root|
+        path = write_workflow(root, source)
+        assert_equal 'ready', report(root).fetch('status'), source
+        apply_upgrade(root)
+        assert_equal source, File.read(path)
+      end
+    end
+  end
+
+  COMMAND_WORKFLOWS = [<<~MATRIX, <<~RUN, <<~HEREDOC, <<~ANCHORED].freeze
+    on: push
+    jobs:
+      a:
+        strategy:
+          matrix:
+            paths: ['.agents/**']
+  MATRIX
+    on:
+      push:
+        paths-ignore: ['.agents/**']
+    jobs:
+      a:
+        steps:
+          - run: ls .agents/**
+  RUN
+    on: push
+    jobs:
+      a:
+        steps:
+          - run: |
+              ruby <<'RUBY'
+              opts = { paths: ['.agents/**'] }
+              RUBY
+  HEREDOC
+    on:
+      push:
+        paths-ignore: &filters ['.agents/**']
+      pull_request:
+        paths-ignore: *filters
+  ANCHORED
+
+  def test_workflow_globs_outside_event_filters_still_block
+    COMMAND_WORKFLOWS.each do |source|
+      with_repository do |root|
+        write_workflow(root, source)
+        assert_blocked_with(root, 'layout')
+      end
     end
   end
 end

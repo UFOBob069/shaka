@@ -8,12 +8,12 @@ module Shaka
         private
 
         def scan_complex_references(path, text)
+          note_workflow_filters(path, text)
           scan_bare_directory_dependency(path, text)
           scan_segmented_reference(path, text)
           scan_continued_reference(path, text)
           scan_shell_fragmented_reference(path, text)
           scan_alias_reference(path, text)
-          scan_workflow_glob_context(path, text)
           scan_unsupported_path_reference(path, text)
         end
 
