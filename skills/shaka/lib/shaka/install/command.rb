@@ -12,8 +12,9 @@ module Shaka
                  '--branch NAME' => :branch, '--skills-dir DIR' => :skills_dir,
                  '--managed-dir DIR' => :managed_dir, '--rollback PACKAGE_ID' => :rollback }.freeze
 
-      def initialize(source)
+      def initialize(source, program: 'bin/install')
         @source = source
+        @program = program
         @options = { agents: [], names: ['shaka'] }
         @actions = []
       end
@@ -32,7 +33,7 @@ module Shaka
 
       def parser
         OptionParser.new do |options|
-          options.banner = 'Usage: bin/install [--directory DIR] [--agent NAME] [--update|--verify]'
+          options.banner = "Usage: #{@program} [--directory DIR] [--agent NAME] [--update|--verify]"
           VALUES.each { |flag, key| options.on(flag) { |value| @options[key] = value } }
           selections(options)
           actions(options)

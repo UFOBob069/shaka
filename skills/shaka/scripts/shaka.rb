@@ -39,6 +39,7 @@ require_relative '../lib/shaka/post_implementation'
 require_relative '../lib/shaka/reviewer'
 require_relative '../lib/shaka/seam'
 require_relative '../lib/shaka/status'
+require_relative '../lib/shaka/subcommands'
 require_relative '../lib/shaka/trusted_config_source'
 require_relative '../lib/shaka/usage/usage'
 require_relative '../lib/shaka/usage/publisher_attribution'
@@ -54,115 +55,14 @@ require_relative '../lib/shaka/update_check'
 
 exit Shaka::Welcome.run if ARGV.empty?
 
-if ARGV.first == 'update-check'
-  ARGV.shift
-  exit Shaka::UpdateCheck.run(ARGV)
-end
-
-if ARGV.first == 'usage'
-  ARGV.shift
-  exit Shaka::Usage.run(ARGV)
-end
-
 if ARGV.first == 'pr' && ARGV[1] == 'watch'
   ARGV.shift(2)
   exit Shaka::PrWatch::Command.run(ARGV)
 end
 
-if ARGV.first == 'issue-create'
-  ARGV.shift
-  exit Shaka::IssueCreate.run(ARGV)
-end
-
-if ARGV.first == 'trial'
-  ARGV.shift
-  exit Shaka::Trial::Command.run(ARGV)
-end
-
-if ARGV.first == 'work'
-  ARGV.shift
-  exit Shaka::Work.run(ARGV)
-end
-
-if ARGV.first == 'recommendation'
-  ARGV.shift
-  exit Shaka::Recommendation.run(ARGV)
-end
-
-if ARGV.first == 'checkpoint'
-  ARGV.shift
-  exit Shaka::Checkpoint.run(ARGV)
-end
-
-if ARGV.first == 'review-prompt'
-  ARGV.shift
-  exit Shaka::ReviewPrompt.run(ARGV)
-end
-
-if ARGV.first == 'post-implementation'
-  ARGV.shift
-  exit Shaka::PostImplementation.run(ARGV)
-end
-
-if ARGV.first == 'review'
-  ARGV.shift
-  exit Shaka::LocalReview.run(ARGV)
-end
-
-if ARGV.first == 'reviewer'
-  ARGV.shift
-  exit Shaka::Reviewer.run(ARGV)
-end
-
-if ARGV.first == 'seam'
-  ARGV.shift
-  exit Shaka::Seam.run(ARGV)
-end
-
-if ARGV.first == 'workflow'
-  ARGV.shift
-  exit Shaka::Workflow.run(ARGV)
-end
-
-if ARGV.first == 'enforcement'
-  ARGV.shift
-  exit Shaka::Enforcement.run(ARGV)
-end
-
-if ARGV.first == 'doctor'
-  ARGV.shift
-  exit Shaka::Doctor.run(ARGV)
-end
-
-if ARGV.first == 'install'
-  require_relative '../lib/shaka/install/command'
-  ARGV.shift
-  exit Shaka::Install::Command.new(File.expand_path('../../..', __dir__)).run(ARGV)
-end
-
-if ARGV.first == 'evidence'
-  ARGV.shift
-  exit Shaka::Evidence::Command.run(ARGV)
-end
-
-if ARGV.first == 'claim'
-  ARGV.shift
-  exit Shaka::Claim.run(ARGV)
-end
-
-if ARGV.first == 'repos'
-  ARGV.shift
-  exit Shaka::Repos.run(ARGV)
-end
-
-if ARGV.first == 'prefix'
-  ARGV.shift
-  exit Shaka::Prefix.run(ARGV)
-end
-
-if ARGV.first == 'guidance'
-  ARGV.shift
-  exit Shaka::Guidance.run(ARGV)
+if Shaka::Subcommands::TABLE.key?(ARGV.first)
+  subcommand = Shaka::Subcommands::TABLE.fetch(ARGV.shift)
+  exit subcommand.run.call(ARGV)
 end
 
 COMMANDS = %w[pr comments description reply resolve walkthrough merge attention squash-message handoff].freeze
@@ -234,13 +134,11 @@ def walkthrough_parts(options, github)
 end
 
 def usage_banner
-  ["Usage: shaka (#{COMMANDS.join('|')}) OWNER/REPO NUMBER [options]; ",
-   'shaka usage --help; shaka work --help; shaka recommendation --help; shaka checkpoint --help',
-   '; shaka reviewer --help', '; shaka review-prompt --help', '; shaka review run --help',
-   '; shaka review check --help', '; shaka review publish --help', '; shaka seam check --help',
-   '; shaka workflow --help', '; shaka enforcement --help', '; shaka doctor --help',
-   '; shaka repos --help; shaka prefix --help; shaka guidance --help',
-   '; shaka issue-create --help; shaka install --help'].join
+  lines = ["shaka (#{COMMANDS.join('|')}) OWNER/REPO NUMBER [options]", 'shaka pr watch OWNER/REPO NUMBER [options]']
+  lines += Shaka::Subcommands.usage_lines
+  "Usage: #{lines.join("\n       ")}\n" \
+    "Run a command with --help, after its operation when it takes one, for its options.\n" \
+    "Options for the OWNER/REPO NUMBER commands:\n"
 end
 
 def merge_flags(flags, options)

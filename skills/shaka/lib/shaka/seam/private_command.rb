@@ -25,19 +25,24 @@ module Shaka
 
       def run
         operation = @arguments.shift
-        raise OptionParser::InvalidArgument, operation unless OPERATIONS.include?(operation)
+        return 0.tap { puts option_parser(nil) } if %w[-h --help].include?(operation)
 
-        parser = option_parser(operation)
-        parser.parse!(@arguments)
-        raise OptionParser::InvalidArgument, @arguments.join(' ') unless @arguments.empty?
-
-        root = File.realpath(@options.fetch(:root, Dir.pwd))
-        output = execute(operation, root)
+        output = execute(operation, parse(operation))
         puts JSON.pretty_generate(output)
         0
       end
 
       private
+
+      # Returns the repository root the operation acts on.
+      def parse(operation)
+        raise OptionParser::InvalidArgument, operation unless OPERATIONS.include?(operation)
+
+        option_parser(operation).parse!(@arguments)
+        raise OptionParser::InvalidArgument, @arguments.join(' ') unless @arguments.empty?
+
+        File.realpath(@options.fetch(:root, Dir.pwd))
+      end
 
       def execute(operation, root)
         return setup(root) if operation == 'setup'
