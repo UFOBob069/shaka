@@ -147,9 +147,10 @@ sections:
   a hidden tool marker such as `<!-- shaka:reply:… -->`, and a superseded
   walkthrough under Shaka's pointer also count as an agent's.
 - **Said** links to the comment. A comment of at most 12 words and 90 characters
-  appears in quotation marks, in the person's own words. A longer one is already
-  on the PR, so the agent summarizes it in one line, shown without quotation
-  marks. Shaka refuses to publish while a longer comment it shows has no summary.
+  appears in quotation marks, in the person's own words, without its code. A
+  longer one is already on the PR, so the agent summarizes it in one line, shown
+  without quotation marks; so is a short comment with a list beside code. Shaka
+  refuses to publish while a comment it summarizes has no summary.
 - **Response** links the agent post, or the trusted bot's post, that answered it.
 - **Status** is GitHub's resolved state for an inline thread, and the verdict for
   an approval, a request for changes, or a dismissed review. Any other comment

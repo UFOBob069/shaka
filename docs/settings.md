@@ -854,8 +854,10 @@ pr_description:
 ```
 
 How much of a comment the list repeats is not a setting. The list quotes a comment
-only when it has at most 12 words and 90 characters. A longer one is already on
-the PR, so the list shows the agent's one-line summary and links to it.
+only when it has at most 12 words and 90 characters, leaving out any code. A longer
+one is already on the PR, so the list shows the agent's one-line summary and links
+to it. So does a short comment with a list beside code, where code is hard to tell
+from prose.
 
 ## `wip.include_checkout_path`
 

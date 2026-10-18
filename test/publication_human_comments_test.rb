@@ -238,7 +238,7 @@ class PublicationHumanCommentSummaryTest < Minitest::Test
   def test_a_longer_comment_without_a_summary_is_refused_and_named
     error = assert_raises(Shaka::Error) { describe(packet(issue_comments: [issue_comment(1, 'Bob', LONG)])) }
 
-    assert_includes error.message, "needs a one-line summary for each longer human comment: #{ASKED}"
+    assert_includes error.message, "needs a one-line summary for each human comment it does not quote: #{ASKED}"
   end
 
   def test_a_summary_for_a_comment_the_list_quotes_or_does_not_hold_is_refused

@@ -37,7 +37,7 @@ class CliDescriptionHumanCommentsTest < Minitest::Test
       _output, error, status = run_with_comments(dir, packet(HEAD, LONG))
 
       refute_predicate status, :success?
-      assert_includes error, "needs a one-line summary for each longer human comment: #{COMMENT['url']}"
+      assert_includes error, "needs a one-line summary for each human comment it does not quote: #{COMMENT['url']}"
       refute_path_exists File.join(dir, 'published.md')
     end
   end

@@ -49,7 +49,7 @@ module Shaka
       missing = @summarized - @summaries.keys
       unused = @summaries.keys - summarizable
       unless missing.empty?
-        raise Error, "Publication #{SUMMARIES} needs a one-line summary for each longer human comment: " \
+        raise Error, "Publication #{SUMMARIES} needs a one-line summary for each human comment it does not quote: " \
                      "#{missing.join(', ')}."
       end
       return if unused.empty?
