@@ -2095,6 +2095,14 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
       assert_equal source, File.read(path)
     end
   end
+
+  def test_indexed_markdown_directory_change_still_blocks
+    with_repository do |root|
+      path = write_tracked(root, 'README.md', "Run:\n\n    cd .agents\n    ./bin/test\n")
+      File.write(path, "Run make test.\n")
+      assert_blocked_with(root, 'indexed segmented old-layout reference differs from worktree')
+    end
+  end
 end
 
 class SeamUpgradeWorkflowGlobTest < Minitest::Test

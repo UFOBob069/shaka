@@ -102,8 +102,8 @@ module Shaka
 
         # Markdown is not executed, so a variable assigned the old directory there is not an alias.
         def alias_reference?(text, path = nil)
-          return false if path.to_s.match?(/\.(?:md|markdown|mdx)\z/i)
           return true if bare_directory_dependency?(text)
+          return false if path.to_s.match?(/\.(?:md|markdown|mdx)\z/i)
 
           assignment = %r{\b[A-Za-z_]\w*\s*[+?:]?=[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
           mapping = %r{\b[A-Za-z_]\w*\s*:[ \t]+[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}/?(?=[ \t\r\n#'";]|$)}o

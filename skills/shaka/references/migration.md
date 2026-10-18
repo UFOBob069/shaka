@@ -32,9 +32,9 @@ scripts with shebangs that refer to old paths, computed path prefixes, and direc
 patterns such as `.agents/*` or `.agents/bin/**` block for explicit repair. A
 whole-directory `.agents/**` stays as written in an ignore or CODEOWNERS file, and in a
 GitHub Actions workflow whose every `.agents/**` is an event `paths` or `paths-ignore`
-value. A variable set to an old directory blocks, except in Markdown. Other
-unambiguous tracked text references to moved files, including CI and guide references, are rewritten. Historical changelog
-lines stay as written. Historical-sounding guide lines block for explicit repair, because
+value. A variable set to an old directory blocks, except in Markdown. Other unambiguous
+tracked text references to moved files, including CI and guide references, are rewritten.
+Historical changelog lines stay as written. Historical-sounding guide lines block for explicit repair, because
 a current instruction can appear later in the same line. Existing new-layout files,
 including ignored private files, are never overwritten.
 Old-path references inside the contract or repository allowlist block instead of
