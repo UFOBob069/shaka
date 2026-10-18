@@ -8,8 +8,9 @@ require 'time'
 module ReviewTimingAssertions
   private
 
-  def assert_timing(result)
-    assert_in_delta Time.now.to_f, Time.iso8601(result.fetch('started_at')).to_f, 10
+  # started_at has whole-second precision, so it may read up to a second before the run began.
+  def assert_timing(result, run_began)
+    assert_includes (run_began.to_i..Time.now.to_i), Time.iso8601(result.fetch('started_at')).to_i
     assert_kind_of Integer, result.fetch('duration_ms')
     assert_operator result.fetch('duration_ms'), :>=, 0
   end
@@ -30,11 +31,12 @@ module ReviewTimingFixture
   def timed_run(*arguments, **options)
     path = arguments.pop
     expected = options.delete(:expected) || 'not_completed'
+    run_began = Time.now
     output, error, status = run_review(*arguments, options.merge(ledger: path))
     result = JSON.parse(output)
     assert_equal expected, result.fetch('status'), error
     assert_equal expected == 'completed', status.success?, error
-    assert_timing(result)
+    assert_timing(result, run_began)
     result
   end
 
@@ -76,10 +78,12 @@ class LocalReviewTimingTest < Minitest::Test
     end
   end
 
+  # `review run` gives each setup Git call the same limit, so the limit leaves room for setup on
+  # a busy machine; the stub sleeps far longer, so only a timeout ends the review in time.
   def test_timeout_keeps_actual_elapsed_time_and_deadline_without_a_round
     with_timed_review do |root, base, head, bin, path|
-      write_executable(bin, 'codex', "#!/bin/sh\nsleep 10\n")
-      result = timed_run(root, base, head, bin, path, timeout_seconds: 1)
+      write_executable(bin, 'codex', "#!/bin/sh\nsleep 60\n")
+      result = timed_run(root, base, head, bin, path, timeout_seconds: 5)
       assert_timeout_timing(result, path)
     ensure
       cleanup_artifacts(result)
@@ -134,11 +138,11 @@ class LocalReviewTimingTest < Minitest::Test
   end
 
   def assert_timeout_timing(result, path)
-    assert_operator result.fetch('duration_ms'), :>=, 1000
-    assert_operator result.fetch('duration_ms'), :<, 6000
-    assert_equal 1, result.fetch('timeout_seconds')
+    assert_operator result.fetch('duration_ms'), :>=, 5000
+    assert_operator result.fetch('duration_ms'), :<, 30_000
+    assert_equal 5, result.fetch('timeout_seconds')
     assert_attempt(path, 'cli_failure', true)
-    assert_equal 1, attempts(path).first.fetch('timeout_seconds')
+    assert_equal 5, attempts(path).first.fetch('timeout_seconds')
   end
 end
 
@@ -167,9 +171,10 @@ class OpenrouterTimingTest < Minitest::Test
   private
 
   def assert_api_timing(root, base, head)
+    run_began = Time.now
     result = Shaka::LocalReviewRunner.new(root:, base:, head:, reviewer: 'deepseek/openrouter',
                                           model: MODEL, effort: 'high', timeout_seconds: 1).run
-    assert_timing(result)
+    assert_timing(result, run_began)
     assert_equal 1, result.fetch('timeout_seconds')
   ensure
     %w[report usage].each { |key| FileUtils.rm_f(result[key]) if result && result[key] }
@@ -309,6 +314,7 @@ class LocalReviewTimingInputTest < Minitest::Test
 
   def input_run(root, base, head, path, **overrides)
     options = { root:, base:, head:, reviewer: 'openai/codex', ledger: path }.merge(overrides)
+    @run_began = Time.now
     Shaka::LocalReviewRunner.new(options).run
   end
 
@@ -316,6 +322,6 @@ class LocalReviewTimingInputTest < Minitest::Test
     assert_equal 'not_completed', result.fetch('status')
     assert_equal 'setup_failure', result.fetch('failure_stage')
     refute result.fetch('attempted')
-    assert_timing(result)
+    assert_timing(result, @run_began)
   end
 end

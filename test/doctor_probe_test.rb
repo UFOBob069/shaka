@@ -8,6 +8,8 @@ require 'shaka/doctor/reviewer_probe'
 # Uses fake reviewer executables; no account requests leave the machine.
 module DoctorProbeFixture
   AGENT = { 'provider' => 'openai', 'model_family' => 'codex', 'model' => 'gpt-6-sol', 'effort' => 'medium' }.freeze
+  # The stub reviewer exits at once, so this limit only matters when a busy machine delays its start.
+  LAUNCH_TIMEOUT = 10
 
   private
 
@@ -37,7 +39,7 @@ module DoctorProbeFixture
     marker = File.join(root, 'untrusted-codex-ran')
     write_codex(unsafe, marker, success: true)
     write_codex(path, trace, success: true)
-    subject = Shaka::Doctor::ReviewerProbe.new(root: nested, path: "#{unsafe}:#{path}", timeout: 1, ref:)
+    subject = Shaka::Doctor::ReviewerProbe.new(root: nested, path: "#{unsafe}:#{path}", timeout: LAUNCH_TIMEOUT, ref:)
     [subject, marker]
   end
 
@@ -76,9 +78,9 @@ module DoctorProbeFixture
     end
   end
 
-  def probe(root, path, agent: AGENT)
+  def probe(root, path, agent: AGENT, timeout: LAUNCH_TIMEOUT)
     review = { 'local_review_agents' => [agent] }
-    Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: 1).call(review)
+    Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout:).call(review)
   end
 
   def write_codex(path, trace, success:)
@@ -162,7 +164,7 @@ class DoctorProbeTest < Minitest::Test
     with_probe do |root, path, trace|
       write_codex(path, trace, success: true)
       deadlines = []
-      item = with_timeout_capture(deadlines) { probe(root, path) }
+      item = with_timeout_capture(deadlines) { probe(root, path, timeout: 1) }
       assert_equal 'failed', item.fetch(:status)
       assert_includes item.fetch(:summary), 'timed out after 1s'
       assert_equal [1], deadlines
@@ -173,7 +175,7 @@ class DoctorProbeTest < Minitest::Test
   def test_probe_reaches_the_doctor_report_once
     with_probe do |root, path, trace|
       write_codex(path, trace, success: true)
-      settings = { timeout: 1, ref: commit_probe_configuration(root) }
+      settings = { timeout: LAUNCH_TIMEOUT, ref: commit_probe_configuration(root) }
       subject = Shaka::Doctor.new(root:, environment: { 'PATH' => path },
                                   system: stub_system(DEFAULTS), probe: settings)
       assert_includes subject.report, '[HEALTHY] Reviewer availability'
@@ -208,7 +210,7 @@ class DoctorProbeTrustTest < Minitest::Test
       ref = commit_probe_configuration(root)
       change_candidate_model(root)
       write_codex(path, trace, success: true)
-      item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: 1, ref:).for_repository
+      item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: LAUNCH_TIMEOUT, ref:).for_repository
       assert_equal 'healthy', item.fetch(:status)
       assert_includes JSON.parse(File.read(trace)).fetch('args'), 'gpt-6-sol'
     end
@@ -217,7 +219,7 @@ class DoctorProbeTrustTest < Minitest::Test
   def test_missing_ref_does_not_launch_a_billable_probe
     with_probe do |root, path, trace|
       write_codex(path, trace, success: true)
-      item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: 1).for_repository
+      item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: LAUNCH_TIMEOUT).for_repository
       assert_equal 'failed', item.fetch(:status)
       refute_path_exists trace
     end
@@ -238,7 +240,7 @@ class DoctorProbeTrustTest < Minitest::Test
       ref = commit_probe_configuration(root)
       write_codex(path, trace, success: true)
       with_candidate_git(root) do |marker|
-        item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: 1, ref:).for_repository
+        item = Shaka::Doctor::ReviewerProbe.new(root:, path:, timeout: LAUNCH_TIMEOUT, ref:).for_repository
         assert_equal 'healthy', item.fetch(:status)
         refute_path_exists marker
         assert_includes JSON.parse(File.read(trace)).fetch('args'), 'gpt-6-sol'

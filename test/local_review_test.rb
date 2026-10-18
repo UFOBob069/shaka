@@ -854,25 +854,30 @@ end
 class LocalReviewTimeoutTest < Minitest::Test
   COMMAND = LocalReviewCodexTest::COMMAND
 
+  # Launches the reviewer directly: through `review run`, each setup Git call shares the
+  # 1-second limit, so a busy machine reports setup_failure before the reviewer starts.
   def test_stalled_reviewer_returns_structured_noncompletion
-    with_repository do |root, base, head, bin|
-      write_executable(bin, 'codex', "#!/bin/sh\nsleep 10\n")
+    Dir.mktmpdir('shaka-stalled-reviewer') do |bin|
+      write_executable(bin, 'codex', "#!/bin/sh\nexec /bin/sleep 10\n")
+      cli = Shaka::LocalReviewCli.new({ reviewer: 'openai/codex', timeout_seconds: 1, capture_usage: false },
+                                      root: bin, report: File.join(bin, 'report'), candidate_root: Dir.pwd, path: bin)
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      output, _error, status = run_review(root, base, head, bin, timeout_seconds: 1)
-      assert_timeout(output, status, started)
+      assert_timeout(cli.run('prompt'), started)
     end
   end
 
+  # The bound includes starting `shaka`, which a busy machine slows; finishing well before
+  # the stub's sleep still proves the stalled Git was killed.
   def test_stalled_setup_command_returns_structured_noncompletion
     with_repository do |root, base, head, bin|
-      write_executable(bin, 'git', "#!/bin/sh\nsleep 10\n")
+      write_executable(bin, 'git', "#!/bin/sh\nsleep 60\n")
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       output, _error, status = run_review(root, base, head, bin, timeout_seconds: 1)
       refute_predicate status, :success?
       result = JSON.parse(output)
       assert_equal 'setup_failure', result.fetch('failure_stage')
       assert_includes result.fetch('reason'), 'timed out after 1s'
-      assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, :<, 6
+      assert_operator Process.clock_gettime(Process::CLOCK_MONOTONIC) - started, :<, 30
     end
   end
 
@@ -892,9 +897,8 @@ class LocalReviewTimeoutTest < Minitest::Test
 
   private
 
-  def assert_timeout(output, status, started)
-    refute_predicate status, :success?
-    result = JSON.parse(output)
+  def assert_timeout(result, started)
+    assert_equal 'not_completed', result.fetch('status')
     assert_equal 'cli_failure', result.fetch('failure_stage')
     assert_equal 'requires_cause_review', result.fetch('skip_evidence')
     assert_includes result.fetch('reason'), 'timed out after 1s'
