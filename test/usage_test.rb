@@ -505,6 +505,27 @@ class UsageTurnSelectionTest < Minitest::Test
       assert_match(/typo.*turn_id/, error)
     end
   end
+
+  # Codex sometimes writes a new turn's first response before that turn's turn_context.
+  def test_usage_logged_before_its_turn_context_takes_that_turns_settings
+    changed = priced_context('current', 'gpt-other', effort: 'low')
+    records = [context('old'), usage('early', 'current', 100), changed, usage('late', 'current', 200)]
+    report = run_report(records, '--turn', 'current')
+    assert_metric report, 'Configured model', 'gpt-other'
+    assert_metric report, 'Effort', 'low'
+    assert_metric report, 'Input', 300
+  end
+
+  # The unreadable line may have been this turn's own context, with other settings.
+  def test_unreadable_line_around_an_early_response_keeps_a_later_turn_context_off_it
+    unreadable = %({"type":"turn_context","payload":{"turn_id":"current","model":"gpt-\xFF"}}\n).b
+    early = "#{JSON.generate(usage('early', 'current', 100))}\n"
+    [unreadable + early, early + unreadable].each do |lines|
+      report = run_report([context('old')], '--turn', 'current',
+                          raw_tail: "#{lines}#{JSON.generate(context('current'))}\n")
+      assert_metric report, 'Configured model', 'UNKNOWN'
+    end
+  end
 end
 
 class MetricAssertTest < Minitest::Test

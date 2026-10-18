@@ -62,9 +62,7 @@ module Shaka
     private
 
     def read(file, turns)
-      @context = {}
-      @provider = nil
-      @records = []
+      start_source
       File.foreach(file, encoding: 'UTF-8') { |line| consume(parse(line)) }
       note_readable(@records)
       selected = selected_turns(turns)
@@ -72,6 +70,13 @@ module Shaka
       @records.select { |record| selected.include?(record['turn_id']) }.each { |record| count(record) }
     rescue SystemCallError
       @gaps << 'Unreadable or unidentifiable records'
+    end
+
+    def start_source
+      @context = {}
+      @pending = []
+      @provider = nil
+      @records = []
     end
 
     def selected_turns(turns)
@@ -88,7 +93,7 @@ module Shaka
       when 'session_meta'
         @provider = payload['model_provider']
         @versions << payload['cli_version']
-      when 'turn_context' then @context = payload.slice('turn_id', 'model', 'effort')
+      when 'turn_context' then settle(@context = payload.slice('turn_id', 'model', 'effort'))
       when 'token_usage_record' then @records << response(record)
       end
     end
@@ -99,7 +104,13 @@ module Shaka
       payload.slice('response_id', 'turn_id', 'usage').merge(
         'timestamp' => record['timestamp'],
         'configuration' => [@provider, settings['model'], 'UNKNOWN', settings['effort']]
-      )
+      ).tap { |response| @pending << response if settings.empty? && !@context['uncertain'] }
+    end
+
+    # Codex can log a turn's first response before that turn's turn_context, which then applies.
+    def settle(settings)
+      early, @pending = @pending.partition { |response| response['turn_id'] == settings['turn_id'] }
+      early.each { |response| response['configuration'][1, 3] = [settings['model'], 'UNKNOWN', settings['effort']] }
     end
 
     def parse(line)
@@ -112,10 +123,12 @@ module Shaka
     end
 
     # An unreadable line may have changed the turn's settings, so later responses keep
-    # the turn but not a model or effort that might no longer apply.
+    # the turn but not a model or effort that might no longer apply, and earlier responses
+    # still waiting for their turn's context take no later one.
     def unreadable
       @gaps << 'Unreadable or unidentifiable records'
-      @context = @context.slice('turn_id')
+      @context = @context.slice('turn_id').merge('uncertain' => true)
+      @pending = []
       nil
     end
   end
