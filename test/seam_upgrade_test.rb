@@ -2030,19 +2030,29 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
   def test_whole_directory_glob_entries_in_ignore_files_stay_as_written
     { '.gitignore' => ".agents/**\n", '.github/CODEOWNERS' => "/.agents/** @maintainers\n" }.each do |name, source|
       with_repository do |root|
-        write_tracked(root, name, source)
+        path = write_tracked(root, name, source)
         assert_equal 'ready', report(root).fetch('status'), name
+        apply_upgrade(root)
+        assert_equal source, File.read(path)
       end
     end
   end
 
+  COMMAND_GLOB_SOURCES = {
+    'ci.rb' => "Dir.glob('.agents/**').each { |path| puts path }\n",
+    'list.rb' => "['.agents/**'].flat_map { |pattern| Dir.glob(pattern) }\n",
+    'keyword.rb' => "files(\n  pattern: '.agents/**'\n)\n",
+    'ci.sh' => "#!/bin/sh\nls .agents/**\n",
+    'wrapped.sh' => "#!/bin/sh\ntar czf out.tgz \\n  .agents/**\n",
+    '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n",
+    '.github/workflows/block.yml' => "jobs:\n  a:\n    steps:\n      - run: |\n          ls \\n            .agents/**\n"
+  }.freeze
+
   def test_double_star_glob_in_commands_still_blocks
-    { 'ci.rb' => "Dir.glob('.agents/**').each { |path| puts path }\n",
-      'ci.sh' => "#!/bin/sh\nls .agents/**\n",
-      '.github/workflows/ci.yml' => "jobs:\n  a:\n    steps:\n      - run: ls .agents/**\n" }.each do |name, source|
+    COMMAND_GLOB_SOURCES.each do |name, source|
       with_repository do |root|
         write_tracked(root, name, source)
-        assert_blocked_with(root, 'old layout-directory pattern')
+        assert_blocked_with(root, 'layout')
       end
     end
   end
@@ -2085,7 +2095,12 @@ class SeamUpgradeCorrectReferenceTest < Minitest::Test
     'concat.rb' => "dir = root + '/.agents'\nsystem(\"\#{dir}/custom-tool\")\n",
     'paths.py' => "AGENTS = ROOT / \".agents\"\nrun(AGENTS / \"custom-tool\")\n",
     'setup.md' => "Run `AGENT_DIR=$ROOT/.agents $AGENT_DIR/custom-tool`.\n",
-    'guide.md' => "Load it:\n\n```ruby\ndir = root + '/.agents'\nload(\"\#{dir}/custom-tool\")\n```\n"
+    'guide.md' => "Load it:\n\n```ruby\ndir = root + '/.agents'\nload(\"\#{dir}/custom-tool\")\n```\n",
+    'nested.md' => "1. Load it:\n\n    ```ruby\n    dir = root + '/.agents'\n    ```\n",
+    'quoted.md' => "> ```ruby\n> dir = root + '/.agents'\n> ```\n",
+    'indented.md' => "Load it:\n\n    dir = root + '/.agents'\n",
+    'guide.rst' => ".. code-block:: ruby\n\n   dir = root + '/.agents'\n",
+    'guide.adoc' => "----\ndir = root + '/.agents'\n----\n"
   }.freeze
 
   def test_assigned_directory_values_without_command_names_block

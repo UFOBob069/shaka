@@ -5,6 +5,8 @@ module Shaka
     class UpgradePlan
       # Conservatively blocks old paths split across shell physical lines.
       module ContinuedReferences
+        include AliasReferences
+
         private
 
         def scan_complex_references(path, text)
@@ -79,17 +81,17 @@ module Shaka
         end
 
         def scan_continued_reference(path, text)
-          return unless continued_old_path?(text)
+          return unless continued_old_path?(text, path)
 
           @references << { 'path' => path, 'kind' => 'continued old-layout reference', 'paths' => [PATHS::DIRECTORY] }
           @blockers << "#{path}: continued old-layout reference needs explicit repair"
         end
 
-        def continued_old_path?(text)
+        def continued_old_path?(text, path = nil)
           joined = text.gsub(/\\\r?\n/, '')
           return false if joined == text
 
-          matching_paths(joined).any? || directory_reference?(joined) || segmented_reference?(joined)
+          matching_paths(joined).any? || directory_reference?(joined, path) || segmented_reference?(joined)
         end
 
         def scan_alias_reference(path, text)
@@ -100,17 +102,17 @@ module Shaka
         end
 
         def scan_shell_fragmented_reference(path, text)
-          return unless shell_fragmented_reference?(text)
+          return unless shell_fragmented_reference?(text, path)
 
           @references << { 'path' => path, 'kind' => 'fragmented old-layout reference', 'paths' => [PATHS::DIRECTORY] }
           @blockers << "#{path}: fragmented old-layout reference needs explicit repair"
         end
 
-        def shell_fragmented_reference?(text)
+        def shell_fragmented_reference?(text, path = nil)
           joined = normalize_shell_fragments(text)
           return false if joined == text
 
-          matching_paths(joined).any? || directory_reference?(joined)
+          matching_paths(joined).any? || directory_reference?(joined, path)
         end
 
         def normalize_shell_fragments(text)

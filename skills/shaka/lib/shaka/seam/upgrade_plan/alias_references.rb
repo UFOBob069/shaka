@@ -23,9 +23,10 @@ module Shaka
         def fenced_code_split(text)
           fenced = false
           text.each_line.partition do |line|
-            fence = line.match?(/\A {0,3}(?:```|~~~)/)
+            body = line.sub(/\A(?:[ \t]*>)*/, '')
+            fence = body.match?(/\A[ \t]*(?:```|~~~)/)
             fenced = !fenced if fence
-            fenced || fence
+            fenced || fence || body.match?(/\A(?: {4}|\t)/)
           end.map(&:join)
         end
 
@@ -33,14 +34,14 @@ module Shaka
           %r{\b[A-Za-z_]\w*\s*[+?:]?=[^\r\n]*#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
         end
 
-        # Outside fenced code in prose, the directory must sit in the assigned value, with whitespace only inside
+        # Outside code blocks in Markdown, the directory must sit in the assigned value, with whitespace only inside
         # quotes or parentheses.
         def prose_assignment
           value = /(?:[^\s"'(]|"[^"\r\n]*"|'[^'\r\n]*')*(?:"[^"\r\n]*|'[^'\r\n]*|\([^\r\n]*?)?/.source
           %r{\b[A-Za-z_]\w*\s*[+?:]?=[ \t]*#{value}#{Regexp.escape(PATHS::DIRECTORY)}(?=/|[^[:alnum:]_.-]|$)}o
         end
 
-        def prose_file?(path) = path.to_s.match?(/\.(?:md|markdown|mdx|txt|rst|adoc)\z/i)
+        def prose_file?(path) = path.to_s.match?(/\.(?:md|markdown|mdx)\z/i)
       end
     end
   end

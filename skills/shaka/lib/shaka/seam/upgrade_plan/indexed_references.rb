@@ -49,8 +49,8 @@ module Shaka
         end
 
         def indexed_complex_reference?(path, text)
-          segmented_reference?(text) || continued_old_path?(text) || alias_reference?(text, path) ||
-            shell_fragmented_reference?(text) || unsupported_path_reference?(text) ||
+          segmented_reference?(text) || continued_old_path?(text, path) || alias_reference?(text, path) ||
+            shell_fragmented_reference?(text, path) || unsupported_path_reference?(text) ||
             relative_helper_dependency?(path, text)
         end
 

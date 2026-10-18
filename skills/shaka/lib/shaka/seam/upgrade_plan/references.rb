@@ -55,11 +55,11 @@ module Shaka
 
         def rewrite_line(path, line, executable)
           keys = matching_paths(line)
-          return line if keys.empty? && !directory_reference?(line)
+          return line if keys.empty? && !directory_reference?(line, path)
 
           record_reference(path, line, keys)
           return historical_reference(path, line) if historical_line?(path, line)
-          return block_directory_reference(path, line) if directory_reference?(line)
+          return block_directory_reference(path, line) if directory_reference?(line, path)
           return block_reference(path, keys, executable, line) if blocked_reference?(keys, executable, line)
 
           replace_paths(line, keys)
@@ -68,7 +68,7 @@ module Shaka
         def record_reference(path, line, keys)
           paths = keys.dup
           paths << PATHS::COMMAND_DIRECTORY if command_directory_reference?(line)
-          paths << PATHS::DIRECTORY if layout_glob_reference?(line)
+          paths << PATHS::DIRECTORY if layout_glob_reference?(line, path)
           paths << PATHS::DIRECTORY if normalized_internal_reference?(line)
           kind = reference_kind(path, historical_line?(path, line))
           @references << { 'path' => path, 'kind' => kind, 'paths' => paths }
