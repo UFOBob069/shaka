@@ -107,7 +107,7 @@ $shaka Add USER to this project's trusted GitHub actors.
 | Commands, merge policy, and review jobs | [Settings](settings.md) in `.agents/shaka/config.yml` |
 | Project constraints, review criteria, and writing style | `AGENTS.md` |
 | What the local reviewer looks for and how it reports | [`review.prompt_file`](settings.md#reviewprompt_file), replacing Shaka's defaults |
-| Changes to Shaka's workflow | A [fork of Shaka](workflow.md#customize-the-instructions) |
+| Changes to Shaka's workflow | A [fork of Shaka](fork-and-hack.md) |
 
 Shaka reads `AGENTS.md` from Git at the trusted commit. When `AGENTS.md` is a
 symlink to another file in the repository, such as `CLAUDE.md`, Shaka reads that

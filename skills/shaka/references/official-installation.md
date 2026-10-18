@@ -89,7 +89,7 @@ Keep every older package: active chats may reference its absolute paths.
 
 ## Teams and forks
 
-Use [team instructions](https://github.com/shakacode/shaka/blob/main/docs/getting-started.md#use-a-personal-fork).
+Use the [fork guide](https://github.com/shakacode/shaka/blob/main/docs/fork-and-hack.md).
 Keep local `.git` installation records per machine. For forks or SSH origins, register the exact `--repository URL` and optional `--branch NAME`.
 Publish upstream integrations separately before updating.
 

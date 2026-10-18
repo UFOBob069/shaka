@@ -103,14 +103,21 @@ terminal outside it.
 
 ## Install from a personal fork
 
-When the user requests a fork, create or select it on GitHub and clone it into the
-installation directory. Set `origin` to their fork and `upstream` to
-`https://github.com/shakacode/shaka.git`; inspect both remotes before updating.
-Run the same `bin/install` command against that checkout.
+When the user requests a fork, create or select it on GitHub and install it as the
+dedicated checkout in [official installation](official-installation.md), not a
+retained copy. Clone it into the installation directory, set `origin` to their fork
+and `upstream` to `https://github.com/shakacode/shaka.git`, and inspect both remotes
+before updating. When Shaka is already installed there, do not clone or install a
+second checkout: rename its `origin` to `upstream` and add the fork as `origin`.
+Create and push a dedicated branch, such as `mine`, so the fork's `main` can match
+upstream. Then run `bin/install --directory DIR --repository URL
+--branch BRANCH --agent HOST`, where `URL` is the exact `origin` URL and `BRANCH`
+is that dedicated branch.
 
 For updates, fetch upstream and inspect the diff. Fast-forward when possible;
 otherwise preserve fork changes while merging or rebasing on a feature branch.
-Validate the result before updating the installed branch. Contribute improvements
+Validate the result, then merge it into the installed branch; `install --update`
+only fast-forwards, so never rewrite that branch. Contribute improvements
 through a branch and PR to upstream when the user authorizes that publication.
 Never overwrite local customizations to make an update succeed.
 

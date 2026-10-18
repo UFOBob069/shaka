@@ -66,6 +66,12 @@ Start a new chat and look for **Shaka**. [Coding agents](coding-agents.md) shows
 how to start a task in each one. Then continue with
 [setup](getting-started.md#2-choose-individual-or-team-setup).
 
+## Install your own fork
+
+The commands above install ShakaCode's repository. To run a version you can
+change, follow [Fork Shaka and make it yours](fork-and-hack.md). Pass
+`--repository` with your fork's exact origin URL.
+
 ## Verify and update
 
 Check the installation at any time, using the directory you installed into.

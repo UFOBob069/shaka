@@ -8,3 +8,7 @@ Update my Shaka installation.
 ```
 
 Start a new chat after updating.
+
+An installation from your own fork updates that fork's branch. It does not
+pull upstream by itself. Bring upstream changes in by
+[syncing the fork](fork-and-hack.md#keep-your-fork-current) first.

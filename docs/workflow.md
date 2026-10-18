@@ -69,6 +69,8 @@ it does not prove a task followed every step.
 Put commands and merge choices in [settings](settings.md). Use `AGENTS.md` for
 project constraints, review criteria, and writing preferences.
 
-To change Shaka, edit the workflow and references in a fork. Update the enforcement
-map for changed rules, run the checks, and submit a PR. Install the reviewed version
-explicitly; a project branch cannot replace the skill used to review itself.
+To change Shaka, edit the workflow and references in a fork.
+[Fork Shaka and make it yours](fork-and-hack.md) covers installing that fork
+and sending a change back. Update the enforcement map for changed rules, run
+the checks, and submit a PR. Install the reviewed version explicitly; a project
+branch cannot replace the skill used to review itself.
