@@ -167,8 +167,8 @@ fingerprint. The record holds:
   replies, diff, and transcript. Public records carry digests only.
 
 Shipped: [the version 1 schema and offline Ruby check](../../eval/schemas/README.md)
-validate record structure and task-bank identity consistency. Complete fingerprint capture,
-and grading remain proposed. The comparison eligibility check is described in D2.
+validate record structure and task-bank identity consistency. Native tier 2 fingerprint
+assembly is described in D2; grading remains proposed.
 
 Proposed: `eval/bin/shaka-eval run` writes the record; `eval/lib/shaka/evaluation/`
 holds the fingerprint reader and grader modules. The product
@@ -229,7 +229,10 @@ run sets against these axes, validates task and trial matching, and marks missin
 fingerprint evidence provisional. It returns field names without private values.
 Native Harbor records bind a digest of retained agent, verifier and sidecar
 container readbacks; older Harbor records without it are provisional.
-The diff card, statistics, complete fingerprint capture, and release verdict remain proposed.
+The [tier 2 wrapper](../../eval/harbor-trials.md) assembles all D2 fields from native
+observations and explicit operator evidence. Missing observations remain `UNKNOWN`;
+requested version pins cannot substitute for observed versions. Other tiers'
+capture, the diff card, statistics and release verdict remain proposed.
 
 ### D3. Three task tiers by cost, and most of the budget on the cheap two
 
@@ -786,8 +789,9 @@ The [native usage adapter](../../eval/native-usage.md) converts collected Harbor
 JSONL sessions through the installed usage command and reprices cache-neutral
 dollars. The [Harbor trial API](../../eval/harbor-trials.md) supplies a reservation-bound
 single-trial launcher for operator-prepared tasks, with native accounting and owned-resource
-cleanup. Full fingerprint capture, grading, paired statistics, release-gate consumers,
-and scheduled execution remain unbuilt.
+cleanup and D2 assembly from native observations plus explicit operator evidence.
+Capture for other tiers, grading, paired statistics, release-gate consumers and
+scheduled execution remain unbuilt.
 
 All figures are cache-neutral (D12), at the rate card's base input and output rates
 as verified in September 2026, and are planning references to be replaced by the

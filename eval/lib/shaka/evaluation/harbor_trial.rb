@@ -3,16 +3,18 @@
 require 'tmpdir'
 require_relative 'harbor_runtime'
 require_relative 'harbor_environment'
+require_relative 'harbor_fingerprint'
 require_relative 'runner'
 
 module Shaka
   module Evaluation
     # Reserves before launching; a trusted block supplies grading and the full record.
     class HarborTrial
-      def initialize(runtime:, usage:, tasks:, directory:)
+      def initialize(runtime:, usage:, tasks:, directory:, fingerprints: {})
         @runtime = runtime
         @usage = usage
         @tasks = tasks.transform_values { |path| File.realpath(path) }.freeze
+        @fingerprints = fingerprints
         @directory = File.expand_path(directory)
         FileUtils.mkdir_p(@directory, mode: 0o700)
         return if File.stat(@directory).mode.nobits?(0o077)
@@ -34,25 +36,26 @@ module Shaka
       private
 
       def validate_tasks(tasks, builder)
-        return if builder && tasks.is_a?(Array) && !tasks.empty? && tasks.all? { |task| planned?(task) }
+        valid = builder && tasks.is_a?(Array) && !tasks.empty? && tasks.all? { |task| planned?(task) }
+        return if valid && valid_fingerprints?
 
-        raise ArgumentError, 'Expected tier 2 tasks and a trusted record builder'
+        raise ArgumentError, 'Expected tier 2 tasks, operator fingerprints and a trusted record builder'
+      end
+
+      def valid_fingerprints?
+        @fingerprints.is_a?(Hash) && @fingerprints.all? do |id, evidence|
+          @tasks.key?(id) && HarborFingerprint.valid_evidence?(evidence)
+        end
       end
 
       def account(record, capture)
         record['usage'] = capture.fetch('usage')
-        record.fetch('fingerprint')['rate_card_hash'] = @usage.rate_card_hash
-        record.fetch('fingerprint')['execution_framework'] = framework(capture)
+        record['fingerprint'] = capture.fetch('fingerprint').merge('rate_card_hash' => @usage.rate_card_hash)
         if capture.fetch('harness_error')
           record['outcome'] = { 'state' => 'HARNESS_ERROR', 'harness_error' => 'Harbor trial failed' }
           record['score'] = 'UNKNOWN'
         end
         record
-      end
-
-      def framework(capture)
-        { 'name' => 'Harbor', 'version' => HarborRuntime::VERSION,
-          'environment_digest' => capture.fetch('environment').fetch('digest') }
       end
 
       def planned?(task)
@@ -64,12 +67,22 @@ module Shaka
         name = "shaka-#{id.delete('-')}"
         directory = File.join(@directory, name)
         Dir.mkdir(directory, 0o700)
+        success, resources, package = launch(task, name, directory)
+        trial = File.join(directory, name)
+        result = captured(trial, name, success, resources).merge('package' => package, 'sessions' => sessions(trial))
+        result['fingerprint'] = HarborFingerprint.read(task: task, host: @runtime.host, capture: result,
+                                                       evidence: @fingerprints.fetch(task.fetch('id'), {}))
+        result
+      end
+
+      def launch(task, name, directory)
+        package = @runtime.skill_snapshot
         success, resources = Dir.mktmpdir('controller-', @directory) do |controller|
           @runtime.launch(task: @tasks.fetch(task.fetch('id')), name: name, controller: controller,
                           directory: directory, log: File.join(directory, 'controller.log'))
         end
-        trial = File.join(directory, name)
-        captured(trial, name, success, resources)
+        package = {} unless package == @runtime.skill_snapshot
+        [success, resources, package]
       end
 
       def captured(trial, name, success, resources)
@@ -78,26 +91,36 @@ module Shaka
           { 'image_digest' => entry.fetch('Image'),
             'project' => entry.dig('Config', 'Labels', 'com.docker.compose.project') }
         end
-        { 'result' => native, 'images' => images,
+        { 'result' => native, 'images' => images, 'lock' => read_json(File.join(trial, 'lock.json')),
           'environment' => HarborEnvironment.capture(resources.fetch('container'), name: name),
           'usage' => usage(trial),
           'harness_error' => !success || !native || !native['exception_info'].nil? }
       end
 
       def read_result(path, name)
-        result = JSON.parse(File.read(path))
+        result = read_json(path)
         result if result.is_a?(Hash) && result['trial_name'] == name
+      end
+
+      def read_json(path)
+        result = JSON.parse(File.read(path))
+        result if result.is_a?(Hash)
       rescue Errno::ENOENT, JSON::ParserError
         nil
       end
 
       def usage(trial)
+        files = sessions(trial)
+        return @usage.read(host: @runtime.host, files: files) unless files.empty?
+
+        { 'models' => [], 'cache_neutral_dollars' => 'UNKNOWN', 'billed_dollars' => 'UNKNOWN' }
+      end
+
+      def sessions(trial)
         directory = File.join(File.realpath(trial), 'agent', 'sessions')
         files = Dir.glob(File.join(directory, '**/*.jsonl'))
         safe = !files.empty? && files.all? { |file| File.realpath(file).start_with?("#{directory}/") }
-        return @usage.read(host: @runtime.host, files: files) if safe
-
-        { 'models' => [], 'cache_neutral_dollars' => 'UNKNOWN', 'billed_dollars' => 'UNKNOWN' }
+        safe ? files : []
       end
     end
   end

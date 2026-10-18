@@ -75,10 +75,38 @@ unknown score even when Harbor exits zero. Known charges settle; missing usage
 blocks later spending. Logs, native results, image project names and diagnostics
 remain private. Only the closed run-record schema reaches the record store.
 
-The trusted block still owns deterministic grading, artifact digests, timings and
-the full D2 fingerprint. Keep unobserved fields `UNKNOWN`; a Harbor reward alone
-does not establish a Shaka gate or a quality score. Complete fingerprint capture,
-publication graders, calibrated judging, paired statistics and D9 release
+The wrapper replaces the builder's entire fingerprint. It reads the host CLI
+version from native session metadata, model identity and effort from normalized
+usage, agent image and limits from the environment manifest, and Ruby and the
+lockfile hash from the runner. Requested CLI pins never fill missing observations;
+conflicting native identities become `UNKNOWN`. Codex does not report its routed
+model. When usage omits configured model or effort, the retained Harbor lock can
+supply those launch settings; it never supplies a routed model or observed CLI
+version. Task-bank identity comes from the validated task metadata. Actions and
+hosted reviewers are `N/A` for this tier 2 API.
+
+Package capture requires a self-contained skill tree with all loaded guides and
+helpers inside it. Symlinks leave package identity unknown. The reader hashes
+every file, including hidden files, and file/directory permissions and ownership.
+It reads Git commit and
+modified state, and hashes workflow/enforcement files separately. An archive can
+supply content but has unknown Git identity. Capture must match before and after
+launch, and Harbor's single-skill lock must match the source and content digest.
+These checks do not attest every intermediate filesystem state or discover
+dependencies loaded outside the supplied tree; qualify the package accordingly.
+
+Supply optional `fingerprints: {task_id => evidence}` to `HarborTrial.new` for the
+private machine alias, fixture Ruby/version-lockfile hash, local reviewer CLI
+versions, judge model/prompt hash and criteria-set hash. The accepted keys are the
+corresponding [run-record fields](schemas/README.md). Obtain them from the actual
+fixture, reviewer executions and judge configuration; use `N/A` only when the
+field cannot apply. Omitted values stay `UNKNOWN`. Invalid fields are rejected
+before preflight or a budget reservation. Builder guesses cannot override capture.
+Without an explicit machine alias, the wrapper reads `SHAKA_MACHINE_ALIAS`.
+
+The trusted block still owns deterministic grading, artifact digests and timings.
+A Harbor reward alone does not establish a Shaka gate or a quality score.
+Publication graders, calibrated judging, paired statistics and D9 release
 decisions remain unbuilt. The lifecycle tests use disposable native subprocesses
 and synthetic Docker responses; they make no model calls and do not requalify
 the container recipe.

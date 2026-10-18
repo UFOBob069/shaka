@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require_relative 'harbor_process'
+require_relative 'skill_snapshot'
 
 module Shaka
   module Evaluation
@@ -58,6 +59,7 @@ module Shaka
       end
 
       def host = @profile.fetch('host')
+      def skill_snapshot = SkillSnapshot.read(@skill)
 
       private
 
