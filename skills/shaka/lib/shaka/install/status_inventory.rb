@@ -24,9 +24,17 @@ module Shaka
       def trial_directory = File.join(@home, '.local/share/shaka/pr-trials')
       def trials = entries(trial_directory).select { |path| File.directory?(path) }
 
-      # Link owners that are linked worktrees: a worktree is deleted when its branch merges.
+      # Link owners that are linked worktrees, which go away when their branch is cleaned up. A submodule
+      # or a --separate-git-dir clone also has a .git file, but its gitdir is not under worktrees/.
       def worktrees
-        @links.filter_map { |link| owner(link) }.uniq.select { |root| File.file?(File.join(root, '.git')) }
+        @links.filter_map { |link| owner(link) }.uniq.select { |root| linked_worktree?(root) }
+      end
+
+      def linked_worktree?(root)
+        marker = File.join(root, '.git')
+        File.file?(marker) && File.read(marker)[/\Agitdir: (.+)$/, 1].to_s.match?(%r{/worktrees/[^/]+\z})
+      rescue SystemCallError
+        false
       end
 
       def links_to(root) = @links.select { |link| owner(link) == root }

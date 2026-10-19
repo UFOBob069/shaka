@@ -27,6 +27,13 @@ class InstallStatusEntryTest < Minitest::Test
   TOKEN_URL = 'https://someone:s3cr@t-token@example.com/shaka.git'
 
   # The token holds an @, so redaction must strip up to the last @ before the path, as git does.
+  # A symlink's mode means nothing and chmod cannot fix it, so it is not an unsafe-mode finding.
+  def test_a_symlink_in_a_skill_is_not_an_unsafe_mode
+    root = default_install
+    File.symlink('SKILL.md', File.join(root, 'skills/shaka/alias.md'))
+    refute_includes status(root)['findings'].map { |item| item['id'] }, 'B10'
+  end
+
   def test_an_origin_token_is_never_printed
     root = default_install
     git('-C', root, 'remote', 'set-url', 'origin', TOKEN_URL)

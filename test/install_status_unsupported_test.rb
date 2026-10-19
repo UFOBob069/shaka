@@ -37,6 +37,15 @@ class InstallStatusUnsupportedTest < Minitest::Test
     refute_includes output, 'secret-token'
   end
 
+  # A --separate-git-dir clone (like a submodule) has a .git file too, but it is not a worktree.
+  def test_a_separate_git_dir_clone_is_not_a_worktree
+    clone = File.join(@directory, 'separate')
+    git('clone', '-q', '--separate-git-dir', File.join(@directory, 'separate.git'), @remote, clone)
+    FileUtils.mkdir_p(File.join(@home, '.claude/skills'))
+    File.symlink(File.join(clone, 'skills/shaka'), File.join(@home, '.claude/skills/shaka'))
+    refute_equal 'C3', status(@root)['state']
+  end
+
   private
 
   def run_step(report, state)

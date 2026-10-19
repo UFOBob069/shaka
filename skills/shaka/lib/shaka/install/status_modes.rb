@@ -31,7 +31,8 @@ module Shaka
       # Installation verification refuses these same modes, so status names them before it does.
       def unsafe_files
         skills = File.join(@root, 'skills')
-        path = skill_paths(skills).find { |entry| unprotected?(File.lstat(entry)) }
+        # A symlink's own mode is meaningless and chmod cannot change it; the installer refuses symlinks itself.
+        path = skill_paths(skills).find { |entry| !File.symlink?(entry) && unprotected?(File.lstat(entry)) }
         return unless path
 
         finding('B10', "#{path} is group or world writable or owned by another account",
