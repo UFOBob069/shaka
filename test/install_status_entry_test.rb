@@ -26,6 +26,20 @@ class InstallStatusEntryTest < Minitest::Test
 
   TOKEN_URL = 'https://someone:s3cr@t-token@example.com/shaka.git'
 
+  # A refused update must change nothing, including the recorded Ruby while it still works.
+  def test_a_refused_update_keeps_a_working_recorded_ruby
+    root = default_install
+    record = File.join(root, '.git/shaka-ruby')
+    other = File.join(@directory, 'other-ruby')
+    File.write(other, "#!/bin/sh\n")
+    File.chmod(0o755, other)
+    File.write(record, "#{other}\n")
+    File.write(File.join(root, 'notes.txt'), 'draft')
+    _output, process = Open3.capture2e(environment, RbConfig.ruby, File.join(root, 'bin/install'), '--update')
+    refute_predicate process, :success?
+    assert_equal "#{other}\n", File.read(record)
+  end
+
   # Installation refuses a symlink in a skill, and chmod cannot fix one, so status asks to move it.
   def test_a_symlink_in_a_skill_is_named
     root = default_install

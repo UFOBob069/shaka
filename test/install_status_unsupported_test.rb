@@ -46,6 +46,13 @@ class InstallStatusUnsupportedTest < Minitest::Test
     refute_equal 'C3', status(@root)['state']
   end
 
+  # The reinstall clones main, so a worktree whose origin has no main gets a decision, not a wrong branch.
+  def test_a_worktree_without_origin_main_gets_a_decision
+    git('-C', @root, 'update-ref', '-d', 'refs/remotes/origin/main')
+    worktree_links('.claude/skills' => %w[shaka])
+    assert_equal ['C3', nil], status(@root).values_at('state', 'next_command')
+  end
+
   private
 
   def run_step(report, state)

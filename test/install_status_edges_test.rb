@@ -83,12 +83,12 @@ class InstallStatusEdgesTest < Minitest::Test
     assert(details.any? { |detail| detail.include?('local branches experiment') }, details.inspect)
   end
 
-  def test_a_branch_without_its_upstream_is_named
+  def test_a_branch_without_its_tracking_branch_is_named
     root = default_install
     git('-C', root, 'branch', '-q', '--unset-upstream')
     report = status(root)
     assert_equal 'B4', report['state']
-    assert_includes report['next_command'], 'branch --set-upstream-to origin/main'
+    assert_includes report['next_command'], 'branch -u origin/main'
   end
 
   def test_a_record_whose_links_were_all_removed_is_an_orphan

@@ -52,23 +52,23 @@ module Shaka
 
       def branch
         current = value('branch', '--show-current').to_s
-        return upstream if current == @record['branch']
+        return tracked_branch if current == @record['branch']
 
         finding('B4', "checkout is on #{current.empty? ? 'a detached HEAD' : current}; " \
                       "the record expects #{@record['branch']}",
                 command: "#{git_command} switch #{command(@record['branch'])}")
       end
 
-      # Verification and update both require this upstream. Reading the config, not the ref, leaves
-      # a missing tracking ref to the revision check, which asks for a fetch.
-      def upstream
+      # Verification and update both require the branch to track origin's branch of the same name.
+      # Reading the config, not the ref, leaves a missing tracking ref to the revision check.
+      def tracked_branch
         name = @record['branch']
         remote, merge = %w[remote merge].map { |key| value('config', '--get', "branch.#{name}.#{key}") }
         return if remote == 'origin' && merge == "refs/heads/#{name}"
 
-        tracked = remote ? "#{remote}/#{merge.to_s.delete_prefix('refs/heads/')}" : 'no upstream'
+        tracked = remote ? "#{remote}/#{merge.to_s.delete_prefix('refs/heads/')}" : 'no remote branch'
         finding('B4', "#{name} tracks #{tracked}, not origin/#{name}",
-                command: "#{git_command} branch --set-upstream-to origin/#{command(name)}")
+                command: "#{git_command} branch -u origin/#{command(name)}")
       end
 
       def dirty

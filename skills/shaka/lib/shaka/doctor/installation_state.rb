@@ -20,7 +20,7 @@ module Shaka
         step = report['next_command'] ? "Run #{report['next_command']}" : "Decide: #{report['decision']}"
         check('Install state', 'degraded', "#{summary}: #{report['detail']}",
               guidance: "#{step}. `shaka install --status` lists everything it found.")
-      rescue ArgumentError, KeyError, SystemCallError => e
+      rescue ArgumentError, KeyError, NoMethodError, TypeError, SystemCallError => e
         check('Install state', 'degraded', "install --status could not run: #{first_line(e.message)}")
       end
     end

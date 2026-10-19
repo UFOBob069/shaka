@@ -10,6 +10,12 @@ module InstallScenarioSupport
   OFFICIAL = 'https://github.com/shakacode/shaka.git'
   ENVIRONMENT = { 'BASH_ENV' => nil, 'LANG' => 'en_US.UTF-8', 'LC_ALL' => 'en_US.UTF-8' }.freeze
 
+  # A bare remote's HEAD follows init.defaultBranch, which is master on some machines; clones need main.
+  def setup
+    super
+    git('-C', @remote, 'symbolic-ref', 'HEAD', 'refs/heads/main')
+  end
+
   private
 
   def healthy(root) = { from: root, location: root, next: "#{helper(root)} install --update" }

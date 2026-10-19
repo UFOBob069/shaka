@@ -21,6 +21,11 @@ module Shaka
         File.unlink(temporary) if temporary && File.exist?(temporary)
       end
 
+      def recorded_ruby?
+        record = File.join(@checkout.root, '.git', RUBY_RECORD)
+        File.file?(record) && File.executable?(File.read(record).strip)
+      end
+
       def verify_ruby(targets)
         record = File.join(@checkout.root, '.git', RUBY_RECORD)
         ruby = File.read(record).strip

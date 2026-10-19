@@ -11,8 +11,8 @@ module Shaka
     class StatusUnsupported
       TOWERS = { 'rct' => '--with-rct', 'mct' => '--with-mct', 'mct-claude' => '--with-claude-towers',
                  'rct-claude' => '--with-claude-towers' }.freeze
-      DECIDE = 'Reinstall into ~/.local/share/shaka/source with the hosts, skills folders, and towers you use ' \
-               '(one bin/install run per host whose towers differ); see official-installation.md.'
+      DECIDE = 'Reinstall into ~/.local/share/shaka/source from the branch you use, with the hosts, skills folders, ' \
+               'and towers you use (one bin/install run per host whose towers differ); see official-installation.md.'
 
       def initialize(inventory)
         @inventory = inventory
@@ -32,15 +32,20 @@ module Shaka
         hosts = links.group_by { |link| File.dirname(link['path']) }
         { 'directories' => hosts.keys, 'names' => links.map { |link| link['name'] },
           'targets' => hosts.values.map { |group| group.map { |link| link['name'] }.sort },
-          'repository' => origin(root) }
+          'repository' => origin(root), 'main' => main?(root) }
       end
 
-      # Reading one config value runs no program the checkout's config names.
-      def origin(root)
-        output, process = Open3.capture2e(ENV.keys.grep(/\AGIT_/).to_h { |key| [key, nil] },
-                                          'git', '-C', root, 'config', '--get', 'remote.origin.url')
-        url = output.strip
-        url if process.success? && !url.empty?
+      # Reading one config value or ref runs no program the checkout's config names.
+      def origin(root) = read(root, 'config', '--get', 'remote.origin.url')
+
+      # The reinstall clones main; a worktree whose origin has no main gets a decision instead.
+      def main?(root) = !read(root, 'rev-parse', '--verify', '--quiet', 'refs/remotes/origin/main').nil?
+
+      def read(root, *)
+        environment = ENV.keys.grep(/\AGIT_/).to_h { |key| [key, nil] }
+        output, process = Open3.capture2e(environment, 'git', '-C', root, *)
+        value = output.strip
+        value if process.success? && !value.empty?
       end
 
       def replace(id, root, reason, selection)
@@ -53,7 +58,7 @@ module Shaka
 
       def command(selection, links, hosts)
         target = @inventory.default_directory
-        steps = ["git clone #{escape(*branch(selection), repository(selection), target)}"]
+        steps = ["git clone #{escape(repository(selection), target)}"]
         steps << "rm -- #{escape(*links.map { |link| link['path'] })}" if links.any?
         steps << escape(File.join(target, 'bin/install'), '--directory', target, *source(selection), *hosts,
                         *towers(selection))
@@ -62,20 +67,14 @@ module Shaka
 
       # One command can repeat one selection for every host, into a destination git clone accepts.
       def command?(selection)
-        !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
+        selection['main'] && !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
           !StatusStates.credentials?(selection['repository'])
       end
 
       def repository(selection) = selection['repository'] || Checkout::REPOSITORY
 
-      def branch(selection)
-        name = selection['branch'] || 'main'
-        name == 'main' ? [] : ['--branch', name]
-      end
-
       def source(selection)
-        named = repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
-        named + branch(selection)
+        repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
       end
 
       # Hosts take --agent; one custom folder takes --skills-dir; the installer accepts no mix of the two.
