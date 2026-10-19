@@ -65,6 +65,12 @@ class InstallStatusEdgesTest < Minitest::Test
     assert_equal "chmod go-w #{Shellwords.escape(File.realpath(root))}", report['next_command']
   end
 
+  def test_a_host_on_a_managed_copy_splits_the_install
+    default_install('--agent', 'claude')
+    managed_install(File.join(@home, '.cursor/skills'))
+    assert_equal 'C5', status(@root)['state']
+  end
+
   def test_a_managed_copy_in_a_custom_folder_is_recognized
     copies = File.join(@directory, 'copies')
     output, process = Open3.capture2e(environment, RbConfig.ruby, @installer, '--skills-dir',

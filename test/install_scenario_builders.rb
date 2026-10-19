@@ -126,9 +126,10 @@ module BrokenInstallScenarios
 
   def build_c3 = problem(default_install.tap { |root| git('-C', root, 'branch', 'experiment') }, nil)
 
+  # A split install: Claude uses one registered checkout and Cursor another.
   def build_c5
-    default_install('--agent', 'claude')
-    managed_install(File.join(@home, '.cursor/skills'))
-    { from: @root, location: @home, next: nil }
+    root = default_install('--agent', 'claude')
+    run_install(@root, '--directory', @root, '--repository', @remote, '--agent', 'cursor')
+    { from: root, location: @home, next: nil }
   end
 end
