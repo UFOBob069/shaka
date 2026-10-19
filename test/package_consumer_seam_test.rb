@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'package_test_helpers'
+require 'shaka/executable_file'
 
 class PackageConsumerSeamTest < Minitest::Test
   include PackageTestHelpers
@@ -38,6 +39,8 @@ class PackageConsumerSeamTest < Minitest::Test
   end
 
   def test_installed_gem_rejects_a_non_executable_consumer_script
+    skip 'this platform does not store an executable bit' if Shaka::ExecutableFile.windows?
+
     assert_local_failure('not executable') do |root|
       File.chmod(0o644, File.join(root, '.agents/bin/validate'))
     end

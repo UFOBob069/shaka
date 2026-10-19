@@ -2,6 +2,7 @@
 
 require 'pathname'
 require_relative '../error'
+require_relative '../executable_file'
 
 module Shaka
   class RepositoryConfig
@@ -63,7 +64,7 @@ module Shaka
 
       def executable!(value, label)
         path = file!(value, label)
-        raise Error, "#{label} is not executable: #{value}" unless File.executable?(path)
+        raise Error, "#{label} is not executable: #{value}" unless ExecutableFile.executable?(path)
       end
 
       def repository_path(value, label)

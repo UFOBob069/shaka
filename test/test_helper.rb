@@ -38,9 +38,10 @@ ENV['GIT_CONFIG_GLOBAL'] = File.join(TEST_GIT_CONFIG_DIR, 'config').tap do |path
   File.write(path, TestGitConfig.text(ENV))
 end
 
-TEST_GIT = ENV.fetch('PATH').split(File::PATH_SEPARATOR).map { |dir| File.join(dir, 'git') }.find do |path|
-  File.file?(path) && File.executable?(path)
-end or raise 'git executable not found'
+git_names = RUBY_PLATFORM.match?(/mswin|mingw/) ? %w[git.exe git] : %w[git]
+TEST_GIT = ENV.fetch('PATH').split(File::PATH_SEPARATOR).product(git_names).map do |dir, name|
+  File.join(dir, name)
+end.find { |path| File.file?(path) && File.executable?(path) } or raise 'git executable not found'
 
 $LOAD_PATH.unshift File.expand_path('../skills/shaka/lib', __dir__)
 require 'shaka/usage/usage_records'

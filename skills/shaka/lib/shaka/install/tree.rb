@@ -2,6 +2,7 @@
 
 require 'digest'
 require 'fileutils'
+require_relative '../executable_file'
 require_relative 'checkout_reference'
 require_relative 'git_ignore'
 
@@ -92,7 +93,14 @@ module Shaka
         return unless name == 'shaka'
 
         helper = File.join(skill, 'scripts/shaka')
-        raise ArgumentError, "Skill helper is not executable: #{helper}" unless File.stat(helper).mode.anybits?(0o100)
+        raise ArgumentError, "Skill helper is not executable: #{helper}" unless helper_executable?(helper)
+      end
+
+      # Windows does not store the executable bit, so a shebang is the mode Git recorded.
+      def helper_executable?(helper)
+        return true if File.stat(helper).mode.anybits?(0o100)
+
+        ExecutableFile.windows? && ExecutableFile.shebang?(helper)
       end
 
       def copy_entry(path, source, target, directories)

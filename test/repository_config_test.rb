@@ -191,7 +191,10 @@ class RepositoryConfigOptionalCommandTest < Minitest::Test
   def test_rejects_a_non_executable_optional_command
     with_repository do |root|
       create_command(root, 'validate_local')
-      File.chmod(0o644, File.join(root, '.agents/bin/validate-local'))
+      path = File.join(root, '.agents/bin/validate-local')
+      skip 'this platform does not store an executable bit' unless File.executable?(path)
+
+      File.chmod(0o644, path)
 
       message = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }.message
       assert_includes message, '.agents/bin/validate-local is not executable'
