@@ -91,7 +91,8 @@ and code walkthroughs, including with individual settings. Recommendations and
 review replies follow agent instructions; code does not check their length.
 
 An [opening check](settings.md#opening_check) advises whether the first sentence
-leads with what improves for the reader. It does not verify the whole description.
+of a description or walkthrough leads with what improves for the reader. It does
+not verify the whole text.
 [Merged #425](https://github.com/shakacode/shaka/pull/425) added independent opening
 reviewer choices and a way to disable the check completely after #420.
 Both team and individual settings support these options.

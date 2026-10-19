@@ -142,7 +142,14 @@ def walkthrough_parts(options, github)
   walkthrough = walkthrough.merge('head' => options.fetch(:head))
   body = Shaka::Walkthrough::CodeLinks.resolve(Shaka::Publication.walkthrough(walkthrough, github.repository),
                                                walkthrough, github)
-  [body, Shaka::Walkthrough::Notes.resolve(walkthrough, github)]
+  [body, Shaka::Walkthrough::Notes.resolve(walkthrough, github), walkthrough['summary']]
+end
+
+# The opening check runs after GitHub has the text, so its advice never blocks publication.
+def opening_result(options, summary)
+  Shaka::OpeningPublication.new(root: options[:root] || Dir.pwd, ref: options[:ref],
+                                reviewer: options[:opening_reviewer], model: options[:opening_model],
+                                effort: options[:opening_effort]).call(summary)
 end
 
 def usage_banner
@@ -251,8 +258,8 @@ begin
     raise Shaka::Error, 'squash-message requires --ref so checkpoint opt-outs come from a trusted commit.'
   end
   raise Shaka::Error, 'resolve requires --thread THREAD_ID.' if command == 'resolve' && options[:thread].to_s.empty?
-  if options[:opening_reviewer] && command != 'description'
-    raise Shaka::Error, '--opening-reviewer is only for description.'
+  if options[:opening_reviewer] && !%w[description walkthrough].include?(command)
+    raise Shaka::Error, '--opening-reviewer is only for description and walkthrough.'
   end
   if options[:opening_model] && !options[:opening_reviewer]
     raise Shaka::Error, '--opening-model requires --opening-reviewer.'
@@ -314,10 +321,7 @@ begin
                  rendered
                end
                attention = Shaka::DecisionLabels.sync(github, carried)
-               opening = Shaka::OpeningPublication.new(root:, ref: options[:ref],
-                                                       reviewer: options[:opening_reviewer],
-                                                       model: options[:opening_model],
-                                                       effort: options[:opening_effort]).call(described['summary'])
+               opening = opening_result(options.merge(root:), described['summary'])
                refresh = Shaka::CursorUsageRefresh.bind(repository, number, carried['usage']) if carried.is_a?(Hash)
                published.merge('opening' => opening, 'usage_records' => usage_records).merge(prose_note).tap do |result|
                  result['attention'] = attention if attention
@@ -334,9 +338,10 @@ begin
            when 'resolve'
              github.resolve_thread(options.fetch(:thread))
            when 'walkthrough'
-             body, notes = walkthrough_parts(options, github)
+             body, notes, summary = walkthrough_parts(options, github)
              github.walkthrough(head: options.fetch(:head), body:, notes:, seam_required_checks:,
                                 prose: Shaka::ProseLimits.from_ref(root: options[:root] || Dir.pwd, ref: options[:ref]))
+                   .merge('opening' => opening_result(options, summary))
            when 'merge'
              head = options.fetch(:head)
              review = { required: seam&.review&.fetch('required'), waiver: options[:review_waiver],

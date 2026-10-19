@@ -31,7 +31,7 @@ pr_description:
   show_human_comments: true # List the comments people wrote on the PR.
   max_human_comments: 20 # Rows that list shows, open comments first.
   opening_check:
-    enabled: true # Check the PR opening before publication.
+    enabled: true # Check description and walkthrough openings after publication.
     effort: low # Independent of the code-review effort.
 
 prose_limits: # Visible PR description and walkthrough prose.

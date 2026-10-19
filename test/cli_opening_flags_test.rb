@@ -9,7 +9,7 @@ class CliOpeningFlagsTest < Minitest::Test
     _output, error, status = Open3.capture3(COMMAND, 'pr', 'owner/repo', '1',
                                             '--opening-reviewer', 'anthropic/claude')
     refute_predicate status, :success?
-    assert_includes error, '--opening-reviewer is only for description'
+    assert_includes error, '--opening-reviewer is only for description and walkthrough'
   end
 
   def test_model_flag_requires_a_reviewer

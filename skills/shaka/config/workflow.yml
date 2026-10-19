@@ -467,8 +467,8 @@ phases:
         phrasing. Keep exact commands, identifiers, domain terms, risks, and evidence. Skip chatbot
         wrappers and inflated significance. A reply leads with the decision and uses the thread's
         shared context.
-      - `description` reports an advisory `opening` result. Pass the verified default-branch
-        full commit SHA with `description --ref SHA`. Opening settings live under
+      - `description` and `walkthrough` report an advisory `opening` result for the `summary`.
+        Pass the verified default-branch full commit SHA with `--ref SHA`. Opening settings live under
         `pr_description.opening_check`; the top-level `opening_check` remains a compatibility
         input. When `enabled` is false, the command skips the check. Otherwise, a configured `reviewer`, `model`,
         and `effort` select this check independently of code review; the same provider as the
@@ -554,6 +554,7 @@ phases:
         reply OWNER/REPO NUMBER --content-file PATH --key NAME [--comment ROOT_COMMENT_ID]
         resolve OWNER/REPO NUMBER --thread THREAD_ID
         walkthrough OWNER/REPO NUMBER --head SHA --content-file PATH --root DIR --ref SHA
+          [--opening-reviewer PROVIDER/FAMILY] [--opening-model MODEL] [--opening-effort LEVEL]
         attention OWNER/REPO NUMBER --state answer|merge|resume|none
         handoff OWNER/REPO NUMBER [--head SHA] [--woken-by WHAT] [--codex-wake PATH] --root DIR --ref SHA
         squash-message OWNER/REPO NUMBER --head SHA --content-file PATH --root DIR --ref SHA
