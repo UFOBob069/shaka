@@ -366,13 +366,10 @@ refuses a fix recorded by any round on the last head, because no later round has
 
 When `evidence verify` reports review evidence superseded because settings components differ,
 such as after the installed Shaka updated mid-task, review the same head again with the same
-ledger and `--settings-ref`; do not invent a commit or start a new ledger. Each round run with
-`--settings-ref` records the settings that would supersede it, leaving out the reviewer's own
-model and effort. The last reviewed head may then start a new batch: record the earlier batch
-first, start every reviewer again, and record the new batch as usual. The ledger still refuses
-the head when no material setting changed, or when an earlier round on it lacks recorded
-settings. The published comment shows the new batch as a settings re-review beside the earlier
-rounds. A recorded fix still needs its fix head reviewed instead.
+ledger; do not invent a commit or start a new ledger. Record the earlier batch and settle its
+open findings first, then run every reviewer again with `--settings-ref` and record the new
+batch as usual. The ledger refuses this when no material setting changed or an earlier round
+on the head ran without `--settings-ref`.
 The next round's prompt
 lists, as review data, every earlier finding's id, class, summary, and latest disposition
 (including fixed, open, decision-needed, and closed dispositions), plus the commits since the newest

@@ -148,7 +148,25 @@ class LocalReviewBatchLedgerTest < Minitest::Test
     ledger.record!({ 'findings' => [] })
 
     error = assert_raises(Shaka::Error) { append(EARLIER, 'openai/codex', findings: 0, settings: 'a' * 64) }
-    assert_includes error.message, 'Round 1 already reviewed'
+    assert_includes error.message, 'reviewed under other settings'
+  end
+
+  # Break caught: a later record of the commit reaches only its newest batch, stranding an open finding.
+  def test_a_settings_rereview_waits_for_open_findings_to_be_settled
+    append(EARLIER, 'openai/codex', findings: 1, settings: 'a' * 64)
+    record([NIT.merge('disposition' => 'open')])
+
+    error = assert_raises(Shaka::Error) { append(EARLIER, 'openai/codex', findings: 0, settings: 'c' * 64) }
+    assert_includes error.message, 'Settle finding F1'
+  end
+
+  # Break caught: a reviewer without recorded settings joined a batch with them, or the reverse,
+  # and split one commit's triage in two.
+  def test_reviewers_of_one_commit_share_their_settings
+    append(EARLIER, 'openai/codex', findings: 0)
+
+    error = assert_raises(Shaka::Error) { append(EARLIER, 'anthropic/claude', findings: 0, settings: 'a' * 64) }
+    assert_includes error.message, 'reviewed under other settings'
   end
 
   # Break caught: two reviewers finishing together each wrote the ledger they had read, losing a round.

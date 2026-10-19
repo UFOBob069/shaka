@@ -156,7 +156,7 @@ module Shaka
       raise Error, "The ledger's rounds measure the change against #{data['base']}; use a new ledger." unless
         data['base'] == base
 
-      check_new_head!(head, reviewer) unless settings_rereview?(head)
+      check_new_head!(head, reviewer) unless new_settings_batch?(head)
     end
 
     def locked
