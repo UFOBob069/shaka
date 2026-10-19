@@ -12,7 +12,7 @@ module Shaka
       rescue Error => e
         raise unless e.http_status == 403
 
-        @viewer_login = installation_viewer
+        @viewer_login = installation_viewer(e)
       end
 
       def issue_comments
@@ -32,8 +32,12 @@ module Shaka
 
       # GitHub refuses REST /user to a GitHub App installation token but answers the GraphQL
       # viewer. REST lists that token's comments under NAME[bot], so ownership checks compare that.
-      def installation_viewer
-        login = login!(graphql('query { viewer { login } }')['viewer']&.[]('login'))
+      # Any other account refused here keeps the refusal rather than being renamed a bot.
+      def installation_viewer(refusal)
+        viewer = graphql('query { viewer { __typename login } }')['viewer']
+        login = login!(viewer&.[]('login'))
+        raise refusal unless viewer['__typename'] == 'Bot' || login.end_with?('[bot]')
+
         "#{login.delete_suffix('[bot]')}[bot]"
       end
 

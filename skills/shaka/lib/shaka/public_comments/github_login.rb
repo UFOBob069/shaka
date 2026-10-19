@@ -9,6 +9,13 @@ module Shaka
       def self.valid(logins)
         logins.uniq.select { |login| login.is_a?(String) && login.match?(PATTERN) }
       end
+
+      # GraphQL names a bot author NAME; REST, and so every ownership check, names it NAME[bot].
+      def self.author(author)
+        return unless author.is_a?(Hash) && author['login'].is_a?(String)
+
+        author['__typename'] == 'Bot' ? "#{author['login']}[bot]" : author['login']
+      end
     end
   end
 end

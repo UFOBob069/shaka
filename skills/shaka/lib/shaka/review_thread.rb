@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'error'
+require_relative 'public_comments/github_login'
 require_relative 'review_thread/lookup'
 
 module Shaka
@@ -56,7 +57,7 @@ module Shaka
     # The first comment opens the thread. A later comment from this account is the reply.
     def replies(thread)
       thread.dig('comments', 'nodes').drop(1).filter_map do |comment|
-        comment.dig('author', 'login') if comment.is_a?(Hash)
+        PublicComments::GitHubLogin.author(comment['author']) if comment.is_a?(Hash)
       end
     end
 

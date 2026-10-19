@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../error'
+require_relative 'github_login'
 
 module Shaka
   module PublicComments
@@ -102,14 +103,8 @@ module Shaka
       end
 
       def record_authors(id, comments)
-        @authors[id] = comments.filter_map { |comment| author_login(comment['author']) }
+        @authors[id] = comments.filter_map { |comment| GitHubLogin.author(comment['author']) }
         @anonymous << id if @authors[id].size < comments.size
-      end
-
-      def author_login(author)
-        return unless author.is_a?(Hash) && author['login'].is_a?(String)
-
-        author['__typename'] == 'Bot' ? "#{author['login']}[bot]" : author['login']
       end
 
       def normalize_thread(row)

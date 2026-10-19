@@ -18,6 +18,14 @@ class ReviewThreadTest < Minitest::Test
     assert_equal THREAD, sent(2).dig('variables', 'id')
   end
 
+  def test_resolve_matches_an_app_token_reply_that_graphql_names_without_bot
+    app = { '__typename' => 'Bot', 'login' => 'shaka-app' }
+    github = client(response({}, status: 1, http_status: 403), response({ 'data' => { 'viewer' => app } }),
+                    thread_page(authors: ['reviewer', app]), mutation_response(true))
+
+    assert_equal({ 'thread_id' => THREAD, 'is_resolved' => true }, github.resolve_thread(THREAD))
+  end
+
   def test_resolve_refuses_a_thread_this_account_only_opened
     github = client(user_response, thread_page(authors: ['justin808']))
 
@@ -105,7 +113,7 @@ class ReviewThreadTest < Minitest::Test
       'id' => id,
       'isResolved' => resolved,
       'comments' => {
-        'nodes' => authors.map { |login| { 'author' => { 'login' => login } } },
+        'nodes' => authors.map { |author| { 'author' => author.is_a?(Hash) ? author : { 'login' => author } } },
         'pageInfo' => { 'hasNextPage' => more_comments }
       }
     }

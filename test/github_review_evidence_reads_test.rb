@@ -41,13 +41,18 @@ class GitHubReviewEvidenceReadsTest < Minitest::Test
   end
 
   def test_viewer_login_names_an_app_installation_token_as_its_bot
-    %w[shaka-app shaka-app[bot]].each do |graphql_login|
-      github = client(response({ 'message' => 'Resource not accessible by integration' }, status: 1, http_status: 403),
-                      response({ 'data' => { 'viewer' => { 'login' => graphql_login } } }))
+    [{ '__typename' => 'Bot', 'login' => 'shaka-app' }, { 'login' => 'shaka-app[bot]' }].each do |viewer|
+      github = client(refused, response({ 'data' => { 'viewer' => viewer } }))
 
       assert_equal 'shaka-app[bot]', github.viewer_login
       assert_equal 'graphql', @calls.last.first[2]
     end
+  end
+
+  def test_viewer_login_keeps_a_refusal_for_an_account_that_is_not_a_bot
+    github = client(refused, response({ 'data' => { 'viewer' => { '__typename' => 'User', 'login' => 'alice' } } }))
+
+    assert_equal 403, assert_raises(Shaka::Error) { github.viewer_login }.http_status
   end
 
   def test_viewer_login_keeps_other_rest_failures
@@ -62,4 +67,8 @@ class GitHubReviewEvidenceReadsTest < Minitest::Test
 
     assert_raises(Shaka::Error) { github.viewer_login }
   end
+
+  private
+
+  def refused = response({ 'message' => 'Resource not accessible by integration' }, status: 1, http_status: 403)
 end
