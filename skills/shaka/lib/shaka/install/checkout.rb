@@ -3,6 +3,7 @@
 require 'json'
 require_relative 'checkout_drift'
 require_relative 'checkout_git'
+require_relative 'checkout_validation'
 require_relative 'directory_safety'
 require_relative 'package'
 
@@ -13,6 +14,7 @@ module Shaka
       include DirectorySafety
       include CheckoutGit
       include CheckoutDrift
+      include CheckoutValidation
 
       REPOSITORY = 'https://github.com/shakacode/shaka.git'
       RECORD = 'shaka-install.json'
@@ -39,6 +41,7 @@ module Shaka
         git('fetch', '--quiet', 'origin', @branch)
         validate
         candidate = git('rev-parse', "refs/remotes/origin/#{@branch}")
+        refuse_rewrite(candidate)
         stage(candidate, &)
         write_record(@record.merge('pending_revision' => candidate))
         advance(candidate)
@@ -113,24 +116,6 @@ module Shaka
           target.is_a?(Hash) && target['directory'].is_a?(String) &&
             target['directory'].start_with?('/') && Package.valid_skills?(target['names'])
         end
-      end
-
-      def validate
-        raise ArgumentError, 'Unexpected installation checkout root' unless git('rev-parse', '--show-toplevel') == @root
-        raise ArgumentError, 'Installation origin differs from the selected repository' unless
-          git('config', '--get', 'remote.origin.url') == @repository
-        raise ArgumentError, 'Unexpected installation branch' unless git('branch', '--show-current') == @branch
-        raise ArgumentError, 'Unexpected installation upstream' unless
-          git('rev-parse', '--abbrev-ref', '@{upstream}') == "origin/#{@branch}"
-
-        validate_revision
-      end
-
-      def validate_revision
-        raise ArgumentError, 'Installation checkout is dirty; use a separate development checkout' unless
-          git('status', '--porcelain', '--untracked-files=all').empty?
-
-        refuse_drift
       end
     end
   end

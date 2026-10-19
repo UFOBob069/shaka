@@ -30,6 +30,9 @@ The code in this directory handles four parts of that installation:
   this Shaka source or the expected managed package path; the installer leaves
   unrelated destinations alone. This path check does not prove who created a
   package.
+- `Refusal` words each installer refusal as the state, where it was found, and
+  one next command, or the decision a person must make first. A link's owner is
+  read from the install record in the checkout the link points into.
 - `Source` records the copied files' Git revision when the source is the
   repository root, selected files and directories match the tracked tree,
   selected paths have clean Git status, raw file bytes and executable modes

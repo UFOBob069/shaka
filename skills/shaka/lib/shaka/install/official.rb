@@ -1,22 +1,21 @@
 # frozen_string_literal: true
 
-require 'rbconfig'
 require 'shellwords'
 require_relative 'checkout'
 require_relative 'official_links'
 require_relative 'direct_source'
 require_relative 'link_lock'
+require_relative 'ruby_record'
 
 module Shaka
   module Install
     # Keeps the official skill in one dedicated checkout, separate from PR trial packages.
     class Official
       include LinkLock
+      include RubyRecord
 
       HOSTS = { 'codex' => '.agents/skills', 'claude' => '.claude/skills', 'cursor' => '.cursor/skills',
                 'opencode' => '.config/opencode/skills' }.freeze
-      RUBY_RECORD = 'shaka-ruby'
-
       def initialize(source, options)
         selected = options[:directory] || registered_source(source) || File.join(Dir.home, '.agents/shaka')
         @checkout = Checkout.new(selected, **options.slice(:repository, :branch))
@@ -115,15 +114,6 @@ module Shaka
         DirectSource.new(root, names, tree).identity(tree.hash(root))
       end
 
-      def record_ruby
-        path = File.join(@checkout.root, '.git', RUBY_RECORD)
-        temporary = "#{path}.#{Process.pid}"
-        File.write(temporary, "#{File.realpath(RbConfig.ruby)}\n", mode: 'wx', perm: 0o600)
-        File.rename(temporary, path)
-      ensure
-        File.unlink(temporary) if temporary && File.exist?(temporary)
-      end
-
       def verify_identity(targets)
         raise ArgumentError, 'Recorded installation identity differs' unless
           identity(targets) == @checkout.record['identity']
@@ -132,12 +122,7 @@ module Shaka
       def verify(targets, identity: true)
         targets.each { |target| links_for(target).verify(@checkout.root) }
         verify_identity(targets) if identity
-        ruby = File.read(File.join(@checkout.root, '.git', RUBY_RECORD)).strip
-        unless File.executable?(ruby)
-          raise ArgumentError,
-                'Installation Ruby is unavailable; rerun bin/install with Ruby 3.4'
-        end
-
+        verify_ruby(targets)
         puts "Verified Shaka installation: #{@checkout.root} (#{@checkout.revision[0, 7]})"
       end
     end

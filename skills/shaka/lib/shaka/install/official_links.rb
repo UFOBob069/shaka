@@ -19,8 +19,7 @@ module Shaka
       def verify(target)
         @names.each do |name|
           expected = File.join(target, 'skills', name)
-          raise ArgumentError, "Installation link differs: #{destination(name)}" unless
-            File.symlink?(destination(name)) && File.realpath(destination(name)) == expected
+          raise ArgumentError, link_refusal(name, expected, target) unless linked?(name, expected)
         end
       end
 
@@ -40,6 +39,22 @@ module Shaka
       end
 
       private
+
+      def linked?(name, expected)
+        File.symlink?(destination(name)) && File.realpath(destination(name)) == expected
+      rescue SystemCallError
+        false
+      end
+
+      def link_refusal(name, expected, root)
+        path = destination(name)
+        repair = Refusal.command('ln', '-sfn', expected, path)
+        return existing_refusal("Installation link differs: #{path}", name, repair) if
+          File.symlink?(path) || File.exist?(path)
+
+        Refusal.message("Installation link is missing: #{path}", "it should point to #{expected}",
+                        Refusal.command(File.join(root, 'bin/install')))
+      end
 
       def validate_location(target)
         directory = File.realpath(@skills_dir)
