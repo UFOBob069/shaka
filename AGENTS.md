@@ -147,6 +147,9 @@ breaks it, and say which reason applies.
   repository's deliberate policy choices intact. The configuration example test
   runs in `bin/validate` and checks explicit values against shipped defaults;
   extend it for defaults applied outside `RepositoryConfig`.
+  Per-machine environment switches such as `SHAKA_NOTICES` and `SHAKA_CALL_LOG`
+  are not settings: keep them out of `defaults.yml` and `docs/settings.md`, and
+  document them where they are used.
 - `skills/shaka/config/enforcement.yml` records what enforces each rule `workflow.yml`
   states with never, must, do not, or only when, and `shaka enforcement` prints it.
   Loading it fails when a quote leaves the workflow, and when one of those forms appears
