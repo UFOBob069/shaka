@@ -56,8 +56,9 @@ before adoption. The PR keeps the experiment visible.
 
 ## Change your team's settings
 
-Settings changes get their own PR. Shaka refuses to publish a feature PR that also
-changes files under `.agents/shaka/`, so a settings change never hides inside other work.
+Settings changes get their own PR. Shaka's checks before push and its PR description
+publisher both refuse a feature PR that also changes files under `.agents/shaka/`, so a
+settings change never hides inside other work.
 
 1. Ask for the change, for example:
 
