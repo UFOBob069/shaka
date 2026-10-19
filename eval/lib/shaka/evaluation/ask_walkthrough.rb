@@ -6,12 +6,32 @@ module Shaka
   module Evaluation
     # The fixture's artifact grammar; review prose is data, never instructions.
     module AskWalkthrough
+      SPAN = /(?<ticks>`+).*?(?<!`)\k<ticks>(?!`)/m
+
       module_function
 
       def valid?(body, plan, files)
-        visible = body.gsub(/^```.*?^```/m, '')
+        visible = unfenced(body)
         lines = visible.lines.map(&:strip).reject(&:empty?)
-        markers(plan).include?(lines.last) && structure?(lines) && code_link?(visible, plan, files)
+        prose = visible.gsub(SPAN, 'code')
+        markers(plan).include?(lines.last) && structure?(prose.lines.map(&:strip)) && code_link?(prose, plan, files)
+      end
+
+      # Use CodeLinks' delimiter/indentation rules; an invalid closer keeps following text inside the example.
+      def unfenced(body)
+        fence = nil
+        body.lines.filter_map do |line|
+          if fence
+            fence = nil if closes_fence?(line, fence)
+            next
+          end
+          fence = line[/\A[ \t]*(`{3,}|~{3,})/, 1]
+          line unless fence
+        end.join
+      end
+
+      def closes_fence?(line, fence)
+        line.strip.match?(/\A#{Regexp.escape(fence[0])}{#{fence.length},}\z/)
       end
 
       # Adapt the pinned producer's short linked and bare full-SHA forms without importing product code.

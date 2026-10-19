@@ -42,6 +42,39 @@ class EvaluationAskWalkthroughTest < Minitest::Test
     end
   end
 
+  def fenced_body(opening, closing)
+    section = walkthrough_body[/## Repair\nRead[^\n]+/]
+    walkthrough_body.sub(section, "#{opening}\n#{section}\n#{closing}")
+  end
+
+  def test_tilde_and_indented_fences_cannot_supply_artifact_structure
+    [['~~~markdown', '~~~'], ['  ```ruby', '  ```'], ['  ~~~~text', '  ~~~~~']].each do |opening, closing|
+      assert_fails with_body(fenced_body(opening, closing)), 'walkthrough'
+    end
+  end
+
+  def test_shorter_wrong_or_missing_closers_do_not_end_a_fence
+    [["````ruby\n```", '````'], ["~~~ruby\n```", '~~~'], ['~~~ruby', '']].each do |opening, closing|
+      assert_fails with_body(fenced_body(opening, closing)), 'walkthrough'
+    end
+  end
+
+  def test_a_longer_matching_fence_allows_real_structure_after_it
+    body = walkthrough_body.sub('## Repair', "~~~markdown\nexample only\n~~~~\n## Repair")
+    assert grader.call(with_body(body))['passed']
+  end
+
+  def test_inline_code_examples_do_not_supply_links
+    line = walkthrough_body.lines.find { |text| text.start_with?('Read [') }.strip
+    ['`', '``'].each do |ticks|
+      assert_fails with_body(walkthrough_body.sub(line, "#{ticks}#{line}#{ticks}")), 'walkthrough'
+    end
+  end
+
+  def test_inline_code_in_a_real_heading_is_valid
+    assert grader.call(with_body(walkthrough_body.sub('## Repair', '## `Repair`')))['passed']
+  end
+
   def test_code_link_must_resolve_to_changed_final_blob_lines
     { "https://github.com/#{REPOSITORY}/blob/" => ['https://github.com/another/cell/blob/'],
       "/blob/#{HEAD}/" => ["/blob/#{'b' * 40}/"],
