@@ -718,7 +718,9 @@ What it does not provide, checked the same way:
   reaping and a read-only trusted skill still apply.
 - The tier 3 driver. A [protected review readback API](../../eval/delivery-readback.md)
   now retains native IDs, bodies, digests and timestamps and detects later changes.
-  It does not grade the Ask protocol or qualify an executor. The proposal's driver
+  The [offline Ask grader](../../eval/ask-grading.md) now checks the six
+  protected-evidence assertions. Native collection and executor qualification
+  remain unbuilt. The proposal's driver
   posts head-bound reviews during the run
   and reads GitHub state back. Tier 3 stays on that driver, and the spike does not
   test it.
