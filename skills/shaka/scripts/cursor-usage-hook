@@ -3,4 +3,4 @@
 
 require_relative '../lib/shaka/usage/cursor_usage'
 
-exit Shaka::CursorUsage.persist($stdin.read)
+exit Shaka::CursorUsage.persist($stdin.binmode.read)

@@ -30,6 +30,14 @@ class CursorStopHookTest < Minitest::Test
   end
 
   # Break: include? treats `echo cursor-usage-hook` as the persistence script.
+  def test_a_windows_launcher_is_installed
+    with_hooks('stop' => [{ 'command' => 'skills/shaka/scripts/cursor-usage-hook.cmd' }]) do |path|
+      assert installed?(path)
+    end
+    quoted = { 'stop' => [{ 'command' => '"C:\Ruby34-x64\bin\ruby.exe" "skills\shaka\scripts\cursor-usage-hook"' }] }
+    with_hooks(quoted) { |path| assert installed?(path) }
+  end
+
   def test_a_command_that_only_mentions_the_hook_name_is_not_installed
     with_hooks('stop' => [{ 'command' => 'echo cursor-usage-hook' }]) { |path| refute installed?(path) }
   end
