@@ -1,0 +1,31 @@
+{
+  "head": "b7ee4555810dcb82b4a0714200c599ab076daac8",
+  "conclusion": "Proceed",
+  "summary": "Maintainers can ask the agent to merge an approved revision when no required checks exist. The bounded exception preserves other merge gates; authorization remains agent-enforced, and measured savings are unknown.",
+  "reasons": [
+    "Issue #551 demonstrates an unnecessary manual merge step after Ask approval. The change restores the existing approved-merge outcome without requiring maintainers to configure artificial checks.",
+    "The 12-file change adds one head-bound exception, result evidence, setup guidance, and focused tests without new dependencies or configuration. Existing required-check discovery and other merge gates remain in place.",
+    "Ask authorization remains agent-enforced, consistent with the existing merge-authority boundary. Ruby verifies the confirmed head rather than claiming to verify user approval.",
+    "Three local review rounds and hosted repairs do not establish an approach problem. Detailed repair history, incident frequency, measured time savings, and full instruction-growth report output are unavailable; the supplied instruction estimate is about 30 workflow words."
+  ],
+  "concerns": [],
+  "alternative": "Keep the existing GitHub merge click. It preserves native safeguards but loses agent completion after explicit Ask approval—the demonstrated workflow gap. Requiring a configured check would impose a repository policy change to solve that gap.",
+  "next_action": "Carry this change forward with the existing human review requirement for merge-guard changes.",
+  "status": "completed",
+  "reviewer": "openai/codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "medium",
+  "started_at": "2026-10-19T09:01:29Z",
+  "duration_ms": 53655,
+  "prompt_source": "3787b9c4423e4e6a9e15e54174916f1068228ce3:eval-arms/default-before.md",
+  "settings_ref": "3787b9c4423e4e6a9e15e54174916f1068228ce3",
+  "usage": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "input": "137637",
+    "cached_input": "114688",
+    "output": "1172",
+    "reasoning_output": "51",
+    "usd": "$0.069087"
+  }
+}

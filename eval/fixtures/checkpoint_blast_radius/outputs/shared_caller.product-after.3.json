@@ -1,0 +1,32 @@
+{
+  "head": "4b382e5388e652308d2beca448666630ba6c332d",
+  "conclusion": "Proceed",
+  "summary": "Failed check lookups now report a gh failure and preserve HTTP status when available, with little added maintenance cost. Regression evidence supports the fix; live rate-limit behavior and realized user benefit remain unverified.",
+  "reasons": [
+    "The change addresses issue #656 directly: empty output from a failed check lookup now produces a gh failure instead of an invalid-JSON error. Required-check errors retain the parsed HTTP status.",
+    "Scope stays within the reported failure. The change reuses existing error handling, adds no dependencies or configuration, and introduces little maintenance cost. No instruction files changed.",
+    "Reported evidence includes a regression that failed before the fix, passing focused tests, 3454 passing tests with clean RuboCop results, and a live missing-PR lookup. One review round found only a missing direct test for empty stdout with exit 8.",
+    "Verification is proportionate to a diagnostic change shared by status, watch, handoff, and merge. Lookup failures continue to raise; reverting restores the prior behavior without persistent data changes.",
+    "A live rate limit and end-to-end rate-limit handling through each consuming command were not reported as exercised. Empty stdout with exit 8 lacks a direct test. Messages without an '(HTTP nnn)' marker retain a nil status. Incident frequency and realized user benefit remain unknown."
+  ],
+  "concerns": [],
+  "alternative": "Keep the bounded fix. A direct empty-stdout exit-8 test could add coverage, but the reported evidence does not justify broader error parsing or new workflow behavior.",
+  "next_action": "Carry the existing validation and known coverage limits into the PR recommendation.",
+  "status": "completed",
+  "reviewer": "openai/codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "medium",
+  "started_at": "2026-10-19T08:59:27Z",
+  "duration_ms": 32915,
+  "prompt_source": "3787b9c4423e4e6a9e15e54174916f1068228ce3:eval-arms/product-after.md",
+  "settings_ref": "3787b9c4423e4e6a9e15e54174916f1068228ce3",
+  "usage": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "input": "64249",
+    "cached_input": "43520",
+    "output": "986",
+    "reasoning_output": "76",
+    "usd": "$0.055670"
+  }
+}

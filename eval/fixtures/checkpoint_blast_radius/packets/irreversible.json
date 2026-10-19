@@ -1,0 +1,7 @@
+{
+  "problem": "Issue #551: on a branch where GitHub requires no checks, shaka merge refused every merge because the required-check set was empty, so under Ask a maintainer who approved a verified PR had to click merge on GitHub themselves instead of telling the agent to merge.",
+  "audience": "Maintainers using Ask merge preference on repositories or branches without native required checks.",
+  "outcome": "shaka merge --empty-checks-confirmed-head SHA accepts an empty required-check set only for that exact head; unknown, failing, pending, and missing checks, native reviews, merge state, base, and queue gates still block. The merge result records the confirmed head. seam init warns when Auto is chosen without a required check. workflow.yml gains about 30 words telling the agent when it may pass the confirmation.",
+  "validation": "bin/validate (full, via evidence run) passed at c115b78. Focused tests: test/merge_empty_checks_confirmation_test.rb, test/cli_merge_admin_actor_test.rb, test/seam_initializer_test.rb, using a fake GitHub client. Local review by openai/codex and anthropic/claude: 3 rounds, 1 risk fixed, 3 nits documented. deepseek/openrouter and xai/grok did not run (HTTP 402; no model configured). claude-review CI passed at c115b78 with no findings. CodeRabbit: 2 findings fixed in c115b78. Instruction growth: workflow.yml about +30 words.",
+  "repair_history": "Local review by openai/codex and anthropic/claude ran 3 rounds: 1 risk fixed, 3 nits documented. CodeRabbit's 2 findings were fixed in c115b78."
+}

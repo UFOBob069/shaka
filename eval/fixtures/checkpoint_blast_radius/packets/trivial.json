@@ -1,0 +1,7 @@
+{
+  "problem": "The maintainer wants a short, memorable statement of what Shaka produces at the top of the README and docs landing page.",
+  "audience": "People landing on the Shaka README or docs site for the first time.",
+  "outcome": "The README and the docs landing page open with the tagline \"PRs that are a delight to review.\", replacing the README's old bold line. Leaves out the site homepage and social card (companion PR) and the guided-start welcome text. Safe because two Markdown lines change; no code, settings, or agent instructions.",
+  "validation": ".agents/shaka/bin/validate passed on the tested tree (docs navigation check). Local reviews by openai/codex and anthropic/claude and hosted claude-review found nothing. Not verified: nothing.",
+  "repair_history": "None."
+}

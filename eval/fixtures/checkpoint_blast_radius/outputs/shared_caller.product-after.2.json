@@ -1,0 +1,31 @@
+{
+  "head": "4b382e5388e652308d2beca448666630ba6c332d",
+  "conclusion": "Proceed",
+  "summary": "Check lookups now preserve gh failures and available HTTP status when failed commands return empty stdout. Reported verification supports the small maintenance cost, while live rate-limit behavior and realized user benefit remain unobserved.",
+  "reasons": [
+    "The change addresses issue #656 directly: agents and maintainers receive a gh failure with available HTTP status instead of a misleading JSON error. Scope stays within check lookup handling and focused tests.",
+    "Reported evidence includes a reproduction that failed before the fix, passing focused tests, 3454 passing tests, clean RuboCop, and a live missing-PR lookup. This is proportionate to a diagnostic change on an already-failing path; a revert restores the previous behavior without persistent effects.",
+    "One review round produced only the untested empty-stdout exit-8 case. Maintenance adds a small error helper and status propagation without new dependencies, configuration, or instructions. Instruction-growth and loading criteria are therefore inapplicable.",
+    "A live rate limit, empty stdout with exit 8, and end-to-end diagnostics through pr watch, handoff, and merge were not reported exercised. GraphQL errors without an HTTP marker still lack status. Incident frequency and realized user benefit remain unknown."
+  ],
+  "concerns": [],
+  "alternative": "Keep the bounded fix; further diagnostic expansion can wait for evidence of another failure format.",
+  "next_action": "Use the existing merge process for this head; no product revision is warranted by the supplied evidence.",
+  "status": "completed",
+  "reviewer": "openai/codex",
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "medium",
+  "started_at": "2026-10-19T08:58:29Z",
+  "duration_ms": 28065,
+  "prompt_source": "3787b9c4423e4e6a9e15e54174916f1068228ce3:eval-arms/product-after.md",
+  "settings_ref": "3787b9c4423e4e6a9e15e54174916f1068228ce3",
+  "usage": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "input": "60360",
+    "cached_input": "51584",
+    "output": "699",
+    "reasoning_output": "87",
+    "usd": "$0.029700"
+  }
+}
