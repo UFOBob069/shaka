@@ -4,6 +4,7 @@ require 'digest'
 require 'yaml'
 require_relative '../error'
 require_relative '../public_comments/github_login'
+require_relative '../repository_config/duplicate_keys'
 
 module Shaka
   module PublicComments
@@ -20,6 +21,7 @@ module Shaka
 
       def parse(contents, scope:)
         text = utf8(contents)
+        reject_duplicate_keys(text)
         values = lists(YAML.safe_load(text, aliases: false) || {})
         build(values, scope: scope, text: text)
       rescue Psych::Exception
@@ -27,6 +29,13 @@ module Shaka
       end
 
       private
+
+      # Visits each document so an empty or comment-only file stays an empty allowlist.
+      def reject_duplicate_keys(text)
+        Psych.parse_stream(text).children.each { |document| RepositoryConfig::DuplicateKeys.visit(document.root) }
+      rescue Error => e
+        raise Error, "Trust config is invalid: #{e.message}."
+      end
 
       def utf8(contents)
         text = contents.dup.force_encoding(Encoding::UTF_8)

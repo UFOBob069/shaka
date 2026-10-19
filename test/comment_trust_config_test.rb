@@ -169,3 +169,38 @@ class CommentTrustConfigValidationTest < Minitest::Test
     assert_equal HEAD, Shaka::PublicComments::TrustConfig.new(github).default_base_oid
   end
 end
+
+class CommentTrustConfigDuplicateKeyTest < Minitest::Test
+  include CommentTrustConfigFixture
+
+  def test_duplicate_machine_key_is_refused
+    with_machine("trusted_users: [alice]\ntrusted_users: [bob]\n") do |path|
+      error = assert_raises(Shaka::Error) do
+        Shaka::PublicComments::TrustConfig.new(client, machine_path: path).load(base_oid: HEAD)
+      end
+
+      assert_equal 'Trust config is invalid: duplicate key: trusted_users.', error.message
+      assert_empty @calls
+    end
+  end
+
+  def test_duplicate_repository_key_is_refused
+    with_machine(nil) do |path|
+      github = client(blob("trusted_teams: [core]\ntrusted_users: [alice]\ntrusted_users: [bob]\n"))
+      error = assert_raises(Shaka::Error) do
+        Shaka::PublicComments::TrustConfig.new(github, machine_path: path).load(base_oid: HEAD)
+      end
+
+      assert_equal 'Trust config is invalid: duplicate key: trusted_users.', error.message
+    end
+  end
+
+  def test_comment_only_allowlist_stays_empty
+    with_machine("# no machine-wide actors yet\n") do |path|
+      result = Shaka::PublicComments::TrustConfig.new(client(blob('')), machine_path: path).load(base_oid: HEAD)
+
+      assert_empty result[:users]
+      assert_equal(%w[machine repository], result[:sources].map { |source| source['scope'] })
+    end
+  end
+end
