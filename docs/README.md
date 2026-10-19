@@ -34,7 +34,7 @@ Ask the agent to handle configuration. These guides explain your choices:
 - [Coding agents](coding-agents.md) — invocation and installation for your environment.
 - [Install Shaka manually](manual-installation.md) — review and run the installer yourself.
 - [Fork Shaka and make it yours](fork-and-hack.md) — install your fork and send a change back.
-- [Upgrade an installation](migration.md) — preserve customizations when updating.
+- [Update Shaka](migration.md) — update your installation, or upgrade a repository's configuration layout.
 
 ## Look deeper
 
