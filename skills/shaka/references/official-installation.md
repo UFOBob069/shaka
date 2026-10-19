@@ -56,6 +56,8 @@ The installer prints an update reminder for every host and custom skills directo
 
 `update-check` compares the checkout's HEAD commit with its registered origin branch from any folder. `drift` means
 the checkout moved; its guidance says whether `install --update` can record the move. An `unknown` result names its reason.
+`bin/install --agent claude --session-hook` reports the saved `update-check` answer when each Claude Code chat
+starts; installing with `--agent claude` and without the flag removes that hook.
 Use the registered helper with your chosen path:
 
 ```bash

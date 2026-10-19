@@ -8,6 +8,8 @@ module Shaka
     module Notice
       COMMITS = 3
       SECONDS = 24 * 60 * 60
+      # The SessionStart hook's argument: report the saved answer as plain text, with no network request.
+      SESSION_START = '--session-start'
       GUIDANCE = "Shaka suggests updating once it is #{COMMITS} commits or a day behind.".freeze
 
       # A usable count below the threshold waits unless the oldest missing commit is a day old.

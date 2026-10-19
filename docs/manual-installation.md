@@ -86,8 +86,20 @@ changes, and is the target of each skill link, and that the recorded Ruby still 
 
 Shaka tells you when an update is available once your installation is three
 commits behind, or when the oldest change you lack is a day old, so a busy
-day on `main` does not interrupt every new chat. Finish active Shaka chats,
-fetch and apply it, then start a new chat:
+day on `main` does not interrupt every new chat. Each `update-check` answer is
+saved in `~/.local/share/shaka/update-check.json`. Any later Shaka command reads
+that file, without a network request, and prints one line to standard error at
+most once a day when it says to update, says the checkout moved, or is missing or over a day old.
+A command run from a different Shaka checkout than your skill links point to
+prints one line naming the linked one. Set `SHAKA_NOTICES=off` to silence both.
+
+To have each new Claude Code chat start with the saved answer, add `--session-hook`
+to `bin/install --agent claude`. The chat then hears about an update, a moved
+checkout, or a check over a day old, without a network request that would slow
+its start. That adds one `SessionStart` hook to `~/.claude/settings.json`;
+installing with `--agent claude` again without the flag removes it.
+
+When an update is due, finish active Shaka chats, fetch and apply it, then start a new chat:
 
 ```bash
 "$HOME/.agents/shaka/skills/shaka/scripts/shaka" install --update
