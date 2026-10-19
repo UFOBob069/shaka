@@ -4,6 +4,8 @@ require 'json'
 require 'shellwords'
 require 'tmpdir'
 require_relative 'doctor/installation_identity'
+require_relative 'startup_notice'
+require_relative 'update_check/cache'
 require_relative 'update_check/launch'
 require_relative 'update_check/messages'
 require_relative 'update_check/notice'
@@ -21,9 +23,12 @@ module Shaka
     COMMIT = /\A[0-9a-f]{40}\z/
 
     def self.run(arguments)
+      return StartupNotice.session_start if arguments == [Notice::SESSION_START]
       return usage(arguments) unless arguments.empty?
 
-      puts JSON.generate(installed.result)
+      check = installed
+      puts JSON.generate(result = check.result)
+      check.remember(result)
       0
     rescue Shaka::Error, JSON::ParserError, KeyError, SystemCallError => e
       warn "Shaka update check unavailable: #{e.class}. See #{GUIDE} and retry."
@@ -31,7 +36,7 @@ module Shaka
     end
 
     def self.usage(arguments)
-      puts 'Usage: shaka update-check (read-only, advisory; 15-second network deadline)'
+      puts 'Usage: shaka update-check [--session-start] (read-only, advisory; 15-second network deadline)'
       arguments == ['--help'] ? 0 : 1
     end
 
@@ -56,6 +61,10 @@ module Shaka
       @checkout = checkout
       @runner = runner
     end
+
+    # Later helper calls repeat a registered checkout's answer from this cache instead of the network.
+    # A failed check is not saved, so a check that keeps failing still earns the daily reminder.
+    def remember(result) = (Cache.record(@checkout, result) if @checkout && result['status'] != 'unknown')
 
     def result
       return answer('uninstalled', 'Use the official installer to receive update guidance.') if

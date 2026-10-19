@@ -3,6 +3,7 @@
 require 'optparse'
 require_relative '../installer'
 require_relative 'official'
+require_relative 'session_hook'
 require_relative 'status'
 
 module Shaka
@@ -50,6 +51,7 @@ module Shaka
         options.on('--with-mct') { @options[:names] << 'mct' }
         options.on('--with-rct') { @options[:names] << 'rct' }
         options.on('--with-claude-towers') { @options[:names].push('mct-claude', 'rct-claude') }
+        options.on('--session-hook', 'Show saved update checks in new Claude chats') { @options[:session_hook] = true }
         options.on('--managed', 'Explicit managed copy (normally use a PR trial)') { @options[:managed] = true }
       end
 
@@ -88,6 +90,7 @@ module Shaka
         @options[:agents].each do |agent|
           raise ArgumentError, "Unknown coding agent: #{agent}" unless Official::HOSTS.key?(agent)
         end
+        SessionHook.validate(@options)
       end
 
       def validate_action
@@ -124,8 +127,7 @@ module Shaka
         if managed?
           Installer.new(source_root: @source, **@options.slice(:skills_dir, :names, :managed_dir, :rollback)).run
         else
-          Official.new(@source, @options)
-                  .run(@actions.first || :install)
+          SessionHook.around(@options, @actions.any?) { Official.new(@source, @options).run(@actions[0] || :install) }
         end
       end
     end

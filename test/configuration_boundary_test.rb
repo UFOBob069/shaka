@@ -24,6 +24,7 @@ module ConfigurationBoundaryFileIO
     seam/upgrade_plan/symlink_chain.rb seam/private_recovery/exclusion.rb seam/upgrader.rb seam/upgrader/filesystem.rb
     seam/private_recovery/seed.rb seam/private_seed.rb ui_check.rb install/refusal.rb install/ruby_record.rb
     install/status_checkout.rb install/status_inventory.rb install/checkout_record.rb install/take_over.rb
+    update_check/cache.rb install/session_hook.rb
   ].freeze
 end
 
@@ -33,7 +34,7 @@ class ConfigurationBoundaryTest < Minitest::Test
 
   ROOT = File.expand_path('../skills/shaka/lib/shaka', __dir__)
   INTERNAL = %w[configuration.rb repository_config.rb trusted_config_source.rb].freeze
-  OTHER_PATHS = %w[install/official.rb install/official_links.rb install/status_inventory.rb
+  OTHER_PATHS = %w[install/locations.rb install/official.rb install/official_links.rb install/status_inventory.rb
                    merge_review_comparison.rb seam/initializer_readme.rb seam/pointer.rb].freeze
   OTHER_GIT_READ = %w[local_review/criteria.rb seam/upgrade_plan/indexed_references.rb].freeze
 

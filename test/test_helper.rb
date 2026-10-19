@@ -7,6 +7,8 @@ require 'fileutils'
 
 # Helper calls the tests spawn stay out of the developer's own call log.
 ENV['SHAKA_CALL_LOG'] = 'off'
+# This checkout is not the developer's linked installation, so every spawned call would say so.
+ENV['SHAKA_NOTICES'] = 'off'
 # Background maintenance outlives a fixture repository and races Dir.mktmpdir's cleanup.
 # Trial preparation refuses an inherited GIT_CONFIG_PARAMETERS, so a generated global config
 # carries the setting after including the files Git would have read, in Git's own order.

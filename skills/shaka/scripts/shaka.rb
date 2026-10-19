@@ -8,6 +8,10 @@ require_relative '../lib/shaka/call_log'
 
 Shaka::CallLog.start(ARGV.dup)
 
+require_relative '../lib/shaka/startup_notice'
+
+Shaka::StartupNotice.call(ARGV)
+
 require_relative '../lib/shaka/github'
 require_relative '../lib/shaka/github/pull_timeline'
 require_relative '../lib/shaka/attention'
