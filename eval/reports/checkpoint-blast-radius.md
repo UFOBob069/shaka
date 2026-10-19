@@ -30,7 +30,9 @@ UNKNOWN. No GitHub mutation happened.
 `2363e217b6034b4b684ef88f2a29ddda458d870f` that added the [four prompt files](../fixtures/checkpoint_blast_radius/prompts).
 Both arms therefore read the same AGENTS.md criteria and settings and differed only by
 `--prompt-file`. Each "before" file is the current prompt with the #547 or #549
-sentence removed, so later edits such as #592 appear in both arms.
+sentence removed, so later edits such as #592 appear in both arms. Outputs record the
+prompt as `eval-arms/NAME.md` in that local commit; the committed `prompts/NAME.md`
+files are byte-identical, with the hashes below.
 
 | Prompt | Arm | SHA-256 |
 | --- | --- | --- |
@@ -57,7 +59,7 @@ Nothing was added to plant an omission.
 
 ### Scoring
 
-Criteria were written before the batch ran. Reports were then shuffled under random IDs
+[Criteria](../fixtures/checkpoint_blast_radius/criteria.md) were written before the batch ran. Reports were then shuffled under random IDs
 and scored without the arm visible. The [key](../fixtures/checkpoint_blast_radius/blind_key.json),
 [scores](../fixtures/checkpoint_blast_radius/scores.json) and every
 [report](../fixtures/checkpoint_blast_radius/outputs) are kept. One person designed the
@@ -104,8 +106,7 @@ cost.
 | Conclusion Simplify/reframe | 0/3 | 3/3 | 0/2 | 0/2 |
 
 Every "after" run noticed that Ruby checks the head but the agent decides when to pass
-`--empty-checks-confirmed-head`. They also noticed the packet reported no replay of that
-decision. Two cited [the earlier unauthorized Ask merge](ask-merge-authorization.md),
+`--empty-checks-confirmed-head`, and that nothing reported tested that decision. Two cited [the earlier unauthorized Ask merge](ask-merge-authorization.md),
 and a third noted that the existing replay predates the flag. The three runs with this
 repository's prompt asked for a non-mutating decision replay covering approved Ask,
 unapproved Ask, Auto and a changed head, rather than a live merge. That is the evidence a maintainer
