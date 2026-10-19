@@ -11,6 +11,12 @@
   Use numbered lists when order matters or readers need to refer to individual points.
 - Lead with the outcome its reader notices.
 - Give each sentence one main idea and a clear subject and verb.
+- Make the subject a person who acts, or a thing doing what things do. Do not give
+  a repository, setting, or file a person's verb such as "see" or "know".
+  - Instead of: “A repository can now name the providers whose reviewers read
+    every commit, and see on the PR when one could not.”
+  - Write: “Maintainers can now list the AI providers that review every commit.
+    When one cannot review, the review comment says so.”
 - Put conditions beside the behavior they limit.
 - Use familiar words; explain unfamiliar project terms through the behavior they name.
 - Name the feature, user, or dependency behind references to an agreed design

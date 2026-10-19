@@ -342,6 +342,10 @@ or accept it; technical confidence does not grant merge consent. Scale detail to
   line range. One link per file leaves the reader searching. A change with no
   lines to link, such as a binary asset or submodule pointer, takes a
   commit-pinned file link instead.
+- Organize the body by behavior a reviewer can check, not by function. Name a
+  method only where the reader needs it to find the code. Keep the line-range
+  links above; commentary on specific lines belongs in
+  [walkthrough notes](walkthrough-notes.md).
 - Describe the code at this head, compared with the base branch. Leave out the
   branch's own history: "was removed" or "now rejects" about an earlier commit
   on the branch goes stale and means nothing to a reader of the diff.
