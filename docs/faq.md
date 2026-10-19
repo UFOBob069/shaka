@@ -27,6 +27,18 @@ With team settings, local choices do not override them. You can explicitly
 as shipped in [#426](https://github.com/shakacode/shaka/pull/426).
 Trying a different Shaka implementation is separate: see [try a Shaka PR](trying-pr-versions.md).
 
+## Can I use a different setting than my team?
+
+For one task, say it in your request, such as `Use Ask for this task`, where the
+setting allows it. For a lasting change, propose a settings PR and
+[select it for your tasks](settings.md#preview-settings-before-adopting-them) until
+it merges.
+
+Individual settings do not apply in a repository with team settings, even for a value
+the team leaves out: Shaka uses its own default there. Settings always come from one
+source, so you can tell which choices governed a task. See
+[which settings apply](settings.md#which-settings-apply).
+
 ## Why did the agent stop to ask about model and effort?
 
 Before it changes code, Shaka recommends a model and effort for the task.

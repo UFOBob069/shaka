@@ -25,6 +25,14 @@ settings with shared team settings.
 | Shared Shaka settings exist on the default branch | The default-branch configuration, including when reviewing a PR that changes it. |
 | No shared settings; individual setup is configured | Your local `.agents/shaka/config.yml`, kept out of Git. |
 
+Sources never fill each other's gaps. When the chosen source leaves out a value,
+Shaka uses its own default for it, never your individual setting. For example, if
+team settings leave out `prose_limits`, PR descriptions use the default limit of
+300 words, whatever your individual setup says.
+
+Shaka keeps no settings in your home directory. The one exception is your machine's
+comment allowlist, which adds people and bots whose public comments the agent may read.
+
 Omitted optional values use Shaka's defaults, all listed in
 [Shaka's defaults file](https://github.com/shakacode/shaka/blob/main/skills/shaka/config/defaults.yml).
 An explicit task choice takes

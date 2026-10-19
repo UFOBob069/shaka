@@ -10,6 +10,20 @@ If the project has no Shaka setup, the agent asks whether to prepare individual
 or team settings. It finds your existing checks, explains the AI review choices,
 and defaults to Ask. The [settings reference](settings.md) owns the options and defaults.
 
+## Where Shaka keeps things
+
+Using Shaka is separate from your team adopting it. You can use Shaka on any
+repository without changing it, and adopt it as a team later through an ordinary PR.
+
+| What | Where | Who decides |
+| --- | --- | --- |
+| Shaka itself | Your Shaka installation, linked into your coding agent | You, when you install or update |
+| Individual settings | `.agents/shaka/` in your copy of the repository, kept out of commits | You, until the team adopts Shaka |
+| Team settings | `.agents/shaka/`, committed on the default branch | Your team, through settings PRs |
+
+Each task uses one of these settings sources, never a mix. See
+[which settings apply](settings.md#which-settings-apply).
+
 ## Use individual or team settings
 
 **Individual setup** lets you try Shaka before your team adopts it. Your choices
@@ -39,6 +53,39 @@ override team settings.
 [Merged #426](https://github.com/shakacode/shaka/pull/426) lets you
 [try a settings PR on one task](settings.md#preview-settings-before-adopting-them)
 before adoption. The PR keeps the experiment visible.
+
+## Change your team's settings
+
+Settings changes get their own PR. Shaka refuses to publish a feature PR that also
+changes files under `.agents/shaka/`, so a settings change never hides inside other work.
+
+1. Ask for the change, for example:
+
+   ```text
+   $shaka Propose using Codex first for local reviews in this repository.
+   ```
+
+   The agent prepares the change as its own settings PR. You can also edit
+   `.agents/shaka/config.yml` in a PR yourself.
+2. To try it before it merges, select it for your tasks. Teammates can select the
+   same PR:
+
+   ```text
+   $shaka <task or issue link>
+   Use settings from PR #123.
+   ```
+
+3. Merge the settings PR. Its choices become the team's defaults.
+
+## Common situations
+
+| Situation | What to do |
+| --- | --- |
+| Try Shaka on a repository your team has not adopted | Ask for individual setup. Feature PRs contain no Shaka files. |
+| Share a trial setup with a teammate | Put the settings in a settings PR; each of you selects it for your tasks. |
+| Adopt Shaka as a team | Ask Shaka to set up the repository; review and merge its settings PR. |
+| Change one setting for one task | Say it in the request, such as `Use Ask for this task`, where the setting allows it. |
+| Change a team setting for good | Follow [change your team's settings](#change-your-teams-settings). |
 
 ## Choose a merge policy
 
