@@ -69,9 +69,9 @@ class PrivateDeliveryBoundaryTest < Minitest::Test
     with_trial do
       git(@root, 'add', '-f', '.agents/shaka')
       commit(@root)
-      invoke('reviewer', '--implementer', 'openai/codex', exit_code: 1, error: 'Cannot read')
-      invoke('handoff', exit_code: 1, error: 'Cannot read')
-      invoke_merge(error: 'Cannot read')
+      invoke('reviewer', '--implementer', 'openai/codex', exit_code: 1, error: 'tracked private files')
+      invoke('handoff', exit_code: 1, error: 'tracked private files')
+      invoke_merge(error: 'tracked private files')
     end
   end
 
