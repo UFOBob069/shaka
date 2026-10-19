@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require_relative '../call_log'
 require_relative '../publication/comment_history'
 require_relative '../publication/evidence_history'
 require_relative '../merge_review_evidence'
@@ -28,6 +29,7 @@ module Shaka
       options = parse_options(arguments)
       return 0 unless options
 
+      CallLog.tag(head: options[:head])
       github ||= GitHub.new(*arguments)
       publish_result(collapse_selected(github, options))
     end

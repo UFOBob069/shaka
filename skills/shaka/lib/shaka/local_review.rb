@@ -2,6 +2,7 @@
 
 require 'json'
 require 'optparse'
+require_relative 'call_log'
 require_relative 'error'
 require_relative 'github'
 require_relative 'local_review/publisher'
@@ -58,7 +59,7 @@ module Shaka
         flags.banner = 'Usage: shaka review run --root DIR --base SHA --head SHA --reviewer ID'
         %w[root base head reviewer effort model criteria-ref settings-ref repository description-file timeout-seconds
            ledger max-review-executions budget-reason].each do |key|
-          flags.on("--#{key} VALUE") { |value| @options[key.tr('-', '_').to_sym] = value }
+          flags.on("--#{key} VALUE") { |value| CallLog.tag(key => @options[key.tr('-', '_').to_sym] = value) }
         end
         flags.on('-h', '--help') { @options[:help] = true }
       end
@@ -134,7 +135,7 @@ module Shaka
       OptionParser.new do |flags|
         flags.banner = 'Usage: shaka review check --head SHA (--reviewer ID --report PATH | --not-run-reason TEXT)'
         %w[head reviewer report not-run-reason root settings-ref repository].each do |key|
-          flags.on("--#{key} VALUE") { |value| @options[key.tr('-', '_').to_sym] = value }
+          flags.on("--#{key} VALUE") { |value| CallLog.tag(key => @options[key.tr('-', '_').to_sym] = value) }
         end
         flags.on('-h', '--help') { @options[:help] = true }
       end

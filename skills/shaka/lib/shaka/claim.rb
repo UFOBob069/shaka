@@ -4,6 +4,7 @@ require 'json'
 require 'open3'
 require 'optparse'
 require_relative 'branch_name'
+require_relative 'call_log'
 require_relative 'error'
 require_relative 'claim/description'
 require_relative 'claim/names'
@@ -45,7 +46,7 @@ module Shaka
     end
 
     def self.query(arguments, options, parser)
-      return arguments.first if arguments.length == 1 && !options[:description]
+      return arguments.first.tap { CallLog.tag(number: it) } if arguments.length == 1 && !options[:description]
       raise OptionParser::InvalidArgument, parser.to_s unless arguments.empty? && options[:description]
       raise OptionParser::InvalidArgument, '--branch needs a work item' if options[:branch]
 

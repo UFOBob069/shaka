@@ -73,10 +73,12 @@ module PostImplementationFixture
     ['--content-file', packet]
   end
 
+  # A trailing Hash adds environment variables.
   def run_checkpoint(root, base, head, bin, *options)
+    env = options.last.is_a?(Hash) ? options.pop : {}
     packet_options = options.delete(:without_packet) ? [] : checkpoint_packet(bin)
     output, error, status = Open3.capture3(
-      { 'PATH' => "#{bin}:#{ENV.fetch('PATH')}", 'REVIEW_TRACE' => File.join(root, 'trace.json') },
+      { 'PATH' => "#{bin}:#{ENV.fetch('PATH')}", 'REVIEW_TRACE' => File.join(root, 'trace.json'), **env },
       COMMAND, 'post-implementation', 'run', '--root', root, '--base', base, '--head', head,
       '--ref', base, *packet_options, *options
     )

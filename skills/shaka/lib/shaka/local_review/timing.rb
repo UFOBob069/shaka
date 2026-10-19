@@ -12,10 +12,18 @@ module Shaka
       timing['timeout_seconds'] = @validated_timeout_seconds if @validated_timeout_seconds
       retain_attempt(keep_round(result.merge(timing)))
     ensure
+      tag_call_log
       finish_ledger
     end
 
     private
+
+    # Settings are final here: a checkpoint run has merged its trusted reviewer choices.
+    def tag_call_log
+      provider = @options[:reviewer].to_s.split('/').first
+      CallLog.tag(head: @options[:head], repository: @options[:repository], provider:,
+                  model: @options[:model], effort: @options[:effort])
+    end
 
     # Timing covers setup, invocation and report validation, before local evidence retention.
     def keep_round(result)

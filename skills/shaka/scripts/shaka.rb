@@ -228,6 +228,8 @@ begin
   raise OptionParser::InvalidArgument, parser.to_s unless ARGV.length == 3 && COMMANDS.include?(command)
   raise OptionParser::InvalidArgument, '--issue is only for comments' if options[:issue_only] && command != 'comments'
 
+  Shaka::CallLog.tag(repository:, number:, head: options[:head])
+
   if command == 'merge'
     options.fetch(:head)
     require_merge_ref!(options)

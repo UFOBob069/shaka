@@ -2,6 +2,7 @@
 
 require 'json'
 require 'open3'
+require_relative 'call_log'
 require_relative 'error'
 require_relative 'publication/publishing'
 require_relative 'prose_limits'
@@ -69,7 +70,7 @@ module Shaka
       end
 
       @repository = repository
-      @number = positive_integer(number)
+      @number = positive_integer(number).tap { CallLog.first_tag(repository:, number: it) }
       @runner = runner || ->(argv, stdin_data:) { Open3.capture3(*argv, stdin_data: stdin_data) }
     end
 

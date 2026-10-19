@@ -2,6 +2,7 @@
 
 require 'json'
 require 'optparse'
+require_relative 'call_log'
 require_relative 'error'
 require_relative 'github'
 require_relative 'ui_check/publisher'
@@ -34,6 +35,7 @@ module Shaka
       raise OptionParser::InvalidArgument, parser.to_s unless arguments.length == 2 && options.key?(:content)
       raise OptionParser::MissingArgument, '--head' unless options[:head]
 
+      CallLog.tag(head: options[:head])
       options
     end
 

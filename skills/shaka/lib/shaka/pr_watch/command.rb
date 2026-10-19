@@ -2,6 +2,7 @@
 
 require 'json'
 require 'optparse'
+require_relative '../call_log'
 require_relative '../github'
 require_relative '../ci_review_wait'
 require_relative '../pr_watch'
@@ -18,6 +19,7 @@ module Shaka
         return help(parser) if options[:help]
 
         require_target!(arguments, options)
+        CallLog.tag(repository: arguments[0], number: arguments[1], head: options[:head])
         reason = watcher(arguments, options).call
         puts "SHAKA_WAKE #{reason}"
         0

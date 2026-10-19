@@ -7,9 +7,10 @@ require 'time'
 module Shaka
   # Appends one timing record per helper call to a local file, so a retrospective can
   # measure slow and failing steps. Records name the command, never its arguments, which
-  # can hold private task text. Nothing is uploaded, and a failed write never changes
-  # the command's result. The record is written at exit, so a call that replaces this
-  # process, as a successful `shaka work` launch does, leaves none.
+  # can hold private task text; a command may add the shape-checked tags below. Nothing
+  # is uploaded, and a failed write never changes the command's result. The record is
+  # written at exit, so a call that replaces this process, as a successful `shaka work`
+  # launch does, leaves none.
   module CallLog
     VARIABLE = 'SHAKA_CALL_LOG'
     # Only these names are recorded, so a mistyped call cannot put an argument in the log.
@@ -26,6 +27,13 @@ module Shaka
                    'trial' => %w[prepare report] }.freeze
     # The fixed commands `evidence run` accepts; any other `--command` value is not recorded.
     CHECKS = %w[setup test validate validate_local trigger_hosted_ci].freeze
+    # Task and reviewer values a command may add to its record. A value is kept only when it
+    # has its key's shape, so free text cannot reach the log through a tag. Issues and PRs
+    # share one number space per repository, so `number` names either.
+    TAGS = { 'repository' => %r{\A[A-Za-z0-9][\w.-]*/[\w.-]+\z}, 'number' => /\A[1-9]\d{0,9}\z/,
+             'head' => /\A[0-9a-f]{40}\z/, 'provider' => /\A[a-z][a-z0-9-]*\z/,
+             'model' => %r{\A[A-Za-z0-9][\w.:+/-]*\z}, 'effort' => /\A[a-z][a-z-]*\z/ }.freeze
+    MAX_TAG_LENGTH = 100
 
     module_function
 
@@ -36,8 +44,33 @@ module Shaka
       identity = identity(arguments)
       started_at = Time.now.utc
       started = clock
-      at_exit { append(path, { 'at' => started_at.iso8601, **identity, 'exit' => exit_status, **elapsed(started) }) }
+      at_exit do
+        append(path, { 'at' => started_at.iso8601, **identity, **tags, 'exit' => exit_status, **elapsed(started) })
+      end
     end
+
+    # Adds each value that has its key's shape to this call's record and drops the rest,
+    # including text in an invalid encoding, so tagging never changes a command's result.
+    def tag(values)
+      values.each do |key, value|
+        text = shaped(key.to_s, value)
+        tags[key.to_s] = key.to_s == 'number' ? text.to_i : text if text
+      end
+      nil
+    end
+
+    # Keeps values already tagged, so a command's own pull request outlasts any other it reads.
+    def first_tag(values) = tag(values.reject { |key, _value| tags.key?(key.to_s) })
+
+    def shaped(key, value)
+      text = value.is_a?(Integer) ? value.to_s : value
+      pattern = TAGS[key]
+      return unless pattern && text.is_a?(String) && text.length <= MAX_TAG_LENGTH && text.valid_encoding?
+
+      text if text.match?(pattern)
+    end
+
+    def tags = (@tags ||= {})
 
     # Runs the block and returns its value with when it started and how long it took.
     def measure

@@ -27,7 +27,8 @@ It refuses a checkout or skills directory that other accounts can write to.
 
 Afterward, each Shaka command adds a line to a timing log at
 `~/.local/state/shaka/calls.jsonl`. The log stays on your machine and holds no
-arguments, paths, or task text. Set `SHAKA_CALL_LOG=off` to stop recording.
+paths or task text. It names only the repository, issue or PR number, commit, and
+reviewer model a command was given. Set `SHAKA_CALL_LOG=off` to stop recording.
 
 ## Install
 

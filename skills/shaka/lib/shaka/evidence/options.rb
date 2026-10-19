@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require_relative '../call_log'
 
 module Shaka
   module Evidence
@@ -28,7 +29,7 @@ module Shaka
 
       def add_value_flags(flags)
         %w[root ref repository command result head base flow].each do |name|
-          flags.on("--#{name} VALUE") { |value| @options[name.to_sym] = value }
+          flags.on("--#{name} VALUE") { |value| CallLog.tag(name => @options[name.to_sym] = value) }
         end
         %w[validation review].each do |name|
           flags.on("--#{name} PATH") { |value| (@options[name.to_sym] ||= []) << value }

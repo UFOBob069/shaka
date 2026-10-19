@@ -49,9 +49,11 @@ For tool overhead, read the helper's call log when it exists: the file `SHAKA_CA
 names, or `~/.local/state/shaka/calls.jsonl` when it is unset. When it is `off`, no log
 is kept, so skip this step. Each line is one helper
 call other than a `work` launch: its UTC start `at`, `command`, `exit`, and `duration_ms`, plus `check` on an
-`evidence run` line. Use only lines inside a named session's time range. The log holds
-no arguments or task identity, so attribute a line to the session only when the session
-shows that call; report other lines in the range as unattributed.
+`evidence run` line. A line may also carry `repository`, `number` (an issue or PR), and
+`head`; a `review run` or `post-implementation run` line may carry `provider`, `model`,
+and `effort`. Use only lines inside a named session's time range. Attribute a line to the
+session when its `repository` and `number` or `head` match the session's task, or when
+the session shows that call; report other lines in the range as unattributed.
 
 Before proposing a check, read the repository's validation commands, CI
 workflows, and hooks. Do not execute scripts, hooks, or validation commands the
