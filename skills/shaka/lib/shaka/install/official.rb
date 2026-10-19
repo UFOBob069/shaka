@@ -4,6 +4,7 @@ require 'shellwords'
 require_relative 'checkout'
 require_relative 'locations'
 require_relative 'official_links'
+require_relative 'recent_calls'
 require_relative 'direct_source'
 require_relative 'link_lock'
 require_relative 'ruby_record'
@@ -26,14 +27,16 @@ module Shaka
                    File.join(Dir.home, '.agents/shaka')
         @owner = owning_checkout(selected, options[:skills_dir], registered_source(source)) if options[:take_over]
         @checkout = Checkout.new(selected, **source_options(options))
-        @agents = options.fetch(:agents)
-        @skills_dir = options[:skills_dir]
+        @agents, @skills_dir, @force = options.values_at(:agents, :skills_dir, :force)
         @names = options.fetch(:names).uniq
       end
 
       def run(action)
+        raise ArgumentError, 'Use --force only with --update' if @force && action != :update
+
         @checkout.prepare(action)
         @checkout.check_development_use(action)
+        check_recent_calls if action == :update
         return verify(targets_for(action)) if action == :verify
 
         @owner ? take_over : with_lock(File.join(@checkout.root, '.git')) { install(action) }
@@ -41,6 +44,9 @@ module Shaka
       end
 
       private
+
+      # Before fetching, so a stopped update leaves the checkout and its remote-tracking branch alone.
+      def check_recent_calls = (RecentCalls.new.check(helper) unless @force)
 
       def install(action)
         @checkout.prepare(action)
@@ -54,8 +60,10 @@ module Shaka
         verify(targets)
       end
 
+      def helper = File.join(@checkout.root, 'skills/shaka/scripts/shaka')
+
       def update_reminder
-        puts "Keep Shaka updated: #{Shellwords.escape(File.join(@checkout.root, 'skills/shaka/scripts/shaka'))} " \
+        puts "Keep Shaka updated: #{Shellwords.escape(helper)} " \
              'install --update (finish active Shaka chats first; start a new chat afterward).'
       end
 

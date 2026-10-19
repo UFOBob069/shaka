@@ -53,8 +53,8 @@ module Shaka
       end
 
       def actions(options)
-        options.on('--update') { @actions << :update }
-        options.on('--verify') { @actions << :verify }
+        %i[update verify].each { |action| options.on("--#{action}") { @actions << action } }
+        options.on('--force', 'Update even if Shaka ran in the last 15 minutes') { @options[:force] = true }
         options.on('--take-over', 'Move every host link from the checkout that owns them to this one') do
           @options[:take_over] = true
         end

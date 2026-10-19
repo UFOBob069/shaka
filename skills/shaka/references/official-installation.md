@@ -75,7 +75,9 @@ running `bin/install` with Ruby 3.4 or later. Maintenance uses registered select
 change hosts or towers through installation first. A known interrupted update
 completes on the next installation or update run.
 
-Finish active Shaka chats before updating this mutable path. Doctor reads recorded identity;
+Finish active Shaka chats before updating this mutable path. Update stops before fetching when the
+call log shows a call that ended in the last 15 minutes; relay that stop, and add `--force` only when
+the user confirms no other Shaka chat is open. Doctor reads recorded identity;
 verification rechecks it. Project settings use [repository migration](migration.md).
 
 ## Migrate retained-copy installations

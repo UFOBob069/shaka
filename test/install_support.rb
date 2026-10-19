@@ -61,8 +61,9 @@ module InstallTestSupport
     FileUtils.cp(File.expand_path('../bin/install', __dir__), @installer)
     library = File.join(@source, 'lib', 'shaka')
     FileUtils.mkdir_p(library)
-    FileUtils.cp(File.expand_path('../skills/shaka/lib/shaka/installer.rb', __dir__), library)
-    FileUtils.cp(File.expand_path('../skills/shaka/lib/shaka/ruby_requirement.rb', __dir__), library)
+    %w[installer ruby_requirement call_log].each do |name|
+      FileUtils.cp(File.expand_path("../skills/shaka/lib/shaka/#{name}.rb", __dir__), library)
+    end
     FileUtils.cp_r(File.expand_path('../skills/shaka/lib/shaka/install', __dir__), library)
   end
 

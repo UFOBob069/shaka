@@ -106,7 +106,10 @@ When an update is due, finish active Shaka chats, fetch and apply it, then start
 ```
 
 The update stops without changing the checkout when it finds local changes or
-history that diverged from the recorded branch. To read an update before you
+history that diverged from the recorded branch. It also stops before fetching
+when the call log shows a Shaka call that ended in the last 15 minutes, because
+open chats read files the update would change. The stop names that call and its
+time. Add `--force` to update anyway. To read an update before you
 apply it, run `git fetch` in the checkout and compare `HEAD` with the recorded
 branch, which is `origin/main` unless you chose another.
 
