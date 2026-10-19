@@ -50,7 +50,8 @@ paths you own, or select a protected location. Preserve file contents and execut
 
 The installer prints an update reminder for every host and custom skills directory.
 
-Run `update-check` inside a Git checkout; without a known checkout boundary it skips the network call.
+`update-check` compares the checkout's HEAD commit with its registered origin branch from any folder. `drift` means
+the checkout moved; its guidance says whether `install --update` can record the move. An `unknown` result names its reason.
 Use the registered helper with your chosen path:
 
 ```bash

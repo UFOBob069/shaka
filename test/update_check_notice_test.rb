@@ -9,8 +9,9 @@ class UpdateCheckNoticeTest < Minitest::Test
 
   def check(ahead_by, oldest)
     answer = JSON.generate({ 'status' => 'ahead', 'ahead_by' => ahead_by, 'oldest' => oldest })
-    Shaka::UpdateCheck.new(source: SOURCE, branch: 'main', registered: true, helper: '/installed/shaka',
-                           runner: ->(*) { [answer, '', true] }).result
+    runner = ->(argv, _) { argv.first == 'git' ? ["#{'a' * 40}\n", '', true] : [answer, '', true] }
+    Shaka::UpdateCheck.new(source: SOURCE, branch: 'main', checkout: '/installed', helper: '/installed/shaka',
+                           runner:).result
   end
 
   def hours_ago(hours) = (Time.now - (hours * 3600)).utc.iso8601

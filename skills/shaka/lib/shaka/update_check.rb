@@ -5,14 +5,20 @@ require 'shellwords'
 require 'tmpdir'
 require_relative 'doctor/installation_identity'
 require_relative 'update_check/launch'
+require_relative 'update_check/messages'
 require_relative 'update_check/notice'
-require_relative 'workflow_version'
 
 module Shaka
-  # Advisory comparison with the official main branch; never changes an installation.
+  # Advisory comparison with the registered origin branch; never changes an installation.
   class UpdateCheck
+    include Messages
+
     ROOT = File.expand_path('../../../..', __dir__)
     GUIDE = 'https://github.com/shakacode/shaka/blob/main/skills/shaka/references/official-installation.md'
+    GITHUB = %r{\A(?:https://github\.com/|git@github\.com:|ssh://(?:git@)?github\.com/)
+                ([A-Za-z0-9-]+/[A-Za-z0-9._-]+?)(?:\.git)?/?\z}xi
+    BRANCH = %r{\A(?!-)[A-Za-z0-9._/-]+\z}
+    COMMIT = /\A[0-9a-f]{40}\z/
 
     def self.run(arguments)
       return usage(arguments) unless arguments.empty?
@@ -36,96 +42,99 @@ module Shaka
       raise Shaka::Error, 'Invalid installation record' if record && !record.is_a?(Hash)
 
       new(source: identity.fetch('source'), branch: record&.fetch('branch', nil) || 'main',
-          registered: !record.nil?, helper: File.join(ROOT, 'skills/shaka/scripts/shaka'))
+          helper: File.join(ROOT, 'skills/shaka/scripts/shaka'), checkout: (ROOT if record))
     end
 
     private_class_method :installed, :usage
 
-    def initialize(source:, branch:, registered:, helper:, runner: Launch.method(:capture))
+    # Only a registered installation has a checkout, and its comparison starts from the checkout's
+    # HEAD commit rather than the revision its record names.
+    def initialize(source:, branch:, helper:, checkout: nil, runner: Launch.method(:capture))
       @source = source
       @branch = branch
-      @registered = registered
       @helper = helper
+      @checkout = checkout
       @runner = runner
     end
 
     def result
       return answer('uninstalled', 'Use the official installer to receive update guidance.') if
         @source['kind'] == 'uninstalled'
-      return custom unless official?
+      return development unless @source['kind'] == 'revision'
 
-      compare
-    rescue Shaka::Error, JSON::ParserError, SystemCallError, TypeError
-      unknown
+      compare(@source['repository'].to_s[GITHUB, 1])
+    rescue Launch::Unavailable => e
+      unknown(e.reason, e.message)
+    rescue JSON::ParserError, TypeError
+      unknown('invalid_response', 'GitHub returned an answer this check cannot read.')
+    rescue Shaka::Error, SystemCallError => e
+      unknown('command_failed', "A local command failed: #{e.message}")
     end
 
     private
 
-    def official?
-      origin = @source['repository'].to_s
-      @source['kind'] == 'revision' && origin.match?(WorkflowVersion::UPSTREAM) && @branch == 'main' &&
-        @source['revision'].to_s.match?(/\A[0-9a-f]{40}\z/)
+    def recorded = @source['revision'].to_s
+
+    # The branch and repository name form an API path, so a `..` segment could address another endpoint.
+    def supported?(repository)
+      repository && !"#{repository}/#{@branch}".include?('..') && @branch.to_s.match?(BRANCH) &&
+        recorded.match?(COMMIT)
     end
 
-    def compare
-      endpoint = "repos/shakacode/shaka/compare/#{@source.fetch('revision')}...main"
-      output, _error, ok = @runner.call(['gh', 'api', '--hostname', 'github.com', endpoint, '--jq',
-                                         '{status: .status, ahead_by: .ahead_by, ' \
-                                         'oldest: .commits[0].commit.committer.date}'], Dir.tmpdir)
-      return unknown unless ok
+    def compare(repository)
+      return unsupported_source unless supported?(repository)
+
+      official = repository.casecmp?('shakacode/shaka') && @branch == 'main'
+      @target = official ? 'official main' : "#{repository} #{@branch}"
+      head = checkout_head
+      head == recorded || pulled?(head) ? github(repository, head) : not_a_pull(head)
+    end
+
+    def github(repository, head)
+      endpoint = "repos/#{repository}/compare/#{head}...#{@branch}"
+      output, error, ok = @runner.call(['gh', 'api', '--hostname', 'github.com', endpoint, '--jq',
+                                        '{status: .status, ahead_by: .ahead_by, ' \
+                                        'oldest: .commits[0].commit.committer.date}'], Dir.tmpdir)
+      return request_failed(error) unless ok
 
       response = JSON.parse(output)
-      return unknown unless response.is_a?(Hash)
+      raise TypeError unless response.is_a?(Hash)
 
-      comparison(response['status'], response['ahead_by'], response['oldest'])
+      comparison(response, head)
     end
 
-    def comparison(status, ahead_by, oldest)
-      case status
-      when 'identical' then answer('current', 'This installed revision matches official main.')
-      when 'ahead' then Notice.wait?(ahead_by, oldest) ? recent(ahead_by) : available(ahead_by)
-      when 'behind', 'diverged' then custom
-      else unknown
+    def checkout_head
+      return recorded unless @checkout
+
+      output, error, ok = git('rev-parse', '--verify', 'HEAD')
+      head = output.strip
+      return head if ok && head.match?(COMMIT)
+
+      raise Launch::Unavailable.new('checkout_unreadable', "Could not read #{@checkout}: #{first_line(error)}")
+    end
+
+    # The installer's own test (Install::CheckoutDrift#pulled?) for a move install --update records. It
+    # needs no network, and any other move stops the update whatever caused it.
+    def pulled?(head) = ancestor?(recorded, head) && ancestor?(head, "refs/remotes/origin/#{@branch}")
+
+    def ancestor?(older, newer)
+      _output, error, ok = git('merge-base', '--is-ancestor', older, newer)
+      return ok if ok || error.strip.empty?
+
+      raise Launch::Unavailable.new('checkout_unreadable', "Could not read #{@checkout}: #{first_line(error)}")
+    end
+
+    def git(*arguments) = @runner.call(['git', '-C', @checkout, *arguments], @checkout)
+
+    # Only an upstream lag waits for the notice threshold; a moved checkout needs action now.
+    def comparison(response, head)
+      ahead_by = response['ahead_by']
+      case response['status']
+      when 'identical' then head == recorded ? current : drift(head)
+      when 'ahead' then Notice.wait?(ahead_by, response['oldest']) ? recent(ahead_by) : available(ahead_by)
+      when 'behind', 'diverged' then @checkout ? branch_moved(head) : custom
+      else raise TypeError
       end
     end
-
-    def recent(count)
-      answer('recent', "#{lag(count)} #{Notice::GUIDANCE}").merge('commits_behind' => count)
-    end
-
-    # GitHub reports the comparison from the installed revision, so its ahead count is how far behind this is.
-    def available(ahead_by)
-      count = ahead_by if ahead_by.is_a?(Integer) && ahead_by.positive?
-      result = answer('available', "#{lag(count)} #{update_guidance}")
-      count ? result.merge('commits_behind' => count) : result
-    end
-
-    def lag(count)
-      return 'Newer official commits are available.' unless count
-
-      "This installation is #{count} #{count == 1 ? 'commit' : 'commits'} behind official main."
-    end
-
-    def update_guidance
-      unless @registered
-        return "This is a retained copy; follow #{GUIDE} to migrate. " \
-               'Keep trial and rollback copies for active chats.'
-      end
-
-      "Finish active Shaka chats, run #{Shellwords.escape(@helper)} install --update, then start a new chat. " \
-        'Continue this task with its saved helper.'
-    end
-
-    def custom
-      answer('custom', "Fork, trial, or development source: review upstream changes through #{GUIDE}. " \
-                       'Keep your chosen source and local changes; do not replace it automatically.')
-    end
-
-    def unknown
-      answer('unknown', 'Could not verify update availability. Continue the task and retry `update-check` later; ' \
-                        "manual update guidance: #{GUIDE}.")
-    end
-
-    def answer(status, guidance) = { 'status' => status, 'guidance' => guidance }
   end
 end
