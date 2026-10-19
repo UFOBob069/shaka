@@ -82,6 +82,9 @@ module Shaka
       rows.is_a?(Integer) && rows.positive? ? rows : RepositoryConfig::DEFAULT_PR_DESCRIPTION.fetch('max_human_comments')
     end
 
+    # The bound results Verification reports, or nil when description received none.
+    attr_reader :verdict
+
     NOTE = 'Local files remain local. This reports operation settings and cannot restore them. ' \
            'It does not prove earlier checks ran. Private merge.preference grants no Auto authority. ' \
            'Private trials default to Ask; explicit user authorization and live required gates govern merging.'

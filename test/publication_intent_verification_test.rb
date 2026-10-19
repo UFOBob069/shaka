@@ -16,7 +16,8 @@ class PublicationIntentVerificationTest < Minitest::Test
     intent = "## Intent\n\n**Why:** #{INTENT['why']}\n\n**Scope:** #{INTENT['scope']}\n\n" \
              "**Leaves out:** #{INTENT['leaves_out']}\n\n**Safe because:** #{INTENT['safe_because']}\n\n" \
              '**Review effort:** 2 of 5, easy: skim the diff.'
-    verification = "## Verification\n\n- #{VERIFICATION['checks'].first}\n\n" \
+    verification = "## Verification\n\n#{Shaka::VerificationGates::UNKNOWN}\n\n" \
+                   "- #{VERIFICATION['checks'].first}\n\n" \
                    "**Not verified:** #{VERIFICATION['not_verified']}"
     assert_includes rendered, intent
     assert_includes rendered, verification
@@ -53,10 +54,11 @@ class PublicationIntentVerificationTest < Minitest::Test
 
   def test_a_check_may_cite_a_command_or_a_link
     checks = ['Ran `bin/validate`: 3,047 tests, 0 failures.',
-              'Published on [#539](https://github.com/shakacode/shaka/pull/539): all 7 commits linked.']
+              'Published on [#539](https://github.com/shakacode/shaka/pull/539): all 7 commits linked.',
+              'Replied on [#553](<https://github.com/shakacode/shaka/pull/553#discussion_r1>): fixed.']
     rendered = render('verification' => VERIFICATION.merge('checks' => checks))
 
-    assert_includes rendered, "- #{checks.first}\n- #{checks.last}"
+    assert_includes rendered, checks.map { |check| "- #{check}" }.join("\n")
   end
 
   # A bug-fix PR put the cause in Why and left the symptom unstated.
@@ -93,7 +95,8 @@ class PublicationIntentVerificationTest < Minitest::Test
     rendered = render('wip' => HandoffFixtures::WIP,
                       'verification' => { 'checks' => [], 'not_verified' => 'Validation has not run yet.' })
 
-    assert_includes rendered, "## Verification\n\n**Not verified:** Validation has not run yet."
+    assert_includes rendered, "## Verification\n\n#{Shaka::VerificationGates::UNKNOWN}\n\n" \
+                              '**Not verified:** Validation has not run yet.'
   end
 
   def test_one_to_three_checks_are_allowed

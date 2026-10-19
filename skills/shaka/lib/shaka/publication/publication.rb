@@ -70,7 +70,7 @@ module Shaka
     def credit = PublicationLinks.credit(@settings)
 
     # Intent and verification answer whether to trust the merge, so they come before any section.
-    def intent_verification = IntentVerification.render(@content)
+    def intent_verification = IntentVerification.render(@content, @settings.verdict)
 
     # Verification carries the proof, so a table only adds facts that fit no check.
     def table

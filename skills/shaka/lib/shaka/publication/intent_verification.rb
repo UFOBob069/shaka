@@ -2,6 +2,7 @@
 
 require_relative '../error'
 require_relative 'text'
+require_relative 'verification_gates'
 
 module Shaka
   # Renders what a pull request is for and how it was proved, so a maintainer can decide whether to trust it.
@@ -20,13 +21,16 @@ module Shaka
     }.freeze
     CHECKS = (1..3)
     # A link opens the evidence and a code span names what ran; plain prose names neither.
-    EVIDENCE = %r{\]\(https?://[^)\s]+\)|`[^`]+`}
+    # GitHub also renders a link whose address sits in angle brackets.
+    EVIDENCE = %r{\]\(https?://[^)\s]+\)|\]\(<https?://[^>\s]+>\)|`[^`]+`}
 
     module_function
 
-    def render(content)
+    # The verdict binds the validation and review results; nil when description received none.
+    def render(content, verdict = nil)
       checks_allowed = content['wip'].nil? ? CHECKS : (0..CHECKS.max)
-      [intent(object(content, 'intent')), verification(object(content, 'verification'), checks_allowed)]
+      gate_line = VerificationGates.line(verdict, content['review'])
+      [intent(object(content, 'intent')), verification(object(content, 'verification'), checks_allowed, gate_line)]
     end
 
     def intent(spec)
@@ -46,9 +50,10 @@ module Shaka
       "**Review effort:** #{effort} of 5, #{zone}"
     end
 
-    def verification(spec, allowed)
+    def verification(spec, allowed, gate_line)
       not_verified = PublicationText.single_line(spec['not_verified'], 'verification not_verified')
-      ['## Verification', *checks(spec['checks'], allowed), "**Not verified:** #{not_verified}"].join("\n\n")
+      ['## Verification', gate_line, *checks(spec['checks'], allowed), "**Not verified:** #{not_verified}"]
+        .join("\n\n")
     end
 
     # An unfinished draft may have run nothing yet; Not verified then says why.
