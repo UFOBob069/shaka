@@ -69,13 +69,33 @@ module Shaka
     def self.first_executable(entries, name, candidate_root, drop_candidate)
       entries.each do |entry|
         directory = File.expand_path(entry.empty? ? '.' : entry)
-        executable = File.join(directory, name)
-        next unless File.file?(executable) && File.executable?(executable)
+        executable = executable_in(directory, name)
+        next unless executable
         next if drop_candidate && candidate_executable?(directory, executable, candidate_root)
 
         return executable
       end
       nil
+    end
+
+    # Unix finds an executable by its exact name. Windows runs gh.exe when the command is gh.
+    def self.executable_in(directory, name)
+      names = [name]
+      names.concat(windows_command_names(name)) if RUBY_PLATFORM.match?(/mswin|mingw/)
+      names.each do |candidate|
+        executable = File.join(directory, candidate)
+        return executable if File.file?(executable) && File.executable?(executable)
+      end
+      nil
+    end
+
+    def self.windows_command_names(name)
+      ENV.fetch('PATHEXT', '.COM;.EXE;.BAT;.CMD').split(';').filter_map do |suffix|
+        cleaned = suffix.strip
+        next if cleaned.empty? || cleaned == '.'
+
+        "#{name}#{cleaned}"
+      end
     end
 
     def self.candidate_executable?(directory, executable, candidate_root)

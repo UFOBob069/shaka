@@ -61,6 +61,20 @@ class OpeningPathGuardTest < Minitest::Test
     end
   end
 
+  def test_windows_finds_a_command_by_its_pathext_suffix
+    skip 'Windows command extensions' unless RUBY_PLATFORM.match?(/mswin|mingw/)
+
+    root = Dir.mktmpdir
+    safe = Dir.mktmpdir
+    File.write(File.join(safe, 'gh.exe'), '')
+    found = Shaka::LocalReviewPathGuard.safe_executable(safe, 'gh', root)
+    assert_equal File.realpath(safe), File.realpath(File.dirname(found))
+    assert_equal 'gh.exe', File.basename(found).downcase
+  ensure
+    FileUtils.remove_entry(root) if root && File.directory?(root)
+    FileUtils.remove_entry(safe) if safe && File.directory?(safe)
+  end
+
   def test_relative_shebang_interpreter_fails_closed
     with_candidate_link do |root, external, _safe|
       File.unlink(File.join(external, 'gh'))
