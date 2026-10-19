@@ -2,48 +2,30 @@
 
 require_relative 'install_scenario_support'
 
-# Source checkouts Shaka no longer supports: status names one command that replaces each one.
+# A source checkout that is a linked worktree is unsupported: status names one command that replaces it.
 class InstallStatusUnsupportedTest < Minitest::Test
   include InstallScenarioSupport
 
-  # The reinstall step must work: afterward the old checkout's record is the only thing left to retire.
-  def test_the_reinstall_step_replaces_the_old_location
-    old = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(old, '--directory', old, '--repository', @remote, '--agent', 'claude', '--with-rct')
-    run_step(status(old), 'E1')
-    report = status(default_path)
-    assert_equal ['C1', File.realpath(old)], report.values_at('state', 'location')
-    assert_equal File.join(File.realpath(default_path), 'skills/rct'),
-                 File.realpath(File.join(@home, '.claude/skills/rct'))
-  end
-
-  def test_a_source_checkout_that_is_a_linked_worktree_is_replaced
-    git('-C', @root, 'worktree', 'add', '-q', File.join(@directory, 'feature-tree'))
-    link = File.join(@home, '.claude/skills/shaka')
-    FileUtils.mkdir_p(File.dirname(link))
-    File.symlink(File.join(@directory, 'feature-tree/skills/shaka'), link)
-    report = status(@root)
-    assert_equal 'C3', report['state']
-    assert_includes report['next_command'], "rm -- #{Shellwords.escape(link)} && "
-    assert_includes report['next_command'], '--agent claude'
+  # The reinstall step must work: afterward the hosts use a fresh checkout with the same towers.
+  def test_the_reinstall_step_replaces_a_worktree_install
+    worktree_links('.claude/skills' => %w[shaka rct])
+    run_step(status(@root), 'C3')
+    assert_equal 'A5', status(default_path)['state']
+    assert_equal tower_in(default_path), File.realpath(File.join(@home, '.claude/skills/rct'))
   end
 
   # One command would give every host the union of their towers, so differing hosts get a decision.
   def test_hosts_with_different_towers_get_a_decision
-    old = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(old, '--directory', old, '--repository', @remote, '--agent', 'claude')
-    run_install(old, '--agent', 'codex', '--with-rct')
-    report = status(old)
-    assert_equal 'E1', report['state']
+    worktree_links('.claude/skills' => %w[shaka], '.agents/skills' => %w[shaka rct])
+    report = status(@root)
+    assert_equal 'C3', report['state']
     assert_includes report['decision'], 'one bin/install run per host'
   end
 
   def test_an_existing_default_directory_gets_a_decision
-    old = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(old, '--directory', old, '--repository', @remote)
+    worktree_links('.claude/skills' => %w[shaka])
     FileUtils.mkdir_p(File.join(default_path, 'leftover'))
-    report = status(old)
-    assert_equal ['E1', nil], report.values_at('state', 'next_command')
+    assert_equal ['C3', nil], status(@root).values_at('state', 'next_command')
   end
 
   private
@@ -52,5 +34,17 @@ class InstallStatusUnsupportedTest < Minitest::Test
     assert_equal state, report['state']
     output, process = Open3.capture2e(environment, 'sh', '-c', report['next_command'])
     assert_predicate process, :success?, output
+  end
+
+  def tower_in(root) = File.join(File.realpath(root), 'skills/rct')
+
+  # Host links into a linked worktree of the fixture checkout, as a manual link or old installer left them.
+  def worktree_links(hosts)
+    tree = File.join(@directory, 'feature-tree')
+    git('-C', @root, 'worktree', 'add', '-q', tree)
+    hosts.each do |directory, names|
+      FileUtils.mkdir_p(File.join(@home, directory))
+      names.each { |name| File.symlink(File.join(tree, 'skills', name), File.join(@home, directory, name)) }
+    end
   end
 end

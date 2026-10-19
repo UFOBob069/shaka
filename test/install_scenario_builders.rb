@@ -120,13 +120,6 @@ module BrokenInstallScenarios
     problem(root, nil)
   end
 
-  # The old default location, which is also where a project keeps its Shaka settings.
-  def build_e1
-    root = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(root, '--directory', root, '--repository', @remote)
-    problem(root, "git clone #{Shellwords.escape(@remote)} #{Shellwords.escape(default_path)}")
-  end
-
   # A split install: Claude uses one registered checkout and Cursor another.
   def build_c5
     root = default_install('--agent', 'claude')

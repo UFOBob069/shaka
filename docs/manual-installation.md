@@ -97,9 +97,9 @@ or the decision you need to make. For example, after a `git pull` inside the
 checkout it reports a manual pull and names `install --update`. When an older
 checkout still holds an install record but your links point at another
 checkout, it reports an orphan record and names the command that renames that
-record aside. A checkout at the old default `~/.agents/shaka`, or one that is a
-linked Git worktree, is unsupported; status names the one command that reinstalls
-Shaka into `~/.local/share/shaka/source` with the same agents. Below the state it
+record aside. A checkout that is a linked Git worktree is unsupported, because
+Git deletes it when its branch merges; status names the one command that
+reinstalls Shaka into `~/.local/share/shaka/source` with the same agents. Below the state it
 lists every Shaka link, checkout, and PR trial it found. `shaka doctor` shows the
 same state as its Install state check.
 

@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
+require 'open3'
 require 'shellwords'
 require_relative 'status_states'
 
 module Shaka
   module Install
-    # Reports source checkouts Shaka no longer supports, each with the one command that replaces it:
-    # clone into the default location, remove the old links, and install there with the same selections.
+    # Reports a source checkout that is a linked worktree with the one command that replaces it: clone
+    # into the default location, remove the old links, and install there with the same selections.
     class StatusUnsupported
       TOWERS = { 'rct' => '--with-rct', 'mct' => '--with-mct', 'mct-claude' => '--with-claude-towers',
                  'rct-claude' => '--with-claude-towers' }.freeze
@@ -18,32 +19,27 @@ module Shaka
       end
 
       def findings
-        old_location + @inventory.worktrees.map do |root|
+        @inventory.worktrees.map do |root|
           replace('C3', root, 'the source checkout is a linked worktree, which is deleted when its branch merges',
-                  selected(@inventory.links_to(root)))
+                  selected(root, @inventory.links_to(root)))
         end
       end
 
       private
 
-      def old_location
-        old = @inventory.real(@inventory.old_directory)
-        @inventory.checkouts.values.select { |checkout| checkout.root == old }.map do |checkout|
-          replace('E1', checkout.root, 'the source checkout sits at the settings path', recorded(checkout.record))
-        end
+      # The host folders and skills the worktree serves, and the origin to clone it from again.
+      def selected(root, links)
+        hosts = links.group_by { |link| File.dirname(link['path']) }
+        { 'directories' => hosts.keys, 'names' => links.map { |link| link['name'] },
+          'targets' => hosts.values.map { |group| group.map { |link| link['name'] }.sort },
+          'repository' => origin(root) }
       end
 
-      # The host folders and skill names the old checkout serves, from its record when it has one.
-      def recorded(record)
-        { 'directories' => record['targets'].map { |target| target['directory'] },
-          'names' => record['targets'].flat_map { |target| target['names'] },
-          'targets' => record['targets'].map { |target| target['names'].sort },
-          'repository' => record['repository'], 'branch' => record['branch'] }
-      end
-
-      def selected(links)
-        { 'directories' => links.map { |link| File.dirname(link['path']) },
-          'names' => links.map { |link| link['name'] } }
+      # Reading one config value runs no program the checkout's config names.
+      def origin(root)
+        output, process = Open3.capture2e(ENV.keys.grep(/\AGIT_/).to_h { |key| [key, nil] },
+                                          'git', '-C', root, 'config', '--get', 'remote.origin.url')
+        output.strip if process.success? && !output.strip.empty?
       end
 
       def replace(id, root, reason, selection)
