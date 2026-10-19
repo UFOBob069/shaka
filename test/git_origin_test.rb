@@ -45,6 +45,18 @@ class GitOriginTest < Minitest::Test
     assert_equal 'acme/repo', Shaka::GitOrigin.identity('ssh://git@ghe.example:2222/acme/repo.git')
   end
 
+  def test_identity_from_urls_with_a_trailing_slash_or_a_leading_scp_slash
+    %w[
+      https://github.com/acme/repo/
+      https://github.com/acme/repo.git/
+      git@github.com:acme/repo.git/
+      git@github.com:/acme/repo.git
+    ].each do |url|
+      assert_equal 'acme/repo', Shaka::GitOrigin.identity(url), url
+      assert_equal 'https://github.com/acme/repo', Shaka::GitOrigin.canonical_url(url), url
+    end
+  end
+
   def test_identity_from_scp_url_without_a_username
     assert_equal 'acme/repo', Shaka::GitOrigin.identity('ghe.example:acme/repo.git')
     assert_equal 'ssh://ghe.example/acme/repo',
