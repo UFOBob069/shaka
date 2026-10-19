@@ -83,6 +83,19 @@ class PublicationRegressionTest < Minitest::Test
     assert_includes error.message, 'usage'
   end
 
+  def test_timings_follow_the_usage_details_when_the_timeline_was_read
+    timeline = { 'opened' => Time.utc(2026, 10, 18, 8), 'merged' => Time.utc(2026, 10, 18, 9), 'labels' => [] }
+    rendered = Shaka::Publication.description(description_content, nil, nil, nil, timeline)
+    assert_operator rendered.index('<summary>Usage'), :<,
+                    rendered.index("<summary>Timings</summary>\n\n**Totals:** 1h 0m")
+    refute_includes Shaka::Publication.description(description_content), '<summary>Timings'
+  end
+
+  def test_timings_supplied_as_a_details_item_are_refused
+    item = { 'summary' => 'Timings', 'body' => '| Stretch | Time |' }
+    assert_raises(Shaka::Error) { Shaka::Publication.description(description_content('details' => [item])) }
+  end
+
   def test_a_separator_line_alone_does_not_count_as_a_usage_table
     decoy = { 'summary' => 'Usage',
               'body' => "Native usage is PARTIAL: 70 responses.\n\n| --- |" }

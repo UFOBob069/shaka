@@ -4,6 +4,7 @@ require_relative '../error'
 require_relative 'text'
 require_relative 'links'
 require_relative 'usage_details'
+require_relative 'timings_details'
 require_relative 'provenance'
 require_relative 'provenance_history'
 require_relative 'wip_details'
@@ -19,8 +20,9 @@ module Shaka
   # Renders the publication surfaces so headings, spacing, tables and details are Ruby's.
   class Publication
     # With the pull request being replaced, the provenance history carries forward from its body.
-    def self.description(content, workflow_version = nil, pull = nil, settings = nil)
-      new(content, description: true, workflow_version:, pull:, settings:)
+    # Callers pass content as a bare hash, so a keyword here would swallow it; every argument is positional.
+    def self.description(content, workflow_version = nil, pull = nil, settings = nil, timeline = nil) # rubocop:disable Metrics/ParameterLists
+      new(content, description: true, workflow_version:, pull:, settings:, timeline:)
         .render(%i[steps intent_verification sections table provenance skills_used details wip credit],
                 lead: %i[lead]).tap { QuotedMarkers.refuse!(content) }
     end
@@ -32,7 +34,7 @@ module Shaka
         "#{PublicationLinks.walkthrough_footer(content['head'], repository)}\n"
     end
 
-    def initialize(content, description: false, workflow_version: nil, pull: nil, settings: nil)
+    def initialize(content, description: false, workflow_version: nil, pull: nil, settings: nil, timeline: nil) # rubocop:disable Metrics/ParameterLists
       raise Error, 'Publication content must be an object.' unless content.is_a?(Hash)
 
       @content = content
@@ -40,6 +42,7 @@ module Shaka
       @workflow_version = workflow_version
       @pull = pull
       @settings = settings || PublicationSettings.new
+      @timeline = timeline
     end
 
     # A description leads with the maintainer's decision, so lead parts come before the summary.
@@ -104,17 +107,18 @@ module Shaka
     def details
       items = PublicationText.list(@content['details'], 'details')
       validate_details(items) if @description
-      items = [@settings.detail, *items] if @description
-      rendered = items.map { |detail| details_block(detail) }
-      rendered.unshift(details_block(UsageDetails.new(@content['usage']).detail)) if @description
-      rendered
+      items = [*helper_details, *items] if @description
+      items.map { |detail| details_block(detail) }
     end
+
+    # The helper renders these itself; timings follow usage, so cost and elapsed time sit together.
+    def helper_details = [UsageDetails.new(@content['usage']).detail, *TimingsDetails.for(@timeline), @settings.detail]
 
     def validate_details(items)
       UsageDetails.refuse_free_form!(items)
       refuse_free_form_wip(items)
       refuse_supplied_history(items)
-      [PublicationSettings, SkillsUsed].each { |validator| validator.refuse_free_form!(items) }
+      [PublicationSettings, SkillsUsed, TimingsDetails].each { |validator| validator.refuse_free_form!(items) }
     end
 
     # The note is optional because it disappears once GitHub confirms the outcome.
