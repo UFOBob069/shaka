@@ -92,17 +92,18 @@ offline:
 "$HOME/.agents/shaka/skills/shaka/scripts/shaka" install --status
 ```
 
-It prints one state, where it found it, and either the one command to run next
-or the decision you need to make. For example, after a `git pull` inside the
-checkout it reports a manual pull and names `install --update`. When an older
-checkout still holds an install record but your links point at another
-checkout, it reports an orphan record and names the command that renames that
-record aside. A checkout that is a linked Git worktree is unsupported, because
-it goes away when its branch is cleaned up; status names the command that
-reinstalls Shaka into `~/.local/share/shaka/source` with the same agents, or the
-decision to make when one command cannot reproduce the install. Below the state it
-lists every Shaka link, checkout, and PR trial it found. `shaka doctor` shows the
-same state as its Install state check.
+It names the state, where it found it, and the one command for you to run next,
+or the decision you need to make. For example:
+
+- After a `git pull` inside the checkout, it names `install --update`.
+- When an older checkout still holds an install record that your links no longer
+  use, it names the command that renames that record aside.
+- When your links point into a linked Git worktree, which disappears when its
+  branch is cleaned up, it names the command that reinstalls Shaka into
+  `~/.local/share/shaka/source`.
+
+Below the state it lists the links, checkouts, and PR trials it found.
+`shaka doctor` reports the same state.
 
 Shaka tells you when an update is available once your installation is three
 commits behind, or when the oldest change you lack is a day old, so a busy
