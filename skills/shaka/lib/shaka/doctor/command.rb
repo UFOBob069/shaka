@@ -31,8 +31,10 @@ module Shaka
         validate_probe_ref!(options)
         return unless options.key?(:probe_timeout) || options[:ref]
 
-        raise OptionParser::InvalidArgument, '--probe-timeout-seconds requires --probe-reviewers' unless
-          options[:probe_reviewers]
+        unless options[:probe_reviewers]
+          flag = options.key?(:probe_timeout) ? '--probe-timeout-seconds' : '--ref'
+          raise OptionParser::InvalidArgument, "#{flag} requires --probe-reviewers"
+        end
         return unless options.key?(:probe_timeout)
 
         raise OptionParser::InvalidArgument, '--probe-timeout-seconds must be 1..120' unless

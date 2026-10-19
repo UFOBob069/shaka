@@ -47,6 +47,18 @@ class DoctorCliTest < Minitest::Test
     end
   end
 
+  def test_each_probe_only_flag_names_itself_without_probe_reviewers
+    { %w[--ref HEAD] => '--ref', %w[--probe-timeout-seconds 1] => '--probe-timeout-seconds' }.each do |arguments, flag|
+      error = StringIO.new
+      original = $stderr
+      $stderr = error
+      assert_equal 1, Shaka::Doctor.run(arguments)
+      assert_includes error.string, "#{flag} requires --probe-reviewers"
+    ensure
+      $stderr = original
+    end
+  end
+
   private
 
   def capture_doctor(path, root)
