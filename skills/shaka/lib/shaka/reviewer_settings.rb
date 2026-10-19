@@ -1,35 +1,37 @@
 # frozen_string_literal: true
 
+require_relative 'usage/rate_card'
+require_relative 'repository_config/post_implementation_schema'
+
 module Shaka
   # Names Shaka already prices or has seen a reviewer CLI accept.
   # Known spelling is not evidence that an account can use a model.
+  # Codex and Claude read their models from the installed rate card and their efforts
+  # from the checkpoint schema, so a newly priced model or accepted level is known here too.
   module ReviewerCatalog
     Entry = Data.define(:models, :efforts, :closed_effort)
 
-    ENTRIES = {
+    # Neither is priced in the rate card; grok-4.5 is a name the reviewer CLI accepted.
+    LISTED = {
       'deepseek/openrouter' => Entry.new(
         models: ['deepseek/deepseek-v4.1-flash'], efforts: %w[low high max], closed_effort: true
       ),
-      'openai/codex' => Entry.new(
-        models: %w[gpt-5.6-terra gpt-5.6-sol gpt-6-astra gpt-6-sol gpt-6-luna],
-        efforts: %w[low medium high xhigh],
-        closed_effort: false
-      ),
-      'anthropic/claude' => Entry.new(
-        models: %w[claude-fable-5-1 claude-fable-5 claude-opus-5-5 claude-opus-5 claude-opus-4-8
-                   claude-opus-4-7 claude-opus-4-6 claude-opus-4-5 claude-sonnet-5 claude-sonnet-4-6
-                   claude-sonnet-4-5 claude-haiku-4-5],
-        efforts: %w[low medium high xhigh max],
-        closed_effort: true
-      ),
       'xai/grok' => Entry.new(
         models: %w[grok-4.5 grok-4.6 grok-4.7],
-        efforts: %w[low medium high],
+        efforts: RepositoryConfig::PostImplementationSchema::EFFORTS.fetch('xai/grok'),
         closed_effort: false
       )
     }.freeze
 
-    def self.entry(identity) = ENTRIES[identity]
+    PRICED = { 'openai/codex' => ['openai', false], 'anthropic/claude' => ['anthropic', true] }.freeze
+
+    def self.entry(identity)
+      return LISTED[identity] unless PRICED.key?(identity)
+
+      provider, closed_effort = PRICED.fetch(identity)
+      Entry.new(models: RateCard.installed.model_names(provider),
+                efforts: RepositoryConfig::PostImplementationSchema::EFFORTS.fetch(identity), closed_effort:)
+    end
   end
 
   # Compares one configured reviewer model and effort with the catalog.

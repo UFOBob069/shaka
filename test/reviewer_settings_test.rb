@@ -69,9 +69,17 @@ class ReviewerSettingsTest < Minitest::Test
     assert_empty notices('openai/codex', model: 'gpt-6-astra', effort: 'medium')
   end
 
-  def test_the_recommended_model_and_a_listed_effort_are_quiet
-    assert_empty notices('openai/codex', model: 'gpt-6-sol', effort: 'medium')
+  def test_the_packaged_default_reviewer_settings_are_quiet
+    defaults = Shaka::Defaults.fetch('review', 'post_implementation')
+
+    assert_empty notices(defaults.fetch('reviewer'), model: defaults.fetch('model'), effort: defaults.fetch('effort'))
     assert_empty notices('anthropic/claude', model: 'claude-opus-5-5', effort: 'max')
+  end
+
+  def test_every_effort_the_checkpoint_schema_accepts_is_quiet
+    Shaka::RepositoryConfig::PostImplementationSchema::EFFORTS.each do |identity, efforts|
+      efforts.each { |effort| assert_empty notices(identity, effort:), "#{identity} #{effort}" }
+    end
   end
 
   def test_doctor_warns_about_a_misspelled_model

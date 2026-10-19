@@ -93,6 +93,7 @@ module Shaka
     def openai_threshold = dig('openai', 'threshold')
     def openai_verified = dig('openai', 'verified')
     def openai_model?(model) = models('openai').key?(model.to_s)
+    def model_names(provider) = models(provider).keys
 
     def cursor_rate(model, billing) = dig('cursor', 'models', model, billing)
     def cursor_threshold(model) = dig('cursor', 'models', model, 'threshold')
