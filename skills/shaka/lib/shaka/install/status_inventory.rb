@@ -9,9 +9,10 @@ module Shaka
     class StatusInventory
       attr_reader :home, :source, :checkouts, :links, :unreadable
 
-      def initialize(source:, home:)
+      def initialize(source:, home:, directory: nil)
         @home = home
         @source = real(source) || File.expand_path(source)
+        @directory = directory
         @checkouts = {}
         @unreadable = {}
         discover
@@ -29,7 +30,8 @@ module Shaka
 
       def trials = entries(trial_directory).select { |path| File.directory?(path) }
 
-      def managed?(owner) = owner && File.dirname(owner) == real(managed_directory)
+      # By folder name, so a copy made with a custom --managed-dir is recognized too.
+      def managed?(owner) = owner && File.basename(owner).match?(Package::ID_PATTERN)
       def managed_links = @links.select { |link| managed?(owner(link)) }
       def link_at(path) = @links.find { |link| link['path'] == path } || { 'resolved' => real(path) }
 
@@ -51,7 +53,7 @@ module Shaka
       private
 
       def discover
-        candidates = [@source, default_directory]
+        candidates = [@source, default_directory, *@directory]
         loop do
           candidates.each { |root| register(root) }
           @links = scan

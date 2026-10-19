@@ -122,7 +122,7 @@ module Shaka
       end
 
       def status
-        status = Status.new(source: @source)
+        status = Status.new(source: @source, directory: @options[:directory])
         report = status.call
         puts @options[:json] ? JSON.pretty_generate(report) : status.render(report)
       end

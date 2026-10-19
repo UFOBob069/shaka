@@ -13,6 +13,10 @@ module Shaka
     class StatusCheckout
       include StatusGit
       include StatusRevision
+
+      # DirectorySafety's reasons for a writable directory; the rest of its message is the path.
+      WRITABLE = [' is group or world writable without a sticky bit protecting your directory',
+                  ' is group or world writable'].freeze
       include DirectorySafety
 
       attr_reader :root, :record
@@ -40,8 +44,9 @@ module Shaka
         [@root, File.join(@root, '.git')].each { |path| verify_safe_directory(path, 'Installation directory') }
         nil
       rescue ArgumentError => e
-        path = e.message.split(': ', 2).last.sub(/ (is|cannot) .*\z/m, '')
-        return finding('B10', e.message, command: "chmod go-w #{command(path)}") if e.message.include?('writable')
+        offending = e.message.sub(/\A[^:]*: /, '')
+        path = WRITABLE.map { |reason| offending.delete_suffix(reason) }.find { |trimmed| trimmed != offending }
+        return finding('B10', e.message, command: "chmod go-w #{command(path)}") if path
 
         finding('B10', e.message, decision: 'Move the installation to a directory you own, then rerun bin/install.')
       end

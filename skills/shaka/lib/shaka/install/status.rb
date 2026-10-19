@@ -10,8 +10,8 @@ module Shaka
     # Names the installation state with one next step. Read-only and offline: it never fetches,
     # creates a directory, or rewrites a record or link.
     class Status
-      def initialize(source:, home: Dir.home)
-        @inventory = StatusInventory.new(source:, home:)
+      def initialize(source:, directory: nil, home: Dir.home)
+        @inventory = StatusInventory.new(source:, directory:, home:)
         @healthy = StatusHealthy.new(@inventory)
       end
 

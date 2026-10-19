@@ -40,9 +40,10 @@ module Shaka
         targets = targets_for(action)
         links = targets.map { |target| links_for(target) }
         links.each { |entry| entry.check(@checkout.root) }
+        # Recorded first, so an update can verify the checkout when the earlier recorded Ruby is gone.
+        record_ruby
         update(targets) if action == :update && !@checkout.pending?
         @checkout.save(targets, identity(targets))
-        record_ruby
         switch_links(links)
         verify(targets)
       end
