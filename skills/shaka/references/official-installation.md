@@ -77,7 +77,8 @@ completes on the next installation or update run.
 
 Finish active Shaka chats before updating this mutable path. Update stops before fetching when the
 call log shows a call that ended in the last 15 minutes; relay that stop, and add `--force` only when
-the user confirms no other Shaka chat is open. Doctor reads recorded identity;
+the user confirms no other Shaka chat is open. Passing the check does not show that chats are closed;
+the log misses idle chats and running calls. Doctor reads recorded identity;
 verification rechecks it. Project settings use [repository migration](migration.md).
 
 ## Migrate retained-copy installations
