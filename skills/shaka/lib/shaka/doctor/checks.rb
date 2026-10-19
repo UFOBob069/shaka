@@ -5,8 +5,8 @@ require 'rubygems/version'
 require_relative '../error'
 require_relative '../ruby_requirement'
 require_relative '../configuration'
-require_relative '../reviewer_settings'
 require_relative 'check'
+require_relative 'configured_reviewers'
 require_relative 'machine_alias'
 require_relative 'usage_source'
 require_relative 'reviewer_clis'
@@ -109,10 +109,7 @@ module Shaka
               guidance: 'Repair the repository seam, then run doctor again.')
       end
 
-      def configured_notices
-        config = Configuration.worktree(root: @root)
-        Array(config.review['local_review_agents']).flat_map { |entry| notices_for(entry) }
-      end
+      def configured_notices = ConfiguredReviewers.notices(Configuration.worktree(root: @root))
 
       def setting_status(notices) = notices.any? { |n| n.fetch('severity') == 'failed' } ? 'failed' : 'degraded'
 
@@ -123,13 +120,6 @@ module Shaka
       def setting_summary(notices) = notices.map { |notice| notice.fetch('summary') }.join(' ')
 
       def setting_guidance(notices) = notices.map { |notice| notice.fetch('guidance') }.uniq.join(' ')
-
-      def notices_for(entry)
-        return [] unless entry.is_a?(Hash)
-
-        identity = entry.values_at('provider', 'model_family').join('/').downcase
-        ReviewerSettings.notices(identity, model: entry['model'], effort: entry['effort'])
-      end
 
       # This reads the working tree. Doctor takes no authority from the seam, and the workflow
       # revalidates policy from a trusted ref.
