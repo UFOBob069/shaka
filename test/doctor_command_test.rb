@@ -11,6 +11,7 @@ class DoctorCommandTest < Minitest::Test
   include DoctorCommandHelper
 
   def test_a_command_that_never_answers_returns_at_its_deadline
+    need_groups
     elapsed, (out, error, ok) = timed { run_bounded(0.2, %w[sleep 30]) }
 
     refute ok
@@ -22,6 +23,7 @@ class DoctorCommandTest < Minitest::Test
 
   # A killed child that is never reaped is a zombie, and Process.kill(0) still finds it.
   def test_a_timeout_leaves_no_surviving_child
+    need_groups
     Dir.mktmpdir do |dir|
       path = File.join(dir, 'pid')
       _out, _error, ok = run_bounded(0.2, ['sh', '-c', "echo $$ > #{path}; sleep 30"])
@@ -36,6 +38,7 @@ class DoctorCommandTest < Minitest::Test
   # SIGKILL cannot be made to fail from a test, so the signal is neutralized instead: without
   # a bound on the join, this waits the child's full thirty seconds.
   def test_expiry_returns_even_when_the_signal_does_not_land
+    need_groups
     Dir.mktmpdir do |dir|
       path = File.join(dir, 'pid')
       command = UnkillableCommand.new(timeout: 0.2)
@@ -52,6 +55,7 @@ class DoctorCommandTest < Minitest::Test
   # Ctrl-C reaches this process, not the group it isolated, so leaving on an exception has to
   # take the child with it rather than strand what the deadline existed to bound.
   def test_an_interrupted_call_does_not_strand_its_child
+    need_groups
     command = InterruptedCommand.new(timeout: 30)
 
     assert_raises(Interrupt) { command.call(%w[sleep 30]) }
@@ -61,6 +65,7 @@ class DoctorCommandTest < Minitest::Test
   # The narrowest window: an interrupt arriving after the child exists and before the call has
   # recorded it. The child is in its own group, so no Ctrl-C will ever reach it.
   def test_an_interrupt_inside_the_spawn_does_not_strand_the_child
+    need_groups
     command = InterruptedInsideSpawnCommand.new(timeout: 30)
 
     assert_raises(Interrupt) { command.call(%w[sleep 30]) }
@@ -70,6 +75,7 @@ class DoctorCommandTest < Minitest::Test
   # The leader can be gone while a descendant holds the pipes, so liveness of the leader is
   # the wrong thing to condition cleanup on.
   def test_an_interrupt_after_the_leader_exits_still_takes_the_group
+    need_groups
     Dir.mktmpdir do |dir|
       path = File.join(dir, 'pid')
       command = InterruptedCommand.new(timeout: 30, after: 0.3)
@@ -82,6 +88,7 @@ class DoctorCommandTest < Minitest::Test
 
   # A child can close both pipes and keep running, so the wait after draining is bounded too.
   def test_a_child_that_closes_its_pipes_and_keeps_running_is_still_bounded
+    need_groups
     elapsed, (_out, _error, ok) = timed { run_bounded(0.3, ['sh', '-c', 'exec 1>&- 2>&-; sleep 30']) }
 
     refute ok
@@ -91,6 +98,7 @@ class DoctorCommandTest < Minitest::Test
   # The leader can exit and be reaped while a descendant holds the pipes open, so the group
   # must be addressed by the pid it was created with rather than looked up at expiry.
   def test_a_timeout_kills_a_descendant_that_outlived_the_leader
+    need_groups
     Dir.mktmpdir do |dir|
       path = File.join(dir, 'pid')
       _out, _error, ok = run_bounded(0.5, ['sh', '-c', "sh -c 'echo $$ > #{path}; sleep 30' &"])
@@ -121,6 +129,7 @@ class DoctorCommandTest < Minitest::Test
   end
 
   def test_a_command_that_answers_returns_its_streams_separately
+    need_groups
     out, error, ok = run_bounded(10, ['sh', '-c', 'printf hello; printf oops >&2'])
 
     assert ok
@@ -129,6 +138,7 @@ class DoctorCommandTest < Minitest::Test
   end
 
   def test_a_failing_command_reports_failure_with_its_error
+    need_groups
     _out, error, ok = run_bounded(10, ['sh', '-c', 'echo bad >&2; exit 3'])
 
     refute ok
@@ -136,6 +146,7 @@ class DoctorCommandTest < Minitest::Test
   end
 
   def test_the_child_runs_where_asked_without_moving_this_process
+    need_groups
     Dir.mktmpdir do |dir|
       here = Dir.pwd
       out, _error, ok = run_bounded(10, %w[pwd], dir)
@@ -149,5 +160,84 @@ class DoctorCommandTest < Minitest::Test
   # checks.rb turns SystemCallError into that check's answer, so it must still arrive.
   def test_a_command_that_cannot_launch_raises_for_its_caller
     assert_raises(SystemCallError) { run_bounded(10, ['definitely-not-a-command-4f2d']) }
+  end
+
+  # The same deadline, without a process group. This is the path that used to raise
+  # ArgumentError from `pgroup` before any command ran.
+  def test_a_timeout_returns_without_process_groups
+    skip_with_groups
+    elapsed, (out, error, ok) = timed { run_bounded(0.2, ['ruby', '-e', 'sleep 30']) }
+
+    refute ok
+    assert_operator elapsed, :<, 5, 'the configured deadline was not closely honored'
+    assert_operator elapsed, :>=, 0.2, 'the command gave up before its deadline'
+    assert_empty out
+    assert_includes error, '0.2'
+  end
+
+  def test_a_timeout_leaves_no_surviving_child_without_process_groups
+    skip_with_groups
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, 'pid')
+      script = "File.write(#{path.dump}, Process.pid.to_s); sleep 30"
+      _out, _error, ok = run_bounded(0.3, ['ruby', '-e', script])
+      refute ok
+
+      refute_alive(pid_in(path), 'expiry left the child running')
+    end
+  end
+
+  def test_a_timeout_kills_a_descendant_without_process_groups
+    skip_with_groups
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, 'pid')
+      script = "child = Process.spawn(RbConfig.ruby, '-e', 'sleep 30'); " \
+               "File.write(#{path.dump}, child.to_s); Process.detach(child); sleep 30"
+      _out, _error, ok = run_bounded(0.5, ['ruby', '-e', script])
+      refute ok
+
+      refute_alive(pid_in(path), 'a descendant outlived the deadline')
+    end
+  end
+
+  def test_an_interrupted_call_does_not_strand_its_child_without_process_groups
+    skip_with_groups
+    command = InterruptedCommand.new(timeout: 30)
+
+    assert_raises(Interrupt) { command.call(['ruby', '-e', 'sleep 30']) }
+    refute_alive(command.spawned, 'an interrupted call stranded its child')
+  end
+
+  def test_a_command_that_answers_returns_its_streams_separately_without_process_groups
+    skip_with_groups
+    out, error, ok = run_bounded(10, ['ruby', '-e', 'print "hello"; $stderr.print "oops"'])
+
+    assert ok
+    assert_equal 'hello', out
+    assert_equal 'oops', error
+  end
+
+  def test_the_child_runs_where_asked_without_process_groups
+    skip_with_groups
+    Dir.mktmpdir do |dir|
+      here = Dir.pwd
+      out, _error, ok = run_bounded(10, ['ruby', '-e', 'print Dir.pwd'], dir)
+
+      assert ok
+      assert_equal File.realpath(dir), File.realpath(out.strip)
+      assert_equal here, Dir.pwd
+    end
+  end
+
+  private
+
+  def need_groups
+    return if Shaka::Doctor::BoundedCommand.process_groups?
+
+    skip 'needs a process group, which this platform cannot create'
+  end
+
+  def skip_with_groups
+    skip 'process groups cover this' if Shaka::Doctor::BoundedCommand.process_groups?
   end
 end
