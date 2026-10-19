@@ -71,17 +71,29 @@ class GitHubWalkthroughNotesTest < Minitest::Test
      response(rules)]
   end
 
-  def note_publish_responses(stored, *extra)
-    [snapshot_response, files_response, *gate_responses, html_response, html_response('<p>Start here.</p>'),
-     *resolution_responses, review_response, review_response, response(stored), *extra]
+  # GitHub lists the stored notes 100 to a page.
+  def note_publish_responses(stored, *extra, notes: 1)
+    rendered = Array.new(notes) { html_response('<p>Start here.</p>') }
+    pages = stored.empty? ? [response([])] : stored.each_slice(100).map { |page| response(page) }
+    [snapshot_response, files_response, *gate_responses, html_response, *rendered,
+     *resolution_responses, review_response, review_response, *pages, *extra]
   end
+
+  def note_page(page) = "repos/owner/repo/pulls/42/reviews/123/comments?per_page=100&page=#{page}"
 
   def test_notes_are_posted_as_inline_comments_of_the_same_review
     stored = [{ 'path' => CHANGED_FILE, 'body' => NOTE['body'] }]
     github = client(*note_publish_responses(stored, snapshot_response, response([])))
     github.walkthrough(head: HEAD, body: WALKTHROUGH, notes: [NOTE])
     assert_equal [NOTE], JSON.parse(posted_review.last)['comments']
-    assert(@calls.any? { |argv, _| argv.include?('repos/owner/repo/pulls/42/reviews/123/comments?per_page=100') })
+    assert(@calls.any? { |argv, _| argv.include?(note_page(1)) })
+  end
+
+  def test_notes_past_the_first_page_are_verified
+    stored = Array.new(101) { NOTE.slice('path', 'body') }
+    github = client(*note_publish_responses(stored, snapshot_response, response([]), notes: 101))
+    github.walkthrough(head: HEAD, body: WALKTHROUGH, notes: Array.new(101) { NOTE })
+    assert(@calls.any? { |argv, _| argv.include?(note_page(2)) })
   end
 
   def posted_review

@@ -79,6 +79,13 @@ class WalkthroughNotesTest < Minitest::Test
     end
   end
 
+  def test_more_notes_than_publication_can_read_back_are_refused
+    note = { 'path' => 'lib/package.rb', 'from' => 'def stage', 'body' => 'x' }
+    content = { 'head' => HEAD, 'identity' => IDENTITY, 'notes' => Array.new(1001) { note } }
+    error = assert_raises(Shaka::Error) { Shaka::Walkthrough::Notes.resolve(content, github) }
+    assert_equal 'A walkthrough takes at most 1000 notes; this one has 1001.', error.message
+  end
+
   # The comment reader leaves agent posts out of the Human comments list by their opening.
   def test_a_note_opens_as_an_agent_post
     body = notes({ 'path' => 'lib/package.rb', 'from' => 'def publish', 'body' => 'Skim this.' }).first['body']

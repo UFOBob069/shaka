@@ -40,8 +40,8 @@ module Shaka
       private
 
       def note_roots(review)
-        path = "repos/#{@github.repository}/pulls/#{@github.number}/reviews/#{review['id']}/comments?per_page=100"
-        @github.api_list(path).filter_map do |comment|
+        path = "repos/#{@github.repository}/pulls/#{@github.number}/reviews/#{review['id']}"
+        Notes.stored(@github, path).filter_map do |comment|
           comment['id'] if comment['in_reply_to_id'].nil? && comment.dig('user', 'login') == @account &&
                            comment['body'].to_s.start_with?(Notes::MARKER)
         end

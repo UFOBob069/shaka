@@ -55,7 +55,7 @@ module Shaka
     def verify_notes(id, notes)
       return if notes.empty?
 
-      stored = api_list("#{reviews_path}/#{id}/comments?per_page=100").map { |note| note.values_at('path', 'body') }
+      stored = Walkthrough::Notes.stored(self, "#{reviews_path}/#{id}").map { |note| note.values_at('path', 'body') }
       return if stored.sort == notes.map { |note| note.values_at('path', 'body') }.sort
 
       raise Error, "Published walkthrough review #{id} did not keep its #{notes.size} notes."

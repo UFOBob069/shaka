@@ -2,6 +2,7 @@
 
 require_relative '../error'
 require_relative '../publication/text'
+require_relative '../public_comments/bounded_list'
 require_relative 'code_links'
 
 module Shaka
@@ -13,13 +14,24 @@ module Shaka
     module Notes
       MARKER = '<!-- shaka:walkthrough-note -->'
       FIELDS = %w[path from to block body].freeze
+      # Publication reads the posted notes back to verify them, so it refuses more than that
+      # listing can return before anything is posted.
+      PAGES = 10
+      LIMIT = PAGES * PublicComments::BoundedList::PAGE_SIZE
 
       module_function
+
+      # The inline comments of one walkthrough review, across every page.
+      def stored(github, review_path)
+        PublicComments::BoundedList.new(github, max_pages: PAGES, label: 'Walkthrough note listing')
+                                   .call("#{review_path}/comments")
+      end
 
       def resolve(content, github)
         notes = content.fetch('notes', [])
         raise Error, 'Walkthrough notes must be a list.' unless notes.is_a?(Array)
         return [] if notes.empty?
+        raise Error, "A walkthrough takes at most #{LIMIT} notes; this one has #{notes.size}." if notes.size > LIMIT
 
         locator = CodeLinks.new({}, github, content.fetch('head'))
         identity = PublicationText.identity(content['identity'])
