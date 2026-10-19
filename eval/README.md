@@ -13,6 +13,8 @@ This index links comparison reports and harness attempts. It prevents a harness 
 successful skill evaluation or repeated without a changed hypothesis.
 Prepared tier 1 tasks can use the [native decision replay API](decision-replays.md)
 for accounting, fingerprint capture and exact ordered-action scoring.
+The future tier 3 driver can retain [protected review readbacks](delivery-readback.md);
+its complete delivery protocol and qualification remain unbuilt.
 
 | Experiment | Evidence | Outcome |
 | --- | --- | --- |

@@ -635,7 +635,10 @@ Decision. Tier 3 keeps the proposal's rule: one fresh repository per measured ce
 created from a template with a shallow clone at the base commit and no future refs,
 retained afterward as history, with temporary access removed. Fixture repositories
 stay in the dedicated eval organization, never in `shakacode`. Hidden assets never
-enter them. The public-versus-private choice is open (see below); the tier split in
+enter them. The maintainer selected public mechanics qualification and Free-plan private
+Ask measured cells with seam-required checks on 2026-10-18. Paid private
+protection remains required before Auto cells. This selects the existing
+recommendation; provisioning and isolation are not yet qualified. The tier split in
 D3 confines its consequences to the weekly delivery tasks.
 
 ### D14. Where the code and records live
@@ -713,7 +716,10 @@ What it does not provide, checked the same way:
   drops no capabilities, and it copies the skill into the agent's own configuration
   directory, where the agent can change it. The proposal's lessons on process
   reaping and a read-only trusted skill still apply.
-- The tier 3 driver. The proposal's driver posts head-bound reviews during the run
+- The tier 3 driver. A [protected review readback API](../../eval/delivery-readback.md)
+  now retains native IDs, bodies, digests and timestamps and detects later changes.
+  It does not grade the Ask protocol or qualify an executor. The proposal's driver
+  posts head-bound reviews during the run
   and reads GitHub state back. Tier 3 stays on that driver, and the spike does not
   test it.
 
@@ -1067,7 +1073,10 @@ human question is the cap, not whether there is one.
 
 ## Open decisions
 
-1. Fixture repository organization and visibility. The question is tier 3 only.
+1. Resolved on 2026-10-18: use the existing `shaka-eval-repos` organization,
+   public mechanics qualification and Free-plan private Ask measured cells with
+   seam-required checks; use paid private protection before Auto cells. The
+   alternatives considered for tier 3 were:
    Options: keep public repositories and accept that solved cells leak into the
    public record and into training data, with hidden assets private; move measured
    cells to private repositories on a paid Team plan, which restores GitHub-required
@@ -1109,7 +1118,8 @@ human question is the cap, not whether there is one.
    which provider order does the strong tier rotate?
 3. Which model family is the judge, and is a third family available for provider-axis
    diffs?
-4. Public, Free-plan private, or paid private for tier 3 measured cells?
+4. Resolved on 2026-10-18: public qualification and Free-plan private Ask
+   measured cells; paid private protection before Auto. See D13.
 5. What is the release cadence, and is a release candidate a tag the nightly creates
    or one the maintainer creates?
 6. Which existing artifacts seed the core bank: which past PRs, which review

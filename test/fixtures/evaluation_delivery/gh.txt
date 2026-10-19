@@ -1,0 +1,10 @@
+require 'json'
+request = JSON.parse(STDIN.read)
+File.write(File.join(__dir__, 'request.json'), JSON.generate({argv: ARGV, request: request}))
+content = File.binread(File.join(__dir__, 'response.json'))
+if content == 'hang'
+  File.write(File.join(__dir__, 'pid'), Process.pid)
+  sleep 60
+end
+abort 'private-error-do-not-retain' if content == 'failure'
+STDOUT.write(content)
