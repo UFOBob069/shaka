@@ -14,6 +14,8 @@ module Shaka
       # DirectorySafety's reasons for a writable directory; the rest of its message is the path.
       WRITABLE = [' is group or world writable without a sticky bit protecting your directory',
                   ' is group or world writable'].freeze
+      OWNERSHIP = 'Make your account the owner of the skill files (chown needs that account or root), ' \
+                  'then rerun status.'
 
       private
 
@@ -28,20 +30,37 @@ module Shaka
         finding('B10', e.message, decision: 'Move the installation to a directory you own, then rerun bin/install.')
       end
 
-      # Installation verification refuses these same modes, so status names them before it does.
+      # Installation verification refuses these same files; each kind gets a step that can fix it.
       def unsafe_files
         skills = File.join(@root, 'skills')
-        # A symlink's own mode is meaningless and chmod cannot change it; the installer refuses symlinks itself.
-        path = skill_paths(skills).find { |entry| !File.symlink?(entry) && unprotected?(File.lstat(entry)) }
-        return unless path
-
-        finding('B10', "#{path} is group or world writable or owned by another account",
-                command: "chmod -R go-w #{Shellwords.escape(skills)}")
+        paths = skill_paths(skills)
+        symlink(paths) || foreign(paths) || writable(paths, skills)
       rescue SystemCallError
         nil
       end
 
-      # The installer's own file list: it leaves out ignored files and refuses symlinks on its own.
+      def symlink(paths)
+        link = paths.find { |path| File.symlink?(path) }
+        return unless link
+
+        finding('B10', "#{link} is a symlink, which installation refuses", decision: "Move #{link} out of the skill.")
+      end
+
+      def foreign(paths)
+        path = paths.find { |entry| !owned?(entry) }
+        finding('B10', "#{path} is owned by another account", decision: OWNERSHIP) if path
+      end
+
+      def writable(paths, skills)
+        path = paths.find { |entry| File.lstat(entry).mode.anybits?(0o022) }
+        return unless path
+
+        finding('B10', "#{path} is group or world writable", command: "chmod -R go-w #{Shellwords.escape(skills)}")
+      end
+
+      def owned?(path) = trusted_owner?(File.lstat(path))
+
+      # The installer's own file list, which leaves out ignored files.
       def skill_paths(skills)
         names = @record['targets'].flat_map { |target| target['names'] }.uniq
         tree = Tree.new(names, source_root: @root)
@@ -49,8 +68,6 @@ module Shaka
       rescue ArgumentError
         [skills]
       end
-
-      def unprotected?(entry) = entry.mode.anybits?(0o022) || !trusted_owner?(entry)
     end
   end
 end
