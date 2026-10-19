@@ -40,10 +40,18 @@ module Shaka
     end
 
     def self.parse(raw)
-      record = JSON.parse(raw.to_s)
+      record = JSON.parse(decode(raw))
       record.is_a?(Hash) ? record : nil
     rescue JSON::ParserError, EncodingError
       nil
+    end
+
+    # Windows Cursor writes a UTF-8 BOM before the hook payload. JSON.parse rejects it,
+    # and the hook then stores nothing, so every token total stays unknown.
+    def self.decode(raw)
+      binary = raw.to_s.b
+      binary = binary.byteslice(3..) || ''.b if binary.start_with?("\xEF\xBB\xBF".b)
+      binary.force_encoding(Encoding::UTF_8).delete_prefix("\uFEFF")
     end
 
     def self.compact(payload)
@@ -56,7 +64,7 @@ module Shaka
              .merge('hook_event_name' => 'stop', 'timestamp' => Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ'))
     end
 
-    private_class_method :parse, :compact, :append
+    private_class_method :parse, :decode, :compact, :append
   end
 end
 

@@ -3,6 +3,7 @@
 require_relative 'test_helper'
 require 'json'
 require 'open3'
+require 'rbconfig'
 require 'shaka/usage/cursor_usage'
 
 module CursorUsageFixture
@@ -198,6 +199,18 @@ class CursorUsageTest < Minitest::Test
       output = report('--host', 'cursor', '--file', File.join(directory, "#{SESSION}.jsonl"))
       assert_includes output, ROW
       refute_includes output, 'SENSITIVE'
+    end
+  end
+
+  def test_hook_accepts_a_utf8_bom_from_windows
+    Dir.mktmpdir do |directory|
+      env = CLEAR.merge('CURSOR_USAGE_DIR' => directory)
+      stdin = "\xEF\xBB\xBF#{JSON.generate(payload(NEW, 100))}"
+      _out, err, status = Open3.capture3(env, RbConfig.ruby, '--disable-gems', HOOK, stdin_data: stdin)
+      assert_predicate status, :success?, err
+      saved = JSON.parse(File.read(File.join(directory, "#{SESSION}.jsonl")))
+      assert_equal NEW, saved['generation_id']
+      assert_equal 100, saved['input_tokens']
     end
   end
 end
