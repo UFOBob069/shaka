@@ -7,9 +7,11 @@ and [#549](https://github.com/shakacode/shaka/pull/549) changes what the reviewe
 reports. The reviewer is asked whether verification is proportionate to what a failure
 would reach and whether a revert undoes it, and to name paths nobody exercised.
 
-The sentence changed behavior in a consistent direction. With it, every run named the
-paths the PR left unexercised and said whether a revert undoes the damage. Without it,
-no run did either. On the merge-path PR, all three runs with this repository's prompt
+The sentence changed behavior in a consistent direction. With it, every run said whether
+a revert undoes the damage; without it, none did. With it, every run on the two code PRs
+named a consuming command or live GitHub path that went unexercised; without it, none did,
+though four of five shared-caller runs repeated the packet's own note that no live rate
+limit was triggered. On the merge-path PR, all three runs with this repository's prompt
 moved from Proceed to Simplify/reframe because nobody had tested the agent's new
 consent decision. On the docs edit every run still said Proceed with no concerns, and
 reports grew by 14 to 16 percent. The sentence has a cost. On the shared-caller PR, two
@@ -64,8 +66,9 @@ and scored without the arm visible. The [key](../fixtures/checkpoint_blast_radiu
 [scores](../fixtures/checkpoint_blast_radius/scores.json) and every
 [report](../fixtures/checkpoint_blast_radius/outputs) are kept. One person designed the
 criteria and scored the reports, so the blinding reduces bias but does not remove it.
-Columns marked "found" were added after reading, because the reviewers raised them
-without being asked.
+Rows marked "found" or "post hoc" were added after reading. The "found" rows are things
+reviewers raised without being asked. The post-hoc rows are narrower versions of a fixed
+criterion, shown beside it.
 
 ## Results
 
@@ -77,7 +80,8 @@ Counts are runs meeting the criterion, out of the runs in that cell.
 | --- | ---: | ---: | ---: | ---: |
 | States the fact safety rests on (only an already-failing path changes) | 0/3 | 3/3 | 0/2 | 0/2 |
 | Names the consuming commands a failure reaches | 3/3 | 3/3 | 2/2 | 2/2 |
-| Names a consuming path as not exercised | 0/3 | 3/3 | 0/2 | 2/2 |
+| Names a specific unexercised path: commands end to end, live rate limit, GraphQL message or exit 8 | 3/3 | 3/3 | 1/2 | 2/2 |
+| Post hoc: names a consuming command as not exercised end to end | 0/3 | 3/3 | 0/2 | 2/2 |
 | Says what a revert does | 0/3 | 3/3 | 0/2 | 2/2 |
 | Found: HTTP status never reaches users | 3/3 | 1/3 | 2/2 | 2/2 |
 | Conclusion Proceed | 0/3 | 2/3 | 0/2 | 0/2 |
@@ -121,7 +125,7 @@ ran before #547 merged and concluded Proceed with no concerns.
 | --- | ---: | ---: | ---: | ---: |
 | Proceed with no concerns | 3/3 | 3/3 | 2/2 | 2/2 |
 | Asks for no extra verification | 3/3 | 3/3 | 2/2 | 2/2 |
-| Notes the rendered page was not checked | 0/3 | 3/3 | 0/2 | 2/2 |
+| Post hoc: notes the rendered page was not checked | 0/3 | 3/3 | 0/2 | 2/2 |
 | Mean words in summary, reasons, concerns, alternative and next action | 130 | 151 | 97 | 111 |
 
 The docs edit stayed brief and unblocked. The added sentence about the rendered page
@@ -138,9 +142,8 @@ the 25 percent bound fixed beforehand (+16 and +14 percent).
 | Built-in after | 6 | 35 | 106,279 | 1,088 | 0.0579 |
 
 The 30 runs cost $1.78 API-equivalent on a subscription. Token differences reflect how
-much source each run chose to read, not the prompt length. Reports on the merge-path PR
-grew by about 40 percent with this repository's prompt, because they now carry a
-concern.
+much source each run chose to read, not the prompt length. Visible words on the
+merge-path PR grew from 242 to 345, about 43 percent, with this repository's prompt, because those reports now carry a concern.
 
 ## What this does and does not show
 

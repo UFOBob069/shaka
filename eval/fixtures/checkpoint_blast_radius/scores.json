@@ -3,10 +3,11 @@
     "_cols": [
       "S1 safety fact",
       "S2 consuming paths",
-      "S3 unexercised consuming path",
+      "S3 specific unexercised path (as written)",
       "S4 revert",
       "S5 Proceed",
-      "X finds status not user-visible"
+      "X finds status not user-visible",
+      "post hoc: consuming command named as not exercised end to end"
     ],
     "e5f6f5": [
       1,
@@ -14,23 +15,26 @@
       1,
       1,
       1,
-      0
+      0,
+      1
     ],
     "4836db": [
       0,
       1,
+      1,
       0,
       0,
-      0,
-      1
+      1,
+      0
     ],
     "9b3e87": [
       0,
       1,
+      1,
       0,
       0,
-      0,
-      1
+      1,
+      0
     ],
     "6a1ba4": [
       1,
@@ -38,7 +42,8 @@
       1,
       1,
       1,
-      0
+      0,
+      1
     ],
     "1d0b57": [
       0,
@@ -46,23 +51,26 @@
       1,
       1,
       0,
+      1,
       1
     ],
     "4a406e": [
       0,
       1,
+      1,
       0,
       0,
-      0,
-      1
+      1,
+      0
     ],
     "991b6a": [
       0,
       1,
+      1,
       0,
       0,
-      0,
-      1
+      1,
+      0
     ],
     "1febf2": [
       1,
@@ -70,6 +78,7 @@
       1,
       1,
       0,
+      1,
       1
     ],
     "39096a": [
@@ -78,6 +87,7 @@
       1,
       1,
       0,
+      1,
       1
     ],
     "947f64": [
@@ -86,7 +96,8 @@
       0,
       0,
       0,
-      1
+      1,
+      0
     ]
   },
   "irreversible": {
