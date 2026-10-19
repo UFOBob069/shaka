@@ -59,7 +59,7 @@ Nothing was added to plant an omission.
 
 ### Scoring
 
-[Criteria](../fixtures/checkpoint_blast_radius/criteria.md) were written before the batch ran. Reports were then shuffled under random IDs
+[Criteria](../fixtures/checkpoint_blast_radius/criteria.md) were written after one docs-edit run had finished and before the other 29 runs started. Reports were then shuffled under random IDs
 and scored without the arm visible. The [key](../fixtures/checkpoint_blast_radius/blind_key.json),
 [scores](../fixtures/checkpoint_blast_radius/scores.json) and every
 [report](../fixtures/checkpoint_blast_radius/outputs) are kept. One person designed the
@@ -132,7 +132,7 @@ the 25 percent bound fixed beforehand (+16 and +14 percent).
 
 | Arm | Runs | Mean seconds | Mean input tokens | Mean output tokens | Mean API-equivalent USD |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Repo before | 9 | 41 | 106,939 | 966 | 0.0588 |
+| Repo before | 9 | 41 | 106,939 | 967 | 0.0588 |
 | Repo after | 9 | 37 | 85,243 | 972 | 0.0603 |
 | Built-in before | 6 | 36 | 99,458 | 952 | 0.0597 |
 | Built-in after | 6 | 35 | 106,279 | 1,088 | 0.0579 |

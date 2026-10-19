@@ -1,4 +1,4 @@
-# Criteria fixed before the batch (2026-10-19 ~09:00 UTC)
+# Criteria written at 2026-10-19T08:57:31Z (file time), after the first trivial run started at 08:56:59Z and before the other 29 runs started at 08:57:41Z or later
 Scored from each report's JSON fields, blind to arm (outputs shuffled under random IDs).
 shared_caller (#695):
  S1 states the fact safety rests on (only the empty-stdout non-zero-exit path changes; other paths unchanged)
