@@ -13,7 +13,7 @@ module Shaka
       def initialize(github) = @github = github
 
       def head
-        account = @github.api('user')['login']
+        account = @github.viewer_login
         ours = comments.select { |comment| comment.dig('user', 'login') == account && comment['id'].is_a?(Integer) }
         latest = ours.filter_map { |comment| message_entry(comment) }
         latest.max_by(&:first)&.last

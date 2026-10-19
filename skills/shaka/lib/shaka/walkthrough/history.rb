@@ -115,7 +115,7 @@ module Shaka
       reviews = earlier_walkthroughs(published)
       return report if reviews.empty?
 
-      fold_all(reviews, url, authenticated_login, report)
+      fold_all(reviews, url, @github.viewer_login, report)
     rescue Error => e
       report['unavailable'] << e.message
       report
@@ -213,13 +213,6 @@ module Shaka
     def list_reviews
       path = "repos/#{@github.repository}/pulls/#{@github.number}/reviews"
       PublicComments::BoundedList.new(@github, max_pages: 5, label: 'Review listing').call(path)
-    end
-
-    def authenticated_login
-      account = @github.api('user')['login']
-      return account if account.is_a?(String) && !account.empty?
-
-      raise Error, 'Authenticated GitHub login is unavailable.'
     end
 
     def review_url(id)

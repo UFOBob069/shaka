@@ -58,7 +58,7 @@ module Shaka
     # Only an older comment this account wrote, whose body opens with the marker, is ours to
     # delete. Comment IDs increase, so a concurrent run's newer comment survives this one.
     def earlier_squash_comments(kept)
-      account = viewer
+      account = viewer_login
       PublicComments::BoundedList.new(self, max_pages: COMMENT_PAGES, label: 'Comment listing')
                                  .call("repos/#{@repository}/issues/#{@number}/comments")
                                  .select do |comment|

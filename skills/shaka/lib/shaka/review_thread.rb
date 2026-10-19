@@ -26,7 +26,7 @@ module Shaka
 
     def resolve
       check_id
-      @account = account
+      @account = @github.viewer_login
       thread = Lookup.new(@github, @thread_id).call
       refuse_resolved(thread)
       check_reply(thread)
@@ -40,13 +40,6 @@ module Shaka
       return if @thread_id.is_a?(String) && @thread_id.match?(THREAD_ID)
 
       raise Error, 'Expected a review-thread ID.'
-    end
-
-    def account
-      login = @github.api('user')['login']
-      return login if login.is_a?(String) && !login.empty?
-
-      raise Error, 'GitHub did not return the authenticated account.'
     end
 
     def refuse_resolved(thread)

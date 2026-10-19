@@ -47,7 +47,7 @@ module Shaka
     end
 
     def prepared_reply(target, mark, trust_config, machine_path)
-      account = viewer
+      account = viewer_login
       listed = replies(target)
       PublicComments::ReplyGuard.new(self, trust_config:, machine_path:).check(listed, target, account)
       listed.find { |reply| ours?(reply, mark, account) && (!target || reply['in_reply_to_id'] == target) }
@@ -75,8 +75,6 @@ module Shaka
     def ours?(comment, mark, account)
       comment['body'].to_s.start_with?(mark) && comment.dig('user', 'login') == account
     end
-
-    def viewer = @viewer ||= api('user')['login']
 
     # Only the marked region is ours; anything a person or another bot added stays.
     def merge(existing, body)

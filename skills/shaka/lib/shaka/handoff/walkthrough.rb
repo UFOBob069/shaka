@@ -14,7 +14,7 @@ module Shaka
       # Superseded walkthroughs are wrapped in a pointer, so only the current one still renders as a
       # walkthrough. Only this account's reviews count, so a commenter's copy cannot change what is owed.
       def revision
-        account = @github.api('user')['login']
+        account = @github.viewer_login
         current = reviews.reverse.find do |review|
           review.dig('user', 'login') == account && review['state'] == 'COMMENTED' &&
             WalkthroughText.rendered?(review['body'].to_s)
