@@ -247,4 +247,22 @@ class PostImplementationFailureReasonTest < Minitest::Test
       end
     end
   end
+
+  def test_setup_failure_without_a_reviewer_publishes_as_unknown
+    Dir.mktmpdir do |root|
+      result = runner_setup_failure(root)
+      assert_equal [nil, 'setup_failure'], result.values_at('reviewer', 'failure_stage')
+      github, status = publish(result, File.join(root, 'result.json'))
+      assert_equal 0, status
+      body = github.bodies.first.first
+      assert body.start_with?('🤖 UNKNOWN · UNKNOWN'), body
+      assert_includes body, result.fetch('reason')
+    end
+  end
+
+  private
+
+  def runner_setup_failure(root)
+    Shaka::PostImplementationRunner.new(root:, base: 'main', head: 'a' * 40, criteria_ref: 'a' * 40).run
+  end
 end

@@ -6,7 +6,7 @@ module Shaka
     private
 
     def identity
-      provider, family = @result.fetch('reviewer', 'UNKNOWN/UNKNOWN').split('/', 2)
+      provider, family = (@result['reviewer'] || 'UNKNOWN/UNKNOWN').split('/', 2)
       PublicationText.identity('agent' => family, 'provider' => provider,
                                'model' => headline_model, 'effort' => known(@configuration[3]))
     end
