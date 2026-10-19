@@ -72,10 +72,10 @@ class HandoffSquashMessageTest < Minitest::Test
     assert owed?(result, 'squash commit message')
     assert_equal Shaka::Handoff::OWED_EXIT, Shaka::Handoff.exit_status(result)
 
-    checkpoint = { 'user' => { 'login' => 'shaka-agent' },
+    checkpoint = { 'id' => 1, 'created_at' => '2026-10-01T00:00:00Z', 'user' => { 'login' => 'shaka-agent' },
                    'body' => "<!-- shaka:reply:post-implementation-aaaaaaa-abc12345 -->\nReport\n\n" \
                              "#{Shaka::PostImplementationEvidence.attestation(HEAD, 'ready')}" }
-    result = awaiting_merge(post_implementation: {}, comments: [checkpoint, squash_comment(HEAD)])
+    result = awaiting_merge(post_implementation: {}, comments: [checkpoint, squash_comment(HEAD, id: 2)])
     assert_empty result['owed']
   end
 
@@ -89,7 +89,7 @@ class HandoffEvaluationMessageTest < Minitest::Test
 
   def checkpoint(state: 'ready', head: HEAD, message_head: HEAD, id: 2, author: 'shaka-agent')
     message = Shaka::SquashMessage.new({ 'title' => 'Fix', 'body' => 'Why.' }, number: 42)
-    { 'id' => id, 'user' => { 'login' => author },
+    { 'id' => id, 'created_at' => '2026-10-01T00:00:00Z', 'user' => { 'login' => author },
       'body' => "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\nReport\n\n" \
                 "#{Shaka::SquashComment.body(message_head, message)}\n" \
                 "#{Shaka::PostImplementationEvidence.attestation(head, state)}" }

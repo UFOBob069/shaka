@@ -7,6 +7,16 @@ module Shaka
   class CommentHistory
     def initialize(github) = @github = github
 
+    # Sort key for GitHub's listing, which callers must not assume is chronological.
+    def self.order(comment)
+      time = WalkthroughText.submitted_at(comment.merge('submitted_at' => comment['created_at']))
+      id = comment['id']
+      raise Error, 'History comment has no creation time or identifier.' unless
+        time && id.is_a?(Integer) && id.positive?
+
+      [time, id]
+    end
+
     def collapse(published = nil)
       report = { 'collapsed' => [], 'unavailable' => [] }
       comments = history_comments(published)
@@ -46,14 +56,7 @@ module Shaka
     # Earlier text the archive keeps unchanged and need not pass the escape and table checks again.
     def quoted(_source) = []
 
-    def order(comment)
-      time = WalkthroughText.submitted_at(comment.merge('submitted_at' => comment['created_at']))
-      id = comment['id']
-      raise Error, 'History comment has no creation time or identifier.' unless
-        time && id.is_a?(Integer) && id.positive?
-
-      [time, id]
-    end
+    def order(comment) = CommentHistory.order(comment)
 
     def fold_one(comment, latest, report)
       path = "repos/#{@github.repository}/issues/comments/#{comment.fetch('id')}"

@@ -47,9 +47,10 @@ module Shaka
 
     def latest
       account = @github.viewer_login
-      @github.issue_comments.reverse.find do |entry|
+      checkpoints = @github.issue_comments.select do |entry|
         entry.dig('user', 'login') == account && entry['body'].to_s.match?(PostImplementationHistory::KEY)
       end
+      checkpoints.max_by { |entry| CommentHistory.order(entry) }
     end
   end
 end

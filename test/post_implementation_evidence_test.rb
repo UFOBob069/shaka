@@ -9,10 +9,13 @@ class PostImplementationEvidenceTest < Minitest::Test
   Client = Struct.new(:issue_comments, :viewer_login)
   HEAD = 'a' * 40
 
-  def comment(state, head: HEAD, author: 'test-author')
-    { 'user' => { 'login' => author }, 'body' => "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\n" \
+  def comment(state, head: HEAD, author: 'test-author', id: next_id)
+    { 'id' => id, 'created_at' => "2026-10-01T00:00:#{format('%02d', id)}Z",
+      'user' => { 'login' => author }, 'body' => "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\n" \
                                                  "Report\n\n#{Shaka::PostImplementationEvidence.attestation(head, state)}" }
   end
+
+  def next_id = @next_id = (@next_id || 0) + 1
 
   def gate(comments, **)
     Shaka::PostImplementationEvidence.new(Client.new(comments, 'test-author'), **)
@@ -30,8 +33,18 @@ class PostImplementationEvidenceTest < Minitest::Test
     %w[blocked not_completed invalid].each do |state|
       assert_raises(Shaka::Error) { gate([comment('ready'), comment(state)]).call(HEAD) }
     end
+    ready = comment('ready')
     missing_footer = comment('ready').merge('body' => "<!-- shaka:reply:post-implementation-aaaaaaa-abc12345 -->\nOld")
-    assert_raises(Shaka::Error) { gate([comment('ready'), missing_footer]).call(HEAD) }
+    assert_raises(Shaka::Error) { gate([ready, missing_footer]).call(HEAD) }
+  end
+
+  def test_the_latest_checkpoint_is_chosen_by_creation_time_and_id_not_listing_order
+    newer = recommended('Revise before merge').merge('id' => 2, 'created_at' => '2026-10-02T00:00:00Z')
+    older = comment('ready').merge('id' => 1, 'created_at' => '2026-10-01T00:00:00Z')
+    assert_raises(Shaka::Error) { gate([newer, older]).call(HEAD) }
+    assert_equal 'Revise before merge', gate([newer, older]).recommendation(HEAD)
+    tied = older.merge('id' => 3, 'created_at' => newer['created_at'])
+    assert_equal 'ready', gate([tied, newer]).call(HEAD)['basis']
   end
 
   def test_a_copied_attestation_without_the_checkpoint_marker_does_not_count

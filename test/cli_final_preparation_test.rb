@@ -69,7 +69,7 @@ module FinalPreparationFixture
   end
 
   def write_comments(bin, head)
-    comment = { 'id' => 1, 'user' => { 'login' => 'agent' },
+    comment = { 'id' => 1, 'created_at' => '2026-10-01T00:00:00Z', 'user' => { 'login' => 'agent' },
                 'body' => "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\nReport\n\n" \
                           "<!-- shaka:post-implementation #{head} ready -->" }
     File.write(File.join(bin, 'fixture'), JSON.generate('comments' => [comment]))

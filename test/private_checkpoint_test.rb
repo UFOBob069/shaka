@@ -55,6 +55,6 @@ class PrivateCheckpointTest < Minitest::Test
   def product_review(head)
     body = "<!-- shaka:reply:post-implementation-#{head[0, 7]}-abc12345 -->\nReport\n\n" \
            "<!-- shaka:post-implementation #{head} ready -->"
-    { 'id' => 1, 'user' => { 'login' => 'shaka-agent' }, 'body' => body }
+    { 'id' => 1, 'created_at' => '2026-10-01T00:00:00Z', 'user' => { 'login' => 'shaka-agent' }, 'body' => body }
   end
 end
