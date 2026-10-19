@@ -91,7 +91,7 @@ class MachineFactsTest < Minitest::Test
   def test_summary_reads_duration_alias_and_facts
     machine = { 'alias' => 'm5', 'cpu_model' => 'Apple M5 Max', 'cpu_cores' => 18, 'memory_total_gb' => 128,
                 'memory_free_gb_at_start' => 3, 'load_at_start' => 140.4, 'load_at_end' => 450.0 }
-    assert_equal '27m on m5 (Apple M5 Max, 18 cores, 128 GB, 3 GB free, load 140→450)',
+    assert_equal '27m on m5 (Apple M5 Max, 18 cores, 128 GB RAM, 3 GB free, load 140→450)',
                  summary(1_620_000, machine)
     assert_equal '7m 30s (load 2.5)', summary(450_000, { 'load_at_start' => 2.5, 'load_at_end' => 2.5 })
   end

@@ -4,8 +4,8 @@ require_relative '../evidence/machine_facts'
 
 module Shaka
   # Says how long a recorded check took and on what kind of machine, such as
-  # "27m on m5 (Apple M5 Max, 18 cores, 128 GB, 3 GB free, load 140→450)", so a reader can
-  # tell slow hardware from a busy machine. Unknown facts are left out of the sentence.
+  # "27m on m5 (Apple M5 Max, 18 cores, 128 GB RAM, 3 GB free, load 140→450)", so a reader
+  # comparing runs can see the hardware and how busy it was. Unknown facts are left out.
   module RunSummary
     module_function
 
@@ -37,7 +37,7 @@ module Shaka
 
     def machine(facts)
       cpu, cores, total, free = facts.values_at('cpu_model', 'cpu_cores', 'memory_total_gb', 'memory_free_gb_at_start')
-      [cpu, ("#{cores} cores" if cores), ("#{total} GB" if total), ("#{free} GB free" if free),
+      [cpu, ("#{cores} cores" if cores), ("#{total} GB RAM" if total), ("#{free} GB free" if free),
        load(facts['load_at_start'], facts['load_at_end'])].compact
     end
 
