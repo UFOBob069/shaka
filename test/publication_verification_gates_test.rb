@@ -44,7 +44,7 @@ class PublicationVerificationGatesTest < Minitest::Test
     refute_includes render(bound), '[attestation]'
   end
 
-  def test_without_results_the_line_says_how_to_supply_them
+  def test_without_results_the_line_says_none_were_supplied
     assert_includes render(nil), "## Verification\n\n#{Shaka::VerificationGates::UNKNOWN}\n\n"
   end
 end

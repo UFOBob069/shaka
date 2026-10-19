@@ -5,7 +5,7 @@ module Shaka
   # check has to restate them and no paraphrase can call a failed run a pass.
   module VerificationGates
     LABEL = '**Validation and review:**'
-    UNKNOWN = "#{LABEL} UNKNOWN: rerun description with --validation-result and --review-result.".freeze
+    UNKNOWN = "#{LABEL} UNKNOWN: no validation or review results were supplied for this revision.".freeze
 
     module_function
 
