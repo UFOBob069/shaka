@@ -13,7 +13,6 @@ module Shaka
         'A4' => ['Custom skills folder', 'ok'],
         'A5' => ['Fork, SSH origin, or non-main branch', 'ok'],
         'A6' => ['Towers selected', 'ok'],
-        'A7' => ['Managed copy from an older installer', 'ok'],
         'A8' => ['PR trial', 'ok'],
         'A9' => ['Helper run from an unregistered clone', 'attention'],
         'B1' => ['Manual pull of the registered branch', 'attention'],
@@ -28,16 +27,17 @@ module Shaka
         'B10' => ['Unsafe file modes', 'attention'],
         'B11' => ['Checkout behind its recorded revision', 'attention'],
         'C1' => ['Orphan installation record', 'attention'],
-        'C3' => ['Source checkout also used for development', 'attention'],
-        'C4' => ['Managed copies, Codex aliases, and links together', 'ok'],
-        'C5' => ['Hosts pointing at different installs', 'attention']
+        'C3' => ['Source checkout is a worktree, or hosts worktrees', 'attention'],
+        'C5' => ['Hosts pointing at different installs', 'attention'],
+        'E1' => ['Source checkout at the old default, the settings path', 'attention']
       }.freeze
 
       # The first problem in this order is the one to fix first: later checks read state an
       # earlier problem can make misleading, such as a revision on a switched branch. Steps that
       # update use bin/install, not the helper, so they still run when the recorded Ruby is gone.
-      PROBLEMS = %w[B10 C1 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 C3 A9].freeze
-      HEALTHY = %w[C4 A5 A4 A3 A6 A2 A1 A7 A8].freeze
+      # E1 and C3 come early: their fix is a fresh install, which makes the checkout's other problems moot.
+      PROBLEMS = %w[B10 C1 E1 C3 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 A9].freeze
+      HEALTHY = %w[A5 A4 A3 A6 A2 A1 A8].freeze
 
       module_function
 

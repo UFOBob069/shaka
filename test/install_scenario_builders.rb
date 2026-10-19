@@ -10,7 +10,7 @@ module HealthyInstallScenarios
 
   def build_a2 = healthy(default_install('--agent', 'codex', '--agent', 'claude'))
 
-  def build_a4 = healthy(default_install('--directory', File.join(@home, '.agents/shaka'), '--skills-dir', @skills_dir))
+  def build_a4 = healthy(default_install('--skills-dir', @skills_dir))
 
   def build_a6 = healthy(default_install('--with-rct'))
 
@@ -21,14 +21,9 @@ module HealthyInstallScenarios
   end
 
   def build_a5
-    root = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(root, '--repository', @remote)
+    root = clone_to(default_path)
+    run_install(root, '--directory', root, '--repository', @remote)
     healthy(root)
-  end
-
-  def build_a7
-    managed_install(File.join(@home, '.claude/skills'))
-    { from: @root, location: package(File.join(@home, '.claude/skills/shaka')), next: nil }
   end
 
   def build_a8
@@ -41,12 +36,6 @@ module HealthyInstallScenarios
     root = default_install
     second = clone_to(File.join(@directory, 'second clone'))
     { from: second, location: second, next: "#{helper(root)} install --status" }
-  end
-
-  def build_c4
-    root = default_install
-    managed_install(File.join(@directory, 'retained skills'))
-    healthy(root)
   end
 end
 
@@ -125,6 +114,13 @@ module BrokenInstallScenarios
   end
 
   def build_c3 = problem(default_install.tap { |root| git('-C', root, 'branch', 'experiment') }, nil)
+
+  # The old default location, which is also where a project keeps its Shaka settings.
+  def build_e1
+    root = clone_to(File.join(@home, '.agents/shaka'))
+    run_install(root, '--directory', root, '--repository', @remote)
+    problem(root, "git clone #{Shellwords.escape(@remote)} #{Shellwords.escape(default_path)}")
+  end
 
   # A split install: Claude uses one registered checkout and Cursor another.
   def build_c5

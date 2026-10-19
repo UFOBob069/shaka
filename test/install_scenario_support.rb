@@ -17,11 +17,13 @@ module InstallScenarioSupport
 
   # A clean clone of the fixture remote at the default path, registered as the official source.
   def default_install(*)
-    root = clone_to(File.join(@home, '.agents/shaka'))
+    root = clone_to(default_path)
     git('-C', root, 'remote', 'set-url', 'origin', OFFICIAL)
-    run_install(root, *)
+    run_install(root, '--directory', root, *)
     root
   end
+
+  def default_path = File.join(@home, '.local/share/shaka/source')
 
   def clone_to(path)
     git('clone', '-q', @remote, path)
@@ -30,11 +32,6 @@ module InstallScenarioSupport
 
   def run_install(root, *)
     output, process = Open3.capture2e(environment, RbConfig.ruby, File.join(root, 'bin/install'), *)
-    assert_predicate process, :success?, output
-  end
-
-  def managed_install(skills)
-    output, process = Open3.capture2e(environment, RbConfig.ruby, @installer, '--skills-dir', skills)
     assert_predicate process, :success?, output
   end
 
@@ -80,8 +77,6 @@ module InstallScenarioSupport
 
     File.join(canonical(File.dirname(path)), File.basename(path))
   end
-
-  def package(link) = File.dirname(File.realpath(link), 2)
 
   def snapshot
     Dir.glob('**/*', File::FNM_DOTMATCH, base: @home).sort.to_h do |entry|

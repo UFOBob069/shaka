@@ -47,8 +47,6 @@ module Shaka
           return finding('B9', path, "points to #{File.readlink(path)}, not #{expected}",
                          command: "ln -sfn #{Shellwords.escape(expected)} #{Shellwords.escape(path)}")
         end
-        return finding('B9', path, "points to managed copy #{owner}", command: checkout.installer) if
-          @inventory.managed?(owner)
 
         finding('B9', path, "points to #{File.readlink(path)}, which this checkout does not own",
                 decision: "Choose which install #{path} should use, then run that install's bin/install.")
@@ -95,7 +93,7 @@ module Shaka
       end
 
       def host_shaka_links
-        @inventory.links.select { |entry| entry['kind'] == 'host link' && entry['name'] == 'shaka' }
+        @inventory.links.select { |entry| entry['name'] == 'shaka' }
       end
 
       def present?(path) = File.exist?(path) || File.symlink?(path)

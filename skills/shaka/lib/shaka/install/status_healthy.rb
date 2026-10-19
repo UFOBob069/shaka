@@ -7,8 +7,6 @@ module Shaka
   module Install
     # Names a working installation's variant and checks which registered checkout this helper is.
     class StatusHealthy
-      MIGRATE = 'Optionally migrate to the official checkout: official-installation.md, ' \
-                '"Migrate retained-copy installations".'
       TRIALS = 'Trials stay until you remove them; Shaka never deletes them.'
 
       def initialize(inventory)
@@ -17,12 +15,9 @@ module Shaka
 
       def finding
         return state(chosen, primary.root, command: "#{primary.helper} install --update") if primary
+        return state('A8', @inventory.trial_directory, decision: TRIALS) if chosen == 'A8'
 
-        case chosen
-        when 'A7' then state('A7', managed_package, decision: MIGRATE)
-        when 'A8' then state('A8', @inventory.trial_directory, decision: TRIALS)
-        else state('none', @inventory.source, command: installer)
-        end
+        state('none', @inventory.source, command: installer)
       end
 
       def unregistered_helper
@@ -35,8 +30,7 @@ module Shaka
       end
 
       def variants
-        @variants ||= [*primary_variants, *('C4' if mixed?), *('A7' if !primary && @inventory.managed_links.any?),
-                       *('A8' if @inventory.trials.any?)]
+        @variants ||= [*primary_variants, *('A8' if @inventory.trials.any?)]
       end
 
       private
@@ -50,7 +44,6 @@ module Shaka
       end
 
       def chosen = StatusStates::HEALTHY.find { |candidate| variants.include?(candidate) }
-      def managed_package = @inventory.owner(@inventory.managed_links.first)
       def installer = Shellwords.escape(File.join(@inventory.source, 'bin/install'))
       def targets = primary.record['targets']
       def custom_source? = primary.record['repository'] != Checkout::REPOSITORY || primary.record['branch'] != 'main'
@@ -61,8 +54,6 @@ module Shaka
         hosts = @inventory.host_directories.flat_map { |path| [path, @inventory.real(path)].compact }
         (targets.map { |target| target['directory'] } - hosts).any?
       end
-
-      def mixed? = primary && (@inventory.managed_copies.any? || @inventory.aliases.any?)
 
       # The registered checkout the host links use, so a status from anywhere names the same one.
       def primary

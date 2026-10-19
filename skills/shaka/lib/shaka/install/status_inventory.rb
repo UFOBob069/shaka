@@ -5,7 +5,7 @@ require_relative 'status_checkout'
 
 module Shaka
   module Install
-    # Finds every Shaka link, install record, managed copy, and PR trial a status report names.
+    # Finds every Shaka link, install record, and PR trial a status report names.
     class StatusInventory
       attr_reader :home, :source, :checkouts, :links, :unreadable
 
@@ -19,20 +19,17 @@ module Shaka
       end
 
       def host_directories = Official::HOSTS.values.map { |directory| File.join(@home, directory) }
-      def default_directory = File.join(@home, '.agents/shaka')
-      def managed_directory = File.join(@home, '.local/share/shaka/installs')
+      def default_directory = File.join(@home, '.local/share/shaka/source')
+      def old_directory = File.join(@home, '.agents/shaka')
       def trial_directory = File.join(@home, '.local/share/shaka/pr-trials')
-      def aliases = @links.select { |link| link['kind'] == 'codex alias' }
-
-      def managed_copies
-        entries(managed_directory).select { |path| File.basename(path).match?(Package::ID_PATTERN) }
-      end
-
       def trials = entries(trial_directory).select { |path| File.directory?(path) }
 
-      # By folder name, so a copy made with a custom --managed-dir is recognized too.
-      def managed?(owner) = owner && File.basename(owner).match?(Package::ID_PATTERN)
-      def managed_links = @links.select { |link| managed?(owner(link)) }
+      # Link owners that are linked worktrees: a worktree is deleted when its branch merges.
+      def worktrees
+        @links.filter_map { |link| owner(link) }.uniq.select { |root| File.file?(File.join(root, '.git')) }
+      end
+
+      def links_to(root) = @links.select { |link| owner(link) == root }
       def link_at(path) = @links.find { |link| link['path'] == path } || { 'resolved' => real(path) }
 
       def real(path)
@@ -53,7 +50,7 @@ module Shaka
       private
 
       def discover
-        candidates = [@source, default_directory, *@directory]
+        candidates = [@source, default_directory, old_directory, *@directory]
         loop do
           candidates.each { |root| register(root) }
           @links = scan
@@ -76,21 +73,19 @@ module Shaka
       end
 
       def scan
-        directories = (host_directories + recorded_directories).uniq
-        links = directories.flat_map { |directory| links_in(directory, 'host link') }
-        links + links_in(File.join(@home, '.codex/skills'), 'codex alias')
+        (host_directories + recorded_directories).uniq.flat_map { |directory| links_in(directory) }
       end
 
       def recorded_directories
         @checkouts.values.flat_map { |checkout| checkout.record['targets'].map { |target| target['directory'] } }
       end
 
-      def links_in(directory, kind)
+      def links_in(directory)
         Package::ALLOWED.filter_map do |name|
           path = File.join(directory, name)
           next unless File.symlink?(path)
 
-          { 'path' => path, 'name' => name, 'kind' => kind, 'target' => File.readlink(path), 'resolved' => real(path) }
+          { 'path' => path, 'name' => name, 'target' => File.readlink(path), 'resolved' => real(path) }
         end
       end
 

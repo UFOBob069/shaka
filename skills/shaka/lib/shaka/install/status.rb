@@ -3,6 +3,7 @@
 require_relative 'status_inventory'
 require_relative 'status_links'
 require_relative 'status_healthy'
+require_relative 'status_unsupported'
 require_relative 'status_text'
 
 module Shaka
@@ -30,7 +31,8 @@ module Shaka
       private
 
       def problems
-        findings = @inventory.checkouts.values.flat_map(&:findings) + StatusLinks.new(@inventory).findings
+        findings = @inventory.checkouts.values.flat_map(&:findings) + StatusLinks.new(@inventory).findings +
+                   StatusUnsupported.new(@inventory).findings
         findings << @healthy.unregistered_helper
         findings.compact.uniq { |item| [item['id'], item['location']] }
       end
@@ -39,10 +41,10 @@ module Shaka
         { 'checkouts' => @inventory.checkouts.values.map { |checkout| checkout_entry(checkout) },
           'unreadable_records' => @inventory.unreadable.keys,
           'links' => @inventory.links.map { |link| link_entry(link) },
-          'managed_copies' => @inventory.managed_copies, 'trials' => @inventory.trials }
+          'trials' => @inventory.trials }
       end
 
-      def link_entry(link) = link.slice('path', 'kind', 'target').merge('owner' => @inventory.owner(link))
+      def link_entry(link) = link.slice('path', 'target').merge('owner' => @inventory.owner(link))
 
       def checkout_entry(checkout)
         { 'root' => checkout.root, **checkout.record.slice('repository', 'branch', 'revision'),

@@ -24,19 +24,13 @@ module Shaka
 
       def inventory(data)
         lines = data['checkouts'].map { |entry| checkout(entry) }
-        lines += data['links'].map { |link| "  #{link['kind']} #{link['path']} -> #{link['target']}" }
-        lines += copies(data['managed_copies']) + data['trials'].map { |path| "  trial #{path}" }
+        lines += data['links'].map { |link| "  link #{link['path']} -> #{link['target']}" }
+        lines += data['trials'].map { |path| "  trial #{path}" }
         lines.empty? ? ['  nothing found'] : lines
       end
 
       def checkout(entry)
         "  checkout #{entry['root']} (#{entry['repository']} #{entry['branch']} #{entry['revision'][0, 7]})"
-      end
-
-      def copies(paths)
-        return [] if paths.empty?
-
-        ["  #{paths.size} managed cop#{paths.size == 1 ? 'y' : 'ies'} in #{File.dirname(paths.first)}"]
       end
     end
   end

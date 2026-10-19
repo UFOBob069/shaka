@@ -65,20 +65,6 @@ class InstallStatusEdgesTest < Minitest::Test
     assert_equal "chmod go-w #{Shellwords.escape(File.realpath(root))}", report['next_command']
   end
 
-  def test_a_host_on_a_managed_copy_splits_the_install
-    default_install('--agent', 'claude')
-    managed_install(File.join(@home, '.cursor/skills'))
-    assert_equal 'C5', status(@root)['state']
-  end
-
-  def test_a_managed_copy_in_a_custom_folder_is_recognized
-    copies = File.join(@directory, 'copies')
-    output, process = Open3.capture2e(environment, RbConfig.ruby, @installer, '--skills-dir',
-                                      File.join(@home, '.claude/skills'), '--managed-dir', copies)
-    assert_predicate process, :success?, output
-    assert_equal 'A7', status(@root)['state']
-  end
-
   def test_a_branch_without_its_upstream_is_named
     root = default_install
     git('-C', root, 'branch', '-q', '--unset-upstream')
@@ -108,8 +94,8 @@ class InstallStatusEdgesTest < Minitest::Test
   private
 
   def pulled_without_ruby
-    root = clone_to(File.join(@home, '.agents/shaka'))
-    run_install(root, '--repository', @remote)
+    root = clone_to(default_path)
+    run_install(root, '--directory', root, '--repository', @remote)
     pull(root)
     File.write(File.join(root, '.git/shaka-ruby'), "/nonexistent/ruby\n")
     root
