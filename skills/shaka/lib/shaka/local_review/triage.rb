@@ -18,7 +18,7 @@ module Shaka
     # The rounds of one commit share one triage, so a finding they share has one outcome. A ledger
     # always records it that way; a hand-written content file might not.
     def self.check!(rounds)
-      rounds.chunk(&:head).each do |head, batch|
+      rounds.chunk(&:batch).each do |(head, _settings), batch|
         split = batch.flat_map(&:findings).group_by(&:id).find { |_, copies| outcomes(copies) > 1 }
         raise Error, "Finding #{split.first} has two outcomes in the reviews of #{head[0, 7]}." if split
       end
@@ -32,7 +32,7 @@ module Shaka
     # reported, how the findings were collated, and what became of each without opening a report.
     def self.section(rounds, links)
       fixed = {}
-      blocks = rounds.chunk(&:head).map do |head, batch|
+      blocks = rounds.chunk(&:batch).map do |(head, _settings), batch|
         text = new(head, batch, links).render(fixed)
         remember_fixes(batch, fixed)
         text
@@ -65,7 +65,7 @@ module Shaka
 
     def render(fixed_before)
       findings = @batch.flat_map(&:findings).uniq(&:id)
-      title = "**Triage of #{@links.commit(@head)}** · #{counts}"
+      title = "**Triage of #{@links.commit(@head)}**#{@batch.first.label} · #{counts}"
       return title if findings.empty?
 
       lines = findings.map do |finding|

@@ -30,7 +30,7 @@ module Shaka
 
       @usage_url = usage_url
       @provider_coverage = content['provider_coverage']
-      @commits = @rounds.chunk(&:head).map { |_, rounds| LocalReviewCommitSection.new(rounds, subject, @links) }
+      @commits = @rounds.chunk(&:batch).map { |_, rounds| LocalReviewCommitSection.new(rounds, subject, @links) }
       @attention = LocalReviewAttention.new(@rounds, @links, assessments: @assessment_view)
     end
 
@@ -74,7 +74,7 @@ module Shaka
     # this commit; a line a reviewer's report imitates further down does not count.
     def reviewers_marker = "<!-- shaka:local-reviewers #{@rounds.last.head} #{final_reviewers.join(' ')} -->"
 
-    def final_reviewers = @rounds.select { |round| round.head == @rounds.last.head }.map(&:reviewer).uniq
+    def final_reviewers = @rounds.select { |round| round.batch == @rounds.last.batch }.map(&:reviewer).uniq
 
     # Which continuation holds each moved commit section's reports.
     def continuations(moved)
@@ -121,7 +121,7 @@ module Shaka
       rows = @commits.map do |commit|
         findings = commit.rounds.map { |round| "#{round.reviewer}: #{round.finding_count}" }.join(' · ')
         findings += " · #{notes[commit]}" if notes.key?(commit)
-        line([@links.commit(commit.head), findings])
+        line([commit.link, findings])
       end
       ['**Reviewed commits:**', [line(%w[Commit Findings]), line(%w[--- ---]), *rows].join("\n")].join("\n\n")
     end
@@ -133,7 +133,7 @@ module Shaka
     end
 
     def coverage
-      rounds = @rounds.select { |round| round.head == @rounds.last.head }
+      rounds = @rounds.select { |round| round.batch == @rounds.last.batch }
       groups = rounds.group_by { |round| round.value('coverage') || 'UNKNOWN; see evidence.' }
       "**Coverage:** #{groups.map { |text, grouped| "#{grouped.map(&:reviewer).join(', ')}: #{text}" }.join(' · ')}"
     end

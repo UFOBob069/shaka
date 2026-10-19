@@ -19,7 +19,11 @@ module Shaka
 
         ref = reviewed_ref(options, action)
         root = safe_root(options[:root])
-        new(root:, ref:, repository: options[:repository], action:, options:).tap(&:capture_before)
+        new(root:, ref:, repository: options[:repository], action:, options:).tap do |capture|
+          capture.capture_before
+          # A ledger round records it, so a settings change can permit a review of the same commit.
+          options[:ledger_settings] = capture.ledger_settings
+        end
       end
 
       def self.safe_root(root)
@@ -54,11 +58,19 @@ module Shaka
                             'model' => options[:model], 'effort' => options[:effort] }.compact
       end
 
+      # The ledger's identity of the settings that make earlier review evidence superseded: the
+      # components `evidence verify` compares, without this reviewer's own choices, so every
+      # reviewer of a commit under the same settings shares it.
+      attr_reader :ledger_settings
+
       def capture_before
         @candidate_before = CandidateTree.capture(root: @root)
         @dirty_before = dirty?
         _config, @settings_before, @source_kind, @public_settings =
           Inputs.capture(root: @root, ref: @ref, repository: @repository, task_overrides: @task_overrides)
+        _config, shared = Inputs.capture(root: @root, ref: @ref, repository: @repository)
+        @ledger_settings = Configuration::FingerprintCanonical.digest('ledger-settings',
+                                                                      shared['components'].except('source'))
       end
 
       def finish(result)

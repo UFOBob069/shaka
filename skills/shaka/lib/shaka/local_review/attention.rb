@@ -8,7 +8,7 @@ module Shaka
       @assessments = assessments
       @rounds = rounds
       @links = links
-      @findings = rounds.chunk(&:head).flat_map { |_, batch| batch.flat_map(&:findings).uniq(&:id) }.group_by(&:id)
+      @findings = rounds.chunk(&:batch).flat_map { |_, batch| batch.flat_map(&:findings).uniq(&:id) }.group_by(&:id)
     end
 
     def visible

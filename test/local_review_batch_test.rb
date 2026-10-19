@@ -24,10 +24,10 @@ module LocalReviewLedgerSteps
 
   private
 
-  def ledger = Shaka::LocalReviewLedger.new(@path)
+  def ledger(settings = nil) = Shaka::LocalReviewLedger.new(@path).tap { |ledger| ledger.settings = settings }
 
-  def append(head, reviewer, findings:)
-    ledger.append!(base: BASE, round: round_entry(head, reviewer, findings))
+  def append(head, reviewer, findings:, settings: nil)
+    ledger(settings).append!(base: BASE, round: round_entry(head, reviewer, findings))
   end
 
   def round_entry(head, reviewer, findings)
@@ -35,6 +35,13 @@ module LocalReviewLedgerSteps
   end
 
   def record(findings, **extra) = ledger.record!({ 'findings' => findings }.merge(extra.transform_keys(&:to_s)))
+
+  # Two reviewers read one commit, record a finding, then read it again under changed settings.
+  def review_twice
+    %w[openai/codex anthropic/claude].each { |reviewer| append(EARLIER, reviewer, findings: 1, settings: 'a' * 64) }
+    record([NIT.merge('reviewers' => { 'openai/codex' => '1', 'anthropic/claude' => '1' })])
+    %w[openai/codex anthropic/claude].each { |reviewer| append(EARLIER, reviewer, findings: 0, settings: 'c' * 64) }
+  end
 
   def fixed(reviewers)
     numbers = reviewers.to_h { |reviewer| [reviewer, '1'] }
@@ -124,6 +131,24 @@ class LocalReviewBatchLedgerTest < Minitest::Test
 
     error = assert_raises(Shaka::Error) { ledger.append!(base: 'f' * 40, round:) }
     assert_includes error.message, 'use a new ledger'
+  end
+
+  # Break caught: a settings re-review joined the earlier batch on its commit, so recording it
+  # rewrote findings that batch had already triaged.
+  def test_a_settings_rereview_is_a_new_batch_on_the_same_commit
+    review_twice
+
+    assert_equal [3, 4], ledger.record!({ 'findings' => [] })
+    assert_equal([1, 1, 0, 0], ledger.rounds.map { |round| round.fetch('findings').size })
+  end
+
+  # Break caught: a third batch under the first settings would have split that batch's rounds apart.
+  def test_a_settings_rereview_cannot_return_to_earlier_settings
+    review_twice
+    ledger.record!({ 'findings' => [] })
+
+    error = assert_raises(Shaka::Error) { append(EARLIER, 'openai/codex', findings: 0, settings: 'a' * 64) }
+    assert_includes error.message, 'Round 1 already reviewed'
   end
 
   # Break caught: two reviewers finishing together each wrote the ledger they had read, losing a round.

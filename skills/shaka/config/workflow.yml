@@ -309,7 +309,7 @@ phases:
         `defect`, `risk`, or `nit`. After a round with findings, record each one's class and
         disposition with `review record`; the next `review run` refuses to start until they are
         recorded, and refuses a head the ledger already reviewed unless another reviewer joins
-        it before that record. Fix defects, and risks whose
+        it before that record or a settings change superseded its review evidence. Fix defects, and risks whose
         fix is clearly correct, in new commits, then review the new head. Document optional nits.
         Use `open` for unfinished agent work,
         `decision_needed` for a consequential choice the maintainer owns, `dismissed` for

@@ -13,6 +13,7 @@ require_relative 'summary'
 require_relative 'bound'
 require_relative 'budget'
 require_relative 'triage'
+require_relative 'settings_rereview'
 require_relative 'assessment_view'
 require_relative 'bundle'
 require_relative 'usage'
@@ -82,25 +83,16 @@ module Shaka
 
       rounds = specs.each_with_index.map { |round, index| Round.new(round, index + 1) }
       check_order!(rounds)
-      rounds
+      LocalReviewSettingsRereview.mark!(rounds)
     end
 
     def check_order!(rounds)
-      check_commits!(rounds)
+      LocalReviewSettingsRereview.check!(rounds)
       LocalReviewTriage.check!(rounds)
       fixer = rounds.select { |round| round.head == rounds.last.head }.find { |round| round.findings.any?(&:fixed?) }
       raise Error, "Round #{fixer.number} records fixes no later round reviewed; review the fix head first." if fixer
 
       rounds.each(&:check_fixes_follow!)
-    end
-
-    # Several reviewers may read one commit, listed together, each once.
-    def check_commits!(rounds)
-      raise Error, 'Two rounds review the same commit with the same reviewer; each round reviews a new head.' unless
-        rounds.uniq { |round| [round.head, round.reviewer] }.size == rounds.size
-
-      heads = rounds.map(&:head).chunk(&:itself).map(&:first)
-      raise Error, 'Rounds of one commit must be listed together.' unless heads.uniq.size == heads.size
     end
 
     # A fence opened in one report and closed in the next hides the boundary between them, including
@@ -118,7 +110,7 @@ module Shaka
     # A finding whose id was marked fixed on an earlier commit and comes back is flagged where it
     # returns. Reviewers of one commit all read it before any of its fixes, so none of them is flagged.
     def round_details
-      @rounds.chunk(&:head).flat_map { |_head, batch| LocalReviewTriage.details(batch) }
+      @rounds.chunk(&:batch).flat_map { |_, batch| LocalReviewTriage.details(batch) }
     end
 
     # Every round usually shares one prompt, so it is named once below the table rather than per row.
@@ -169,6 +161,8 @@ module Shaka
 
     # One reviewed commit, its reviewer settings, and the report whose attestation it carries.
     class Round
+      include LocalReviewSettingsRereview
+
       attr_reader :head, :reviewer, :findings, :number
 
       def initialize(spec, number)
@@ -205,7 +199,7 @@ module Shaka
       def summary
         effort, findings = @report.match(CLOSING).captures
         noun = findings == '1' ? 'finding' : 'findings'
-        PublicationText.summary_text("Round #{@number} · #{@head[0, 7]} · #{@reviewer} · " \
+        PublicationText.summary_text("Round #{@number} · #{@head[0, 7]} · #{@reviewer}#{label} · " \
                                      "effort #{effort} · #{findings} #{noun}", 'round summary')
       end
 

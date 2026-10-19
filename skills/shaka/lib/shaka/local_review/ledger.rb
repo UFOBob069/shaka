@@ -76,12 +76,13 @@ module Shaka
     def previous_head(head) = rounds.reverse.find { |round| round['head'] != head }&.fetch('head')
 
     # A round reviews a new commit on the same base, after the previous batch's findings are
-    # recorded, or joins the last batch with a reviewer that has not read that commit. The cap
-    # counts reviewed commits, so another reviewer of the last one does not use a turn.
+    # recorded, or joins the last batch with a reviewer that has not read that commit. After its
+    # settings change, the last commit may start a new batch once its findings are recorded. The
+    # cap counts reviewed commits, so neither uses a turn.
     def check_next!(base:, head:, reviewer:, max_rounds: RepositoryConfig::ReviewLimit::DEFAULT)
       check_cap!(max_rounds) unless !rounds.empty? && head == last_head
       check_joins!(base, head, reviewer)
-      check_batch_recorded! unless rounds.empty? || head == last_head
+      check_batch_recorded! unless rounds.empty? || (head == last_head && !settings_rereview?(head))
     end
 
     # The newest disposition of every finding so far, keyed by the id rounds share. A commit's
@@ -102,7 +103,7 @@ module Shaka
     # the start checks read a ledger that no longer exists.
     def append!(base:, round:, snapshot: nil, max_rounds: RepositoryConfig::ReviewLimit::DEFAULT)
       locked do
-        append_current_round!(base:, round:, snapshot:, max_rounds: self.max_rounds(max_rounds))
+        append_current_round!(base:, round: with_settings(round), snapshot:, max_rounds: self.max_rounds(max_rounds))
       end
     end
 
@@ -155,7 +156,7 @@ module Shaka
       raise Error, "The ledger's rounds measure the change against #{data['base']}; use a new ledger." unless
         data['base'] == base
 
-      check_new_head!(head, reviewer)
+      check_new_head!(head, reviewer) unless settings_rereview?(head)
     end
 
     def locked

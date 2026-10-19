@@ -2,10 +2,13 @@
 
 require_relative '../error'
 require_relative '../publication/text'
+require_relative 'ledger_settings'
 
 module Shaka
   # Which ledger rounds form the last batch: the reviewers that read the last reviewed commit.
   module LocalReviewLedgerBatch
+    include LocalReviewLedgerSettings
+
     USAGE = %w[model tokens cost estimate].freeze
     # A reviewer's own finding number or short label, such as `1` or `P2-3`.
     LABEL = /\A[\w.-]{1,20}\z/
@@ -34,9 +37,6 @@ module Shaka
       raise Error, "Record round #{unrecorded + 1}'s findings with `shaka review record` before the next round." if
         unrecorded
     end
-
-    # Indexes of the rounds that reviewed the last head.
-    def batch = rounds.each_index.select { |index| rounds[index]['head'] == (@record_head || last_head) }
 
     # Another reviewer may join the last batch until it is triaged; any other repeat of a commit
     # needs a fix first.
@@ -142,8 +142,6 @@ module Shaka
                               'recorded finding')
       check_collation!(findings)
     end
-
-    def joins?(round, head, reviewer) = head == last_head && !same_reviewer?(round, reviewer)
 
     def same_reviewer?(round, reviewer) = round['reviewer'].to_s.casecmp?(reviewer.to_s)
   end

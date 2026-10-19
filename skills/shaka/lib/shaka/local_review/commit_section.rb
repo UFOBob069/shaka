@@ -16,6 +16,9 @@ module Shaka
 
     def head = @rounds.first.head
 
+    # The commit, labeled when these rounds re-reviewed it after a settings change.
+    def link = "#{@links.commit(head)}#{@rounds.first.label}"
+
     def summaries = [summary, *@rounds.map(&:summary)]
 
     def to_s
@@ -27,7 +30,8 @@ module Shaka
 
     def summary
       count = @rounds.sum { |round| round.findings.size }
-      PublicationText.summary_text("Commit #{head[0, 7]} · #{@rounds.map(&:reviewer).join(', ')} · " \
+      reviewers = @rounds.map(&:reviewer).join(', ')
+      PublicationText.summary_text("Commit #{head[0, 7]}#{@rounds.first.label} · #{reviewers} · " \
                                    "#{count} #{count == 1 ? 'finding' : 'findings'}", 'commit summary')
     end
 
