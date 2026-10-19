@@ -24,13 +24,32 @@ class InstallStatusEntryTest < Minitest::Test
     assert_includes report['next_command'], 'chmod -R go-w'
   end
 
+  TOKEN_URL = 'https://someone:s3cr@t-token@example.com/shaka.git'
+
+  # The token holds an @, so redaction must strip up to the last @ before the path, as git does.
   def test_an_origin_token_is_never_printed
     root = default_install
-    git('-C', root, 'remote', 'set-url', 'origin', 'https://someone:secret-token@example.com/shaka.git')
-    output, process = run_status(root, '--json')
-    assert_predicate process, :success?, output
+    git('-C', root, 'remote', 'set-url', 'origin', TOKEN_URL)
+    output = status_text(root)
     assert_equal 'B5', JSON.parse(output)['state']
-    refute_includes output, 'secret-token'
+    refute_match(/s3cr|t-token/, output)
+  end
+
+  def test_a_recorded_token_is_never_printed
+    root = default_install
+    git('-C', root, 'remote', 'set-url', 'origin', TOKEN_URL)
+    record = File.join(root, '.git/shaka-install.json')
+    File.write(record, JSON.generate(JSON.parse(File.read(record)).merge('repository' => TOKEN_URL)))
+    output = status_text(root)
+    assert_equal 'A5', JSON.parse(output)['state']
+    refute_match(/s3cr|t-token/, output)
+  end
+
+  # A PR trial runs its own helper on purpose, so status from inside one is not an unregistered clone.
+  def test_a_helper_inside_a_pr_trial_is_not_unregistered
+    default_install
+    trial = clone_to(File.join(@home, '.local/share/shaka/pr-trials/123-example'))
+    refute_equal 'A9', status(trial)['state']
   end
 
   # A copy an older installer made is unsupported, not absent: status says where the links point.
@@ -57,5 +76,13 @@ class InstallStatusEntryTest < Minitest::Test
                                       '-e', script)
     assert_predicate process, :success?, output
     assert_equal File.realpath(REPOSITORY), output.strip
+  end
+
+  private
+
+  def status_text(root)
+    output, process = run_status(root, '--json')
+    assert_predicate process, :success?, output
+    output
   end
 end

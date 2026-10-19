@@ -47,7 +47,8 @@ module Shaka
       def link_entry(link) = link.slice('path', 'target').merge('owner' => @inventory.owner(link))
 
       def checkout_entry(checkout)
-        { 'root' => checkout.root, **checkout.record.slice('repository', 'branch', 'revision'),
+        { 'root' => checkout.root, 'repository' => StatusStates.redact(checkout.record['repository']),
+          **checkout.record.slice('branch', 'revision'),
           'targets' => checkout.record['targets'] }
       end
     end

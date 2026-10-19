@@ -33,10 +33,15 @@ module Shaka
       def unregistered_helper
         source = @inventory.source
         return if @inventory.checkouts.key?(source) || @inventory.links.any? { |link| @inventory.owner(link) == source }
-        return unless primary
+        return if trial?(source) || !primary
 
         StatusStates.finding('A9', source, "this helper runs from #{source}, but Shaka links point to #{primary.root}",
                              command: "#{primary.helper} install --status")
+      end
+
+      def trial?(source)
+        trials = @inventory.real(@inventory.trial_directory)
+        trials && source.start_with?("#{trials}/")
       end
 
       def variants

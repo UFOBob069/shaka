@@ -20,7 +20,7 @@ module Shaka
 
       def findings
         @inventory.worktrees.map do |root|
-          replace('C3', root, 'the source checkout is a linked worktree, which is deleted when its branch merges',
+          replace('C3', root, 'the source checkout is a linked worktree, which goes away when its branch is cleaned up',
                   selected(root, @inventory.links_to(root)))
         end
       end

@@ -2,6 +2,7 @@
 
 require 'shellwords'
 require_relative 'directory_safety'
+require_relative 'tree'
 require_relative 'status_states'
 
 module Shaka
@@ -39,12 +40,13 @@ module Shaka
         nil
       end
 
+      # The installer's own file list: it leaves out ignored files and refuses symlinks on its own.
       def skill_paths(skills)
         names = @record['targets'].flat_map { |target| target['names'] }.uniq
-        [skills] + names.flat_map do |name|
-          base = File.join(skills, name)
-          Dir.glob('**/*', File::FNM_DOTMATCH, base: base).map { |entry| File.join(base, entry) }
-        end
+        tree = Tree.new(names, source_root: @root)
+        [skills] + names.flat_map { |name| [File.join(skills, name)] + tree.entries(@root, name) }
+      rescue ArgumentError
+        [skills]
       end
 
       def unprotected?(entry) = entry.mode.anybits?(0o022) || !trusted_owner?(entry)
