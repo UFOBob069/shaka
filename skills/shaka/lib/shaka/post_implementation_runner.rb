@@ -2,13 +2,13 @@
 
 require_relative 'local_review/runner'
 require_relative 'post_implementation_report'
+require_relative 'post_implementation/packet'
 
 module Shaka
   # Reuses the restricted local process and pinned-source reader, not technical review evidence.
   class PostImplementationRunner < LocalReviewRunner
     DEFAULT_PROMPT = File.expand_path('../../config/post-implementation-prompt.md', __dir__)
     GUIDE = File.expand_path('../../references/writing.md', __dir__)
-    PACKET_KEYS = %w[problem audience outcome validation repair_history].freeze
 
     def run
       original_path = ENV.fetch('PATH', nil)
@@ -91,25 +91,15 @@ module Shaka
         'Do not merge), reasons (non-empty string list of evidence, costs, or tradeoffs), ' \
         'concerns (string list of problem locations, failures, and consequences; empty only if none), ' \
         'alternative (non-empty string; remedies go here), summary (one or two plain sentences: the concrete change, ' \
-        'tradeoffs, and unknowns; no conclusion label or owner context), next_action (smallest useful owner action). ' \
+        'tradeoffs, and unknowns; no conclusion label or owner context), next_action (smallest useful owner action), ' \
+        "#{PostImplementationReport::ADEQUACY_CONTRACT} " \
         'For blocking conclusions, next_action names a revision to this PR or a maintainer close/replace decision. ' \
         'Summary and next_action must respect blockers. ' \
         'Concerns lists only substantive unresolved product concerns, not technical ' \
         'nits or missing incident frequency alone. Return raw JSON without Markdown fences or surrounding prose.'
     end
 
-    def packet
-      path = packet_path
-      raise Error, 'Checkpoint packet exceeds 100 KB' if File.size(path) > 100_000
-
-      data = JSON.parse(File.read(path, encoding: 'UTF-8'))
-      raise Error, "Checkpoint packet needs #{PACKET_KEYS.join(', ')} as non-empty strings" unless
-        data.is_a?(Hash) && PACKET_KEYS.all? { |key| PostImplementationReport.text?(data[key]) }
-
-      data.slice(*PACKET_KEYS)
-    rescue JSON::ParserError => e
-      raise Error, "Malformed checkpoint packet: #{e.message}"
-    end
+    def packet = PostImplementationPacket.read(packet_path)
 
     def packet_path
       @options[:content_file] || raise(Error, '--content-file is required unless the checkpoint is opted out')

@@ -14,16 +14,20 @@ Known defects still need resolution, even when a smaller alternative is preferab
 
 ## Run the checkpoint
 
-Save a public-safe JSON packet outside the checkout with five non-empty strings:
-`problem`, `audience`, `outcome`, `validation`, and `repair_history`. Include actual
-validation results and explain previous concerns and their disposition in the repair
-history; use “none” only when there were no repairs. The runner supplies the whole
-committed diff and applicable trusted `AGENTS.md` files. Remove private context and
-links before invoking or publishing.
+Pass the PR's description content file, the one `description` publishes, as
+`--content-file`. The runner checks its `intent` and `verification` with the description's
+rules, requiring 1 to 3 checks, and sends them with `summary` to the reviewer. Add two
+non-empty strings under its `checkpoint` object: `audience`, and `repair_history`, which
+explains previous concerns and their disposition, or “none” when there were no repairs.
+An optional `checkpoint.evidence` list carries what the description has no place for,
+such as merge-readiness status or an instruction-growth report. The runner refuses a
+file that still states `problem`, `outcome`, or `validation`.
+It supplies the whole committed diff and applicable trusted `AGENTS.md` files. Remove
+private context and links before invoking or publishing.
 
 ```sh
 shaka post-implementation run --root DIR --base BASE_SHA --head HEAD_SHA \
-  --ref TRUSTED_DEFAULT_SHA --content-file packet.json > checkpoint.json
+  --ref TRUSTED_DEFAULT_SHA --content-file description.json > checkpoint.json
 shaka post-implementation publish OWNER/REPO NUMBER --content-file checkpoint.json \
   --squash-message message.json
 ```
@@ -97,9 +101,14 @@ even when the command fails, and publish the blocked outcome rather than calling
 complete. Successful execution returns `completed`; that status does not mean Proceed.
 
 The report contains the head, conclusion, reasons, unresolved concerns, simpler
-alternative, a short `summary`, and the task owner's `next_action`. The runner requests
-the last two fields; older reports without them remain publishable using the first
-reason and a conclusion-based next action. Ruby verifies supplied fields and marks `ready` false for either blocking
+alternative, a short `summary`, the task owner's `next_action`, and a required
+`verification_adequacy` object: a `verdict` of `adequate`, `adequate with accepted gaps`,
+`inadequate`, or `cannot judge`, the `weakest_claim`, and the `next_check`. The checkpoint
+comment shows all three, and the description lead shows the verdict for the current head.
+The verdict leaves `ready` unchanged; `inadequate` only makes `merge` refuse the head
+until the user approves it with `--adequacy-confirmed-head SHA`. A report without `summary` or `next_action`
+remains publishable using the first reason and a conclusion-based next action; one
+without `verification_adequacy` is not. Ruby verifies supplied fields and marks `ready` false for either blocking
 conclusion or any unresolved concern. A `ready: true` result means this run raised
 no blocker; the owner still resolves all earlier substantive concerns. Publishing
 checks the live open PR head and retains separate executions on that PR, including

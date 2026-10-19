@@ -992,6 +992,16 @@ class PublicationCheckpointTest < Minitest::Test
     refute_includes body, 'Recommendation'
   end
 
+  def test_the_verification_verdict_follows_the_recommendation
+    data = content
+    data['checkpoint']['verification_adequacy'] = 'adequate with accepted gaps'
+    body = Shaka::Publication.description(data, nil, PULL)
+    assert_includes body, "Checkpoint: _Not published yet._\n\n" \
+                          "**Checkpoint on verification:** Adequate with accepted gaps.\n\n**Next:**"
+    data['checkpoint']['verification_adequacy'] = 'fine'
+    assert_raises(Shaka::Error) { Shaka::Publication.description(data, nil, PULL) }
+  end
+
   def test_recommendation_must_be_a_known_disposition
     data = content
     data['checkpoint']['recommendation'] = 'Ship it'

@@ -159,14 +159,22 @@ end
 
 def merge_flags(flags, options)
   flags.on('--review-waiver REASON', 'Merge without review evidence') { |value| options[:review_waiver] = value }
+  flags.on('--squash-message PATH', 'Squash commit title and body as JSON') { |path| options[:squash_message] = path }
+  confirmation_flags(flags, options)
+  flags.on('--woken-by WHAT', 'For handoff: what will wake this session') { |value| options[:woken_by] = value }
+  flags.on('--codex-wake PATH', 'For handoff: native Codex registration evidence as JSON') do |path|
+    options[:codex_wake] = path
+  end
+end
+
+# Heads a user approved for merge although a gate would otherwise hand them back.
+def confirmation_flags(flags, options)
   flags.on('--limits-confirmed-head SHA', 'Head confirmed past limits') { |sha| options[:confirmed_head] = sha }
   flags.on('--empty-checks-confirmed-head SHA', 'Head the user told you to merge with no required checks') do |sha|
     options[:empty_checks_confirmed_head] = sha
   end
-  flags.on('--squash-message PATH', 'Squash commit title and body as JSON') { |path| options[:squash_message] = path }
-  flags.on('--woken-by WHAT', 'For handoff: what will wake this session') { |value| options[:woken_by] = value }
-  flags.on('--codex-wake PATH', 'For handoff: native Codex registration evidence as JSON') do |path|
-    options[:codex_wake] = path
+  flags.on('--adequacy-confirmed-head SHA', 'Head the user approved despite inadequate verification') do |sha|
+    options[:adequacy_confirmed_head] = sha
   end
 end
 
@@ -244,6 +252,9 @@ begin
   end
   if options[:squash_message] && command != 'merge'
     raise OptionParser::InvalidArgument, '--squash-message is only for merge'
+  end
+  if options[:adequacy_confirmed_head] && command != 'merge'
+    raise OptionParser::InvalidArgument, '--adequacy-confirmed-head is only for merge'
   end
   raise Shaka::Error, '--thread is only for resolve.' if options[:thread] && command != 'resolve'
   raise Shaka::Error, '--woken-by is only for handoff.' if options[:woken_by] && command != 'handoff'
@@ -345,7 +356,8 @@ begin
              head = options.fetch(:head)
              review = { required: seam&.review&.fetch('required'), waiver: options[:review_waiver],
                         root: options[:root] || Dir.pwd,
-                        checkpoint: Shaka::PostImplementationEvidence.new(github, **checkpoint) }
+                        checkpoint: Shaka::PostImplementationEvidence.new(github, **checkpoint),
+                        adequacy_confirmed_head: options[:adequacy_confirmed_head] }
              squash_message = options[:squash_message] &&
                               Shaka::SquashMessage.for(github, content(options[:squash_message]))
              merge = Shaka::Merge.new(github, ci_review_wait: options[:ci_review_wait],

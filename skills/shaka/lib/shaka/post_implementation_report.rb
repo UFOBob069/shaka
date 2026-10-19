@@ -9,6 +9,17 @@ module Shaka
     CONCLUSIONS = ['Proceed', 'Simplify/reframe', 'Do not merge'].freeze
     # The task owner's dispositions, shared by the owner's checkpoint comment and the description headline.
     RECOMMENDATIONS = ['Merge', 'Revise before merge', 'Reconsider approach', 'Do not merge'].freeze
+    # Whether the verification proves the intent; only inadequate stops an agent merge, never readiness.
+    ADEQUACY = ['adequate', 'adequate with accepted gaps', 'inadequate', 'cannot judge'].freeze
+    ADEQUACY_FIELDS = %w[verdict weakest_claim next_check].freeze
+    # The packet's intent says what the change rests on; its verification says what was proved.
+    ADEQUACY_CONTRACT = 'verification_adequacy (an object judging whether the packet verification proves the ' \
+                        "packet intent: verdict, one of #{ADEQUACY.map(&:to_json).join(', ')}; " \
+                        'adequate means the checks reach what safe_because rests on and not_verified leaves ' \
+                        'nothing material; adequate with accepted gaps means the named gaps are acceptable ' \
+                        'for review_effort; inadequate means the safety claim has no check that reaches it; ' \
+                        'cannot judge means the checks do not show what ran; weakest_claim, the claim the ' \
+                        'evidence supports least; next_check, the one check that would most raise confidence).'.freeze
 
     module_function
 
@@ -19,6 +30,7 @@ module Shaka
       report = JSON.parse(text)
       validate(report, head:)
       report.slice('head', 'conclusion', 'reasons', 'concerns', 'alternative', 'summary', 'next_action')
+            .merge('verification_adequacy' => report['verification_adequacy'].slice(*ADEQUACY_FIELDS))
     rescue JSON::ParserError => e
       raise Error, "Malformed checkpoint report: #{e.message}"
     end
@@ -30,6 +42,15 @@ module Shaka
 
       evidence_fields!(report)
       summary_fields!(report)
+      adequacy!(report['verification_adequacy'])
+    end
+
+    # Single lines, because the checkpoint comment renders them inline.
+    def adequacy!(adequacy)
+      raise Error, "Checkpoint verification_adequacy needs #{ADEQUACY_FIELDS.join(', ')}" unless
+        adequacy.is_a?(Hash) && ADEQUACY_FIELDS.all? { |key| text?(adequacy[key]) && !adequacy[key].match?(/[\r\n]/) }
+      raise Error, "Checkpoint verification_adequacy verdict must be one of: #{ADEQUACY.join(', ')}" unless
+        ADEQUACY.include?(adequacy['verdict'])
     end
 
     def evidence_fields!(report)

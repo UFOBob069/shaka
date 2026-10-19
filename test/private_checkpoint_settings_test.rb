@@ -8,7 +8,7 @@ class PrivateCheckpointSettingsTest < Minitest::Test
   CHOICES = { 'reviewer' => 'anthropic/claude', 'model' => 'claude-sonnet-4-6', 'effort' => 'high',
               'prompt_file' => '.agents/shaka/checkpoint.md' }.freeze
   COMMITS = { 'totalCount' => 1 }.freeze
-  PACKET = %w[problem audience outcome validation repair_history].to_h { |key| [key, 'Text'] }.freeze
+  PACKET = CHECKPOINT_CONTENT
 
   def test_private_opt_out_is_recorded_then_accepted_by_final_preparation
     with_trial do
@@ -60,7 +60,8 @@ class PrivateCheckpointSettingsTest < Minitest::Test
 
   def checkpoint_reviewer
     report = { head: @ref, conclusion: 'Proceed', reasons: ['Useful change'], concerns: [],
-               alternative: 'No change', summary: 'Evidence supports it.', next_action: 'Merge.' }
+               alternative: 'No change', summary: 'Evidence supports it.', next_action: 'Merge.',
+               verification_adequacy: ADEQUACY }
     <<~RUBY
       #!/usr/bin/env ruby
       require 'json'

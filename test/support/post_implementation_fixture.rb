@@ -46,7 +46,8 @@ module PostImplementationFixture
 
   def fake_checkpoint(bin, head, conclusion: 'Proceed', concerns: [], report_head: head)
     report = { head: report_head, conclusion:, reasons: ['A useful existing check is restored.'],
-               concerns:, alternative: 'A guide sentence leaves the failure intact.' }
+               concerns:, alternative: 'A guide sentence leaves the failure intact.',
+               verification_adequacy: ADEQUACY }
     write_executable(bin, 'codex', <<~RUBY)
       #!/usr/bin/env ruby
       require 'json'
@@ -56,7 +57,8 @@ module PostImplementationFixture
   end
 
   def fake_claude(bin, head)
-    report = { head:, conclusion: 'Proceed', reasons: ['Useful change'], concerns: [], alternative: 'No change' }
+    report = { head:, conclusion: 'Proceed', reasons: ['Useful change'], concerns: [], alternative: 'No change',
+               verification_adequacy: ADEQUACY }
     write_executable(bin, 'claude', <<~RUBY)
       #!/usr/bin/env ruby
       require 'json'
@@ -65,16 +67,15 @@ module PostImplementationFixture
     RUBY
   end
 
-  def checkpoint_packet(bin)
+  def checkpoint_packet(bin, content = CHECKPOINT_CONTENT)
     packet = File.join(bin, 'packet.json')
-    File.write(packet, JSON.generate(problem: 'Restore the missing-check error', audience: 'Maintainers',
-                                     outcome: 'Fail before submission', validation: 'Focused tests pass',
-                                     repair_history: 'No repairs'))
+    File.write(packet, JSON.generate(content))
     ['--content-file', packet]
   end
 
+  # A test sets @packet to run on other description content.
   def run_checkpoint(root, base, head, bin, *options)
-    packet_options = options.delete(:without_packet) ? [] : checkpoint_packet(bin)
+    packet_options = options.delete(:without_packet) ? [] : checkpoint_packet(bin, @packet || CHECKPOINT_CONTENT)
     output, error, status = Open3.capture3(
       { 'PATH' => "#{bin}:#{ENV.fetch('PATH')}", 'REVIEW_TRACE' => File.join(root, 'trace.json') },
       COMMAND, 'post-implementation', 'run', '--root', root, '--base', base, '--head', head,

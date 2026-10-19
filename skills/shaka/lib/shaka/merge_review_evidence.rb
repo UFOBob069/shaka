@@ -17,8 +17,11 @@ module Shaka
     # Bounds compare requests when many earlier revisions were reviewed.
     EARLIER_CANDIDATES = 5
 
-    def initialize(github, required: nil, waiver: nil, root: nil, checkpoint: nil)
+    # adequacy_confirmed_head names the head a user approved although the checkpoint judged its verification
+    # inadequate; like a limits confirmation, any other head needs a new decision.
+    def initialize(github, required: nil, waiver: nil, root: nil, checkpoint: nil, adequacy_confirmed_head: nil) # rubocop:disable Metrics/ParameterLists
       @github = github
+      @adequacy_confirmed_head = adequacy_confirmed_head
       @required = required
       @waiver = waiver
       @proof = root && MergeTreeProof.new(root)
@@ -26,7 +29,15 @@ module Shaka
     end
 
     # Product evidence is read again after technical evidence and the last native snapshot.
-    def final_check(head) = @checkpoint&.call(head)
+    # Inadequate verification stops only this agent merge: readiness and the Ask handoff stay as published.
+    def final_check(head)
+      @checkpoint&.call(head)&.tap do |evidence|
+        next unless evidence['verification_adequacy'] == 'inadequate' && @adequacy_confirmed_head != head
+
+        raise Error, 'The checkpoint judged verification inadequate for this head; hand it to the user as Ask, ' \
+                     'or pass --adequacy-confirmed-head for a head the user approved'
+      end
+    end
 
     # With the PR's base branch and a checkout `root`, a review also survives a clean update from that base.
     def call(head, base: nil)

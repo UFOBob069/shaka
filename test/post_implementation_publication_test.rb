@@ -89,7 +89,8 @@ module PostImplementationPublicationFixture
     Dir.mktmpdir do |root|
       report = File.join(root, 'report.json')
       File.write(report, JSON.generate(head: 'a' * 40, conclusion: 'Proceed', reasons: ['Useful change'],
-                                       concerns: [], alternative: 'No change leaves the bug'))
+                                       concerns: [], alternative: 'No change leaves the bug',
+                                       verification_adequacy: ADEQUACY))
       result = { 'purpose' => 'post_implementation', 'status' => 'completed', 'head' => 'a' * 40,
                  'report' => report, 'reviewer' => 'openai/codex', 'effort' => 'medium',
                  'prompt_source' => 'Shaka default', 'execution_id' => 'abc12345' }

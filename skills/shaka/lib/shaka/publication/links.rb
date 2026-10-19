@@ -25,7 +25,20 @@ module Shaka
 
       checkpoint = current_checkpoint(content['checkpoint'], pull)
       label = recommendation_label(checkpoint['recommendation'])
-      [*decisions, decisions.any? ? links : "#{label} · #{links}", *next_action(checkpoint['next_action'])]
+      [*decisions, decisions.any? ? links : "#{label} · #{links}", *adequacy(checkpoint['verification_adequacy']),
+       *next_action(checkpoint['next_action'])]
+    end
+
+    # The checkpoint's verdict on whether the verification below proves the intent; the report says why.
+    def adequacy(verdict)
+      return [] if verdict.nil?
+
+      verdicts = PostImplementationReport::ADEQUACY
+      unless verdicts.include?(verdict)
+        raise Error, "Description checkpoint verification_adequacy must be one of: #{verdicts.join(', ')}."
+      end
+
+      ["**Checkpoint on verification:** #{verdict.capitalize}."]
     end
 
     def current_checkpoint(checkpoint, pull)

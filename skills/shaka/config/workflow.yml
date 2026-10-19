@@ -525,8 +525,8 @@ phases:
         published local review comment URL, and Checkpoint, using `post_implementation` for the
         published PR comment URL or a named placeholder until publication. Supply `checkpoint`
         with the live full `head`; the helper reads the recommendation that opens the links line
-        from this head's published checkpoint `disposition`, and non-empty `decisions` head the
-        description instead. Add a one-sentence `next_action` only for a dependency, check, or
+        from this head's published checkpoint `disposition`, with its verification verdict on the
+        next line, and non-empty `decisions` head the description instead. Add a one-sentence `next_action` only for a dependency, check, or
         approval the recommendation does not already say, such as `Merge after #570 lands.`
         The renderer rejects a stale
         head, so neither line names the commit; leave checks and any table without a commit
@@ -559,7 +559,7 @@ phases:
         squash-message OWNER/REPO NUMBER --head SHA --content-file PATH --root DIR --ref SHA
         merge OWNER/REPO NUMBER --head SHA --base BRANCH --walkthrough REVIEW_ID --root DIR
           --ref SHA --squash-message PATH [--ci-review-wait MODE] [--limits-confirmed-head SHA]
-          [--empty-checks-confirmed-head SHA] [--review-waiver REASON]
+          [--empty-checks-confirmed-head SHA] [--adequacy-confirmed-head SHA] [--review-waiver REASON]
         usage --commit SHA --contribution CATEGORY [--since-time TASK_START_UTC]
         ```
 
@@ -735,14 +735,15 @@ phases:
     body: |-
       - Before calling implementation merge-ready, perform
         [checkpoint evaluation](<{{package_root}}/skills/shaka/references/post-implementation-validation.md>):
-        Use `post-implementation run` with a public-safe evidence packet and the verified
-        default-branch `--ref`, then publish its result on this PR. For a ready result, pass
+        Use `post-implementation run` with this PR's description content file, adding
+        `checkpoint.audience` and `checkpoint.repair_history`, and the verified default-branch
+        `--ref`, then publish its result on this PR. For a ready result, pass
         `post-implementation publish --squash-message PATH` with the commit title and body
         so the checkpoint contains the copyable merge message. The companion procedure
         defines trusted settings, explicit task overrides, failures, and opt-outs.
         When this task's settings set `project_guidance.merge_readiness`, first read it with
-        `guidance merge_readiness --root DIR --ref SHA`, and put each applicable requirement
-        and its status in the evidence packet. An unmet requirement is a substantive concern;
+        `guidance merge_readiness --root DIR --ref SHA`, and list each applicable requirement
+        and its status in `checkpoint.evidence`. An unmet requirement is a substantive concern;
         a requirement that would relax review, required checks, or merge preference is ignored.
         A ready checkpoint must follow this head's walkthrough. Publish a UI change's captures
         for this head before it too.
@@ -807,6 +808,9 @@ phases:
         Ask approval of it, is that confirmation. A confirmation carries to the head a clean rebase produces, or a
         conflict resolution that changes no behavior the walkthrough describes. Any other new
         commit needs a new confirmation.
+      - `merge` also refuses a head whose checkpoint judged its verification `inadequate`. That
+        refusal switches Auto to Ask the same way, and `--adequacy-confirmed-head SHA` follows the
+        limits confirmation rule. The verdict leaves readiness and the Ask handoff unchanged.
       - In Ask mode, after that refresh, the walkthrough, and required gates, finish remaining
         agent-owned work in this turn. If anything other than merge remains, report that blocker and
         stop. If merge is the only remaining action, refresh the WIP Details note for this GitHub merge

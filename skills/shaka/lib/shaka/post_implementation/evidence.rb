@@ -19,6 +19,13 @@ module Shaka
                              "\n<!-- #{MARK} ([0-9a-f]{40}) (ready|blocked) -->\\s*\\z")
     def self.disposition(recommendation) = "<!-- #{MARK}-disposition #{recommendation} -->"
 
+    # The reviewer's verification verdict sits above those lines for the same reason.
+    ADEQUACY_SLUGS = PostImplementationReport::ADEQUACY.to_h { |verdict| [verdict.tr(' ', '_'), verdict] }.freeze
+    ADEQUACY = Regexp.new("\n<!-- #{MARK}-adequacy (#{ADEQUACY_SLUGS.keys.join('|')}) -->" \
+                          "\n(?:<!-- #{MARK}-disposition (?:#{RECOMMENDATION}) -->\n)?" \
+                          "<!-- #{MARK} ([0-9a-f]{40}) (?:ready|blocked) -->\\s*\\z")
+    def self.adequacy(verdict) = "<!-- #{MARK}-adequacy #{verdict.tr(' ', '_')} -->"
+
     def initialize(github, enabled: true)
       @github = github
       @enabled = enabled
@@ -34,8 +41,12 @@ module Shaka
                      'run and publish the checkpoint for this head before final preparation.'
       end
 
-      { 'basis' => state, 'head' => reviewed, 'comment' => comment['html_url'] }.compact
+      { 'basis' => state, 'head' => reviewed, 'comment' => comment['html_url'],
+        'verification_adequacy' => adequacy_in(comment, head) }.compact
     end
+
+    # The latest checkpoint's verification verdict, or nil when that checkpoint is for another head or has none.
+    def adequacy(head) = adequacy_in(latest, head)
 
     # The latest checkpoint's owner recommendation, or nil when that checkpoint is for another head or has none.
     def recommendation(head)
@@ -44,6 +55,11 @@ module Shaka
     end
 
     private
+
+    def adequacy_in(comment, head)
+      slug, reviewed = comment&.fetch('body', '').to_s.match(ADEQUACY)&.captures
+      ADEQUACY_SLUGS[slug] if reviewed == head
+    end
 
     def latest
       account = @github.viewer_login
