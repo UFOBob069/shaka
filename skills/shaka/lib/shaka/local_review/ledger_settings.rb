@@ -39,8 +39,9 @@ module Shaka
                      '--settings-ref.'
       end
 
-      unsettled = recorded_findings(head).find(&:open?)
-      raise Error, "Settle finding #{unsettled.id} before a settings re-review of #{head}." if unsettled
+      unsettled = recorded_findings(head).find { |finding| finding.open? || finding.fixed? }
+      raise Error, "Settle finding #{unsettled.id}, or review its fix, before a settings re-review of #{head}." if
+        unsettled
 
       true
     end

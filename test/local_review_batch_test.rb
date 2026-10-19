@@ -160,6 +160,15 @@ class LocalReviewBatchLedgerTest < Minitest::Test
     assert_includes error.message, 'Settle finding F1'
   end
 
+  # Break caught: a re-review of a commit whose recorded fix is in a later commit could never publish.
+  def test_a_settings_rereview_waits_for_a_recorded_fix_to_be_reviewed
+    append(EARLIER, 'openai/codex', findings: 1, settings: 'a' * 64)
+    record([fixed(['openai/codex'])])
+
+    error = assert_raises(Shaka::Error) { append(EARLIER, 'openai/codex', findings: 0, settings: 'c' * 64) }
+    assert_includes error.message, 'review its fix'
+  end
+
   # Break caught: a reviewer without recorded settings joined a batch with them, or the reverse,
   # and split one commit's triage in two.
   def test_reviewers_of_one_commit_share_their_settings

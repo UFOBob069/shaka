@@ -223,17 +223,24 @@ module Shaka
 
     # Earlier rounds reach the reviewer as data: each finding's class and disposition, never the
     # author's note, so the reviewer checks the fixes without anchoring on the author's reasons.
+    # A settings re-review of the first reviewed head has findings but no earlier commit.
     def prior_rounds(marker)
       previous = @ledger&.previous_head(head)
-      return '' unless previous
+      findings = @ledger ? @ledger.prior_findings.map(&:prompt_line) : []
+      return '' unless previous || findings.any?
 
-      findings = @ledger.prior_findings.map(&:prompt_line)
-      commits = capture(git_executable, '-C', root, 'log', '--format=%h %s', "#{previous}..#{head}", '--')
       'PRIOR ROUNDS: Earlier local rounds reviewed this change. Confirm each fix below resolves its finding, ' \
         'and report it again with the same id if not. Do not raise documented findings again unless the ' \
         "change made them worse. Then review the full diff fresh.\n\n--- BEGIN PRIOR ROUND DATA #{marker} ---\n" \
         "Findings:\n#{findings.empty? ? 'none' : findings.join("\n")}\n\n" \
-        "Commits since #{previous}:\n#{commits}--- END PRIOR ROUND DATA #{marker} ---\n\n"
+        "#{commits_since(previous)}--- END PRIOR ROUND DATA #{marker} ---\n\n"
+    end
+
+    def commits_since(previous)
+      return "Commits since the earlier review: none; it reviewed #{head} under other settings.\n" unless previous
+
+      "Commits since #{previous}:\n" \
+        "#{capture(git_executable, '-C', root, 'log', '--format=%h %s', "#{previous}..#{head}", '--')}"
     end
   end
 

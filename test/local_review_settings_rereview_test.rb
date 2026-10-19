@@ -42,7 +42,7 @@ module LocalReviewSettingsRereviewFixture
   def fake_codex(findings: 0)
     executable(File.join(@bin, 'codex'), <<~RUBY)
       #!/usr/bin/env ruby
-      STDIN.read
+      File.write(#{File.join(@bin, 'prompt').inspect}, STDIN.read)
       File.write(ARGV.fetch(ARGV.index('-o') + 1), "report\\nREVIEWED #{@head} BY openai/codex EFFORT medium FINDINGS #{findings}\\n")
     RUBY
   end
@@ -65,9 +65,9 @@ module LocalReviewSettingsRereviewFixture
     JSON.parse(output)
   end
 
-  def record_clean
+  def record_clean(findings = [])
     path = "#{@ledger}.record.json"
-    File.write(path, JSON.generate('findings' => []))
+    File.write(path, JSON.generate('findings' => findings))
     capture_io { assert_equal 0, Shaka::LocalReview.run(['record', '--ledger', @ledger, '--content-file', path]) }
   end
 
@@ -146,6 +146,18 @@ class LocalReviewSettingsRereviewTest < Minitest::Test
       fake_codex(findings: 1)
       review
       updated_installation { assert_includes review(expect: 1).fetch('reason'), 'Record round 1' }
+    end
+  end
+
+  # Break caught: with no earlier commit, the re-review prompt left out every earlier finding.
+  def test_a_settings_rereview_of_the_first_commit_sees_earlier_findings
+    in_repository do
+      fake_codex(findings: 1)
+      review
+      record_clean([{ 'id' => 'F1', 'summary' => 'Missing test', 'class' => 'nit', 'disposition' => 'documented' }])
+      fake_codex
+      updated_installation { review }
+      assert_includes File.read(File.join(@bin, 'prompt')), '- [F1] nit: Missing test'
     end
   end
 
