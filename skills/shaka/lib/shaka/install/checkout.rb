@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative 'checkout_development'
 require_relative 'checkout_drift'
 require_relative 'checkout_git'
+require_relative 'checkout_record'
 require_relative 'checkout_validation'
 require_relative 'directory_safety'
 require_relative 'package'
@@ -14,6 +16,8 @@ module Shaka
       include DirectorySafety
       include CheckoutGit
       include CheckoutDrift
+      include CheckoutDevelopment
+      include CheckoutRecord
       include CheckoutValidation
 
       REPOSITORY = 'https://github.com/shakacode/shaka.git'
@@ -47,7 +51,6 @@ module Shaka
         advance(candidate)
       end
 
-      def revision = git('rev-parse', 'HEAD')
       def pending? = @record['pending_revision'] == revision
 
       def save(targets, identity)
@@ -73,10 +76,8 @@ module Shaka
           ensure_safe_directory(@root, 'Installation directory')
           @root = File.realpath(@root)
           clone if Dir.empty?(@root)
-        else
-          verify_safe_directory(@root, 'Installation directory')
         end
-        verify_safe_directory(File.join(@root, '.git'), 'Installation Git directory')
+        verify_directories
       end
 
       def select_source
@@ -88,34 +89,6 @@ module Shaka
         @repository ||= REPOSITORY
         @branch ||= 'main'
         git('clone', '--quiet', '--branch', @branch, '--', @repository, @root)
-      end
-
-      def read_record
-        path = File.join(@root, '.git', RECORD)
-        return unless File.exist?(path) || File.symlink?(path)
-
-        raise ArgumentError, 'Installation record must be a regular file' unless File.lstat(path).file?
-
-        value = JSON.parse(File.read(path))
-        raise ArgumentError, 'Installation record does not match this directory' unless
-          valid_record?(value)
-
-        value
-      rescue JSON::ParserError
-        raise ArgumentError, 'Installation record is invalid'
-      end
-
-      def valid_record?(value)
-        value.is_a?(Hash) && value['schema_version'] == 1 && value['directory'] == @root &&
-          %w[repository branch revision].all? { |key| value[key].is_a?(String) && !value[key].empty? } &&
-          valid_targets?(value['targets'])
-      end
-
-      def valid_targets?(targets)
-        targets.is_a?(Array) && !targets.empty? && targets.all? do |target|
-          target.is_a?(Hash) && target['directory'].is_a?(String) &&
-            target['directory'].start_with?('/') && Package.valid_skills?(target['names'])
-        end
       end
     end
   end

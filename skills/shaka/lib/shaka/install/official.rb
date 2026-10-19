@@ -6,6 +6,8 @@ require_relative 'official_links'
 require_relative 'direct_source'
 require_relative 'link_lock'
 require_relative 'ruby_record'
+require_relative 'take_over'
+require_relative 'take_over_owner'
 
 module Shaka
   module Install
@@ -13,12 +15,17 @@ module Shaka
     class Official
       include LinkLock
       include RubyRecord
+      include TakeOver
+      include TakeOverOwner
 
       HOSTS = { 'codex' => '.agents/skills', 'claude' => '.claude/skills', 'cursor' => '.cursor/skills',
                 'opencode' => '.config/opencode/skills' }.freeze
+
       def initialize(source, options)
-        selected = options[:directory] || registered_source(source) || File.join(Dir.home, '.agents/shaka')
-        @checkout = Checkout.new(selected, **options.slice(:repository, :branch))
+        selected = options[:directory] || (source if options[:take_over]) || registered_source(source) ||
+                   File.join(Dir.home, '.agents/shaka')
+        @owner = owning_checkout(selected, options[:skills_dir], registered_source(source)) if options[:take_over]
+        @checkout = Checkout.new(selected, **source_options(options))
         @agents = options.fetch(:agents)
         @skills_dir = options[:skills_dir]
         @names = options.fetch(:names).uniq
@@ -26,9 +33,10 @@ module Shaka
 
       def run(action)
         @checkout.prepare(action)
+        @checkout.check_development_use(action)
         return verify(targets_for(action)) if action == :verify
 
-        with_lock(File.join(@checkout.root, '.git')) { install(action) }
+        @owner ? take_over : with_lock(File.join(@checkout.root, '.git')) { install(action) }
         update_reminder
       end
 
@@ -108,11 +116,11 @@ module Shaka
         [File.join(Dir.home, HOSTS.fetch('codex'))]
       end
 
-      def links_for(target)
+      def links_for(target, previous_source: nil)
         directory = target.fetch('directory')
 
         OfficialLinks.new(directory, File.join(Dir.home, '.local/share/shaka/installs'),
-                          @checkout.root, target.fetch('names'))
+                          @checkout.root, target.fetch('names'), previous_source:)
       end
 
       def identity(targets, root = @checkout.root)

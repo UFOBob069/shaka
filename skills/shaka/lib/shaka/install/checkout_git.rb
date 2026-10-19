@@ -10,6 +10,8 @@ module Shaka
       AUTHENTICATION_ENV = %w[GIT_SSH GIT_SSH_COMMAND GIT_SSH_VARIANT GIT_ASKPASS GIT_TERMINAL_PROMPT
                               GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM].freeze
 
+      def revision = git('rev-parse', 'HEAD')
+
       private
 
       def advance(candidate)

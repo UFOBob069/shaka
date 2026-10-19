@@ -79,7 +79,8 @@ class CliOpeningSettingsTest < Minitest::Test
   end
 
   def write_fake_codex(dir)
-    sentence = { 'character' => 'Maintainers', 'reader_facing' => true, 'action' => 'choose',
+    sentence = { 'character' => 'Maintainers', 'reader_facing' => true, 'character_can_act' => true,
+                 'action' => 'choose',
                  'object' => 'settings', 'hidden_actions' => [], 'internal_terms' => [] }
     write_executable(dir, 'codex', <<~RUBY)
       require 'json'

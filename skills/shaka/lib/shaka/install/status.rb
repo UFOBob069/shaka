@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'json'
 require_relative 'status_inventory'
 require_relative 'status_links'
 require_relative 'status_healthy'
@@ -8,6 +9,22 @@ require_relative 'status_text'
 
 module Shaka
   module Install
+    # The install command's --status and --json flags.
+    module StatusFlags
+      private
+
+      def status_options(options)
+        options.on('--status', 'Name the installation state and one next step; changes nothing') { @actions << :status }
+        options.on('--json', 'With --status, print the report as JSON') { @options[:json] = true }
+      end
+
+      def validate_status
+        raise ArgumentError, '--json works only with --status' if @options[:json] && @actions != [:status]
+      end
+
+      def print_status = Status.new(source: @source, directory: @options[:directory]).print(json: @options[:json])
+    end
+
     # Names the installation state with one next step. Read-only and offline: it never fetches,
     # creates a directory, or rewrites a record or link.
     class Status
@@ -27,6 +44,11 @@ module Shaka
       end
 
       def render(report = call) = StatusText.render(report)
+
+      def print(json: false)
+        report = call
+        puts json ? JSON.pretty_generate(report) : render(report)
+      end
 
       private
 

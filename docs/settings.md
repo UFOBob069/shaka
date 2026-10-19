@@ -683,6 +683,9 @@ rendered before and after screenshots.
 
 **Optional.** Check whether the first sentence leads with a useful outcome for
 its reader. This is writing advice, not a check of the whole description's accuracy.
+It flags a first sentence led by an internal tool, such as a command or helper, and
+one that gives a thing something only a person does, such as "A repository can now
+see when a reviewer could not run."
 A failed check does not block publication or merging.
 
 > $shaka Use Codex for opening checks.
@@ -860,6 +863,10 @@ branches:
 | `{host}` | Coding-agent slug, such as `codex` or `claude` |
 | `{issue}` | Issue, PR, or work-item number, or `ad-hoc` for a task with none; required in the template |
 | `{description}` | Short task description |
+
+The settings check fills each placeholder with a sample value and refuses a template
+whose result is not a plain branch name: one Git rejects, such as a name with a space
+or `..`, or a full ref such as `refs/heads/{issue}`.
 
 For example: `alex-codex/42-fix-search`, or `alex-codex/ad-hoc-fix-search` when the
 task was given as a sentence. Before starting either one, the agent checks open PRs and

@@ -65,22 +65,13 @@ class InstallStatusEdgesTest < Minitest::Test
     assert_equal "chmod go-w #{Shellwords.escape(File.realpath(root))}", report['next_command']
   end
 
-  # A clone of a non-main branch keeps a local main that holds nothing unpushed; that is not development.
-  def test_a_non_main_install_keeps_its_leftover_main
-    git('-C', @root, 'push', '-q', 'origin', 'main:stable')
-    root = clone_to(default_path)
-    git('-C', root, 'switch', '-q', 'stable')
-    run_install(root, '--directory', root, '--repository', @remote, '--branch', 'stable')
-    assert_equal 'A5', status(root)['state']
-  end
-
   def test_a_branch_with_unpushed_commits_is_development
     root = default_install
     git('-C', root, 'switch', '-q', '-c', 'experiment')
     commit(root, 'experiment')
     git('-C', root, 'switch', '-q', 'main')
     details = status(root)['findings'].map { |item| item['detail'] }
-    assert(details.any? { |detail| detail.include?('local branches experiment') }, details.inspect)
+    assert(details.any? { |detail| detail.include?('local branches: experiment') }, details.inspect)
   end
 
   def test_a_branch_without_its_tracking_branch_is_named

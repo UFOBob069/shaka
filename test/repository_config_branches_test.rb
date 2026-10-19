@@ -26,6 +26,16 @@ class RepositoryConfigBranchesTest < Minitest::Test
     end
   end
 
+  def test_rejects_templates_that_cannot_produce_a_valid_branch_name
+    ['fix {issue}', '{login}:{issue}-{description}', '{issue}..{description}', 'refs/heads/{issue}',
+     '{issue}.lock', '-{issue}'].each do |name|
+      with_repository('branches' => { 'name' => name }) do |root|
+        message = assert_raises(Shaka::Error, name) { Shaka::RepositoryConfig.load(root:) }.message
+        assert_includes message, 'branches.name', name
+      end
+    end
+  end
+
   def test_labels_an_unknown_branch_setting
     with_repository('branches' => { 'name' => '{issue}', 'prefix' => 'feature' }) do |root|
       message = assert_raises(Shaka::Error) { Shaka::RepositoryConfig.load(root:) }.message

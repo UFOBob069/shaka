@@ -117,7 +117,7 @@ module BrokenInstallScenarios
   def build_c3
     root = default_install
     git('-C', root, 'worktree', 'add', '-q', File.join(@directory, 'feature'))
-    problem(root, nil)
+    problem(root, '--take-over')
   end
 
   # A split install: Claude uses one registered checkout and Cursor another.

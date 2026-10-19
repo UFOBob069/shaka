@@ -74,7 +74,7 @@ module Shaka
         return if root.nil? || @checkouts.key?(root) || @unreadable.key?(root)
         return unless File.directory?(File.join(root, '.git'))
 
-        record = Checkout.new(root).send(:read_record)
+        record = Checkout.new(root).read_record
         @checkouts[root] = StatusCheckout.new(root, record) if record
       rescue ArgumentError => e
         @unreadable[root] = e.message

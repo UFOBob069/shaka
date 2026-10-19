@@ -118,3 +118,35 @@ The update stops without changing the checkout when it finds local changes or
 history that diverged from the recorded branch. To read an update before you
 apply it, run `git fetch` in the checkout and compare `HEAD` with the recorded
 branch, which is `origin/main` unless you chose another.
+
+## Develop Shaka in a separate clone
+
+Your coding agent runs Shaka straight from the folder you installed, so keep
+that folder for Shaka alone. If you also work on Shaka, do it in a second clone.
+
+The installer stops when the folder:
+
+- is a Git worktree. Worktrees are often deleted after their branch merges, and
+  Shaka would disappear with it.
+- has other branches or worktrees. `install --verify` and `install --update`
+  only warn about these.
+
+### Move Shaka out of a clone you develop in
+
+Run this inside the clone you develop in. It makes a fresh clone for Shaka and
+points your coding agents at it:
+
+```bash
+./bin/install --directory ~/.local/share/shaka/source --take-over
+```
+
+Your old clone keeps its files, branches, and worktrees; it only stops being
+the installed copy. If the move fails partway, your agents keep using the old
+clone, and the installer lists anything it could not put back. When you run the
+command from a different clone and your skills live in a custom folder, add
+`--skills-dir DIR`.
+
+If the installer is force-stopped (`kill -9`) at the wrong moment, no clone
+counts as installed. To fix it, rename the newest
+`.git/shaka-install.retired-*.json` in the old clone to
+`.git/shaka-install.json`, then run the command again.

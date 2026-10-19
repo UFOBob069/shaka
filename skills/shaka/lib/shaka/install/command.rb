@@ -9,6 +9,8 @@ module Shaka
   module Install
     # One entry point for the official checkout and explicit managed-copy operations.
     class Command
+      include StatusFlags
+
       VALUES = { '--directory DIR' => :directory, '--repository URL' => :repository,
                  '--branch NAME' => :branch, '--skills-dir DIR' => :skills_dir,
                  '--managed-dir DIR' => :managed_dir, '--rollback PACKAGE_ID' => :rollback }.freeze
@@ -23,7 +25,7 @@ module Shaka
       def run(arguments)
         parser.parse!(arguments)
         validate(arguments)
-        install
+        @actions == [:status] ? print_status : install
         0
       rescue OptionParser::ParseError, SystemCallError, IOError, ArgumentError => e
         warn e.message
@@ -54,8 +56,10 @@ module Shaka
       def actions(options)
         options.on('--update') { @actions << :update }
         options.on('--verify') { @actions << :verify }
-        options.on('--status', 'Name the installation state and one next step; changes nothing') { @actions << :status }
-        options.on('--json', 'With --status, print the report as JSON') { @options[:json] = true }
+        status_options(options)
+        options.on('--take-over', 'Move every host link from the checkout that owns them to this one') do
+          @options[:take_over] = true
+        end
         options.on('-h', '--help') do
           puts options
           exit
@@ -71,6 +75,7 @@ module Shaka
         end
         validate_agents
         validate_action
+        validate_take_over
         validate_managed if managed?
       end
 
@@ -86,14 +91,18 @@ module Shaka
       end
 
       def validate_action
-        raise ArgumentError, '--json works only with --status' if @options[:json] && @actions != [:status]
-        if @actions.empty? || (@options[:agents].empty? && @options.values_at(:skills_dir, :repository,
-                                                                              :branch).none? &&
-                  @options[:names] == ['shaka'])
-          return
-        end
+        validate_status
+        selected = @options[:agents].any? || @options.values_at(:skills_dir, :repository, :branch).any?
+        return if @actions.empty? || !(selected || @options[:names] != ['shaka'])
 
         raise ArgumentError, 'Use bin/install to change installation selections before maintenance'
+      end
+
+      def validate_take_over
+        return if !@options[:take_over] ||
+                  (@actions.empty? && @options[:agents].empty? && @options[:names] == ['shaka'] && !managed?)
+
+        raise ArgumentError, 'Use --take-over alone or with --directory, --repository, --branch, or --skills-dir'
       end
 
       def validate_managed
@@ -107,24 +116,17 @@ module Shaka
       def managed? = @options.values_at(:managed, :managed_dir, :rollback).any? || legacy_target?
 
       def legacy_target?
-        @options[:skills_dir] && !@options[:directory] && @options[:agents].empty? && @actions.empty?
+        @options[:skills_dir] && !@options[:directory] && @options[:agents].empty? && @actions.empty? &&
+          !@options[:take_over]
       end
 
       def install
-        return status if @actions == [:status]
-
         if managed?
           Installer.new(source_root: @source, **@options.slice(:skills_dir, :names, :managed_dir, :rollback)).run
         else
           Official.new(@source, @options)
                   .run(@actions.first || :install)
         end
-      end
-
-      def status
-        status = Status.new(source: @source, directory: @options[:directory])
-        report = status.call
-        puts @options[:json] ? JSON.pretty_generate(report) : status.render(report)
       end
     end
   end

@@ -4,6 +4,7 @@ require 'shellwords'
 require_relative 'official'
 require_relative 'status_git'
 require_relative 'status_revision'
+require_relative 'checkout_development'
 require_relative 'status_modes'
 require_relative 'status_states'
 
@@ -13,6 +14,7 @@ module Shaka
     class StatusCheckout
       include StatusGit
       include StatusRevision
+      include CheckoutDevelopment
 
       include StatusModes
 
@@ -21,6 +23,7 @@ module Shaka
       def initialize(root, record)
         @root = root
         @record = record
+        @branch = record['branch']
       end
 
       def helper = command(File.join(@root, 'skills/shaka/scripts/shaka'))
@@ -100,26 +103,17 @@ module Shaka
         finding('B8', "recorded Ruby cannot be read: #{e.message}", command: installer)
       end
 
+      # The installer's own check, so status and installation agree on what counts as development.
+      # Moving development out fixes nothing broken, so it ranks after the install's own problems.
       def development
-        uses = [linked_worktrees, extra_branches].compact
+        uses = development_uses
         return if uses.empty?
 
-        # Moving development out fixes nothing broken, so it ranks after the install's own problems.
-        finding('C3', "source checkout is also used for development: #{uses.join('; ')}",
-                decision: "Move development to a separate clone; the source checkout keeps only #{@record['branch']}.")
+        finding('C3', "source checkout is also used for development (#{uses.join('; ')})",
+                command: "#{installer} --directory #{CheckoutDevelopment::SOURCE_EXAMPLE} --take-over")
           .merge('rank' => 'C3-development')
-      end
-
-      def linked_worktrees
-        count = value('worktree', 'list', '--porcelain').to_s.lines.grep(/\Aworktree /).size - 1
-        "#{count} linked worktree(s)" if count.positive?
-      end
-
-      # Only a branch with commits no origin branch holds is development; a clone's leftover main is not.
-      def extra_branches
-        branches = value('for-each-ref', '--format=%(refname:short)', 'refs/heads').to_s.lines.map(&:strip)
-        extra = (branches - [@record['branch']]).reject { |name| value('rev-list', name, '--not', '--remotes') == '' }
-        "local branches #{listed(extra)}" if extra.any?
+      rescue ArgumentError
+        nil
       end
 
       def git_command = "git -C #{command(@root)}"

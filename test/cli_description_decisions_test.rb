@@ -157,8 +157,16 @@ DESCRIPTION_GH = <<~'RUBY'
   when %r{pulls/1/files\?} then puts '[]'
   when 'markdown' then puts JSON.generate('<table></table>' * 10)
   when 'graphql'
-    state = ENV.fetch('PR_STATE', 'OPEN')
-    puts JSON.generate('data' => { 'repository' => { 'pullRequest' => { 'state' => state } } })
+    if request['query'].to_s.include?('timelineItems')
+      waited = { '__typename' => 'LabeledEvent', 'createdAt' => '2026-10-18T08:10:00Z',
+                 'label' => { 'name' => 'awaiting-answer' } }
+      items = { 'pageInfo' => { 'hasNextPage' => false }, 'nodes' => [waited] }
+      pull = { 'createdAt' => '2026-10-18T08:00:00Z', 'commits' => { 'nodes' => [] }, 'timelineItems' => items }
+      puts JSON.generate('data' => { 'repository' => { 'pullRequest' => pull } })
+    else
+      state = ENV.fetch('PR_STATE', 'OPEN')
+      puts JSON.generate('data' => { 'repository' => { 'pullRequest' => { 'state' => state } } })
+    end
   when %r{issues/1/labels\?}
     name = ENV['PR_LABEL'].to_s
     puts JSON.generate(name.empty? ? [] : [{ 'name' => name }])

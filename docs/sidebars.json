@@ -33,6 +33,7 @@
       "items": [
         "pr-verification",
         "reference/usage-and-cost",
+        "reference/timings",
         {
           "type": "doc",
           "id": "expected-experience",
