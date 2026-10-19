@@ -34,9 +34,21 @@ module Shaka
       def unsafe_files
         skills = File.join(@root, 'skills')
         paths = skill_paths(skills)
+        return refused if @refusal
+
         symlink(paths) || foreign(paths) || special(paths, skills) || writable(paths, skills)
       rescue SystemCallError
         nil
+      end
+
+      # The installer's own refusal of the skill files, which Git may not show, such as a helper that
+      # lost its execute bit under core.filemode=false.
+      def refused
+        helper = @refusal[/\ASkill helper is not executable: (.+)\z/, 1]
+        return finding('B10', @refusal, command: "chmod a+x #{Shellwords.escape(helper)}") if helper
+
+        finding('B3', "installation refuses the skill files: #{@refusal}",
+                decision: 'Fix or restore the file it names, then rerun status.')
       end
 
       def symlink(paths)
@@ -89,7 +101,8 @@ module Shaka
         names = @record['targets'].flat_map { |target| target['names'] }.uniq
         tree = Tree.new(names, source_root: @root)
         [skills] + names.flat_map { |name| [File.join(skills, name)] + tree.entries(@root, name) }
-      rescue ArgumentError
+      rescue ArgumentError => e
+        @refusal = e.message
         [skills]
       end
     end

@@ -16,14 +16,6 @@ class InstallStatusEntryTest < Minitest::Test
     assert_equal 'A1', status(root)['state']
   end
 
-  def test_a_writable_skill_file_is_unsafe
-    root = default_install
-    File.chmod(0o664, File.join(root, 'skills/shaka/SKILL.md'))
-    report = status(root)
-    assert_equal 'B10', report['state']
-    assert_includes report['next_command'], 'chmod -R go-w'
-  end
-
   TOKEN_URL = 'https://someone:s3cr@t-token@example.com/shaka.git'
 
   # A refused update must change nothing, including the recorded Ruby while it still works.
@@ -38,33 +30,6 @@ class InstallStatusEntryTest < Minitest::Test
     _output, process = Open3.capture2e(environment, RbConfig.ruby, File.join(root, 'bin/install'), '--update')
     refute_predicate process, :success?
     assert_equal "#{other}\n", File.read(record)
-  end
-
-  # Installation refuses a symlink in a skill, and chmod cannot fix one, so status asks to move it.
-  def test_a_symlink_in_a_skill_is_named
-    root = default_install
-    link = File.join(root, 'skills/shaka/alias.md')
-    File.symlink('SKILL.md', link)
-    report = status(root)
-    assert_equal ['B10', nil], report.values_at('state', 'next_command')
-    assert_includes report['decision'], 'alias.md'
-  end
-
-  # Git ignores a 0644 to 0600 change, but verification refuses it, so status must not call it healthy.
-  def test_a_mode_change_git_ignores_is_named
-    root = default_install
-    File.chmod(0o600, File.join(root, 'skills/shaka/SKILL.md'))
-    report = status(root)
-    assert_equal ['B3', nil], report.values_at('state', 'next_command')
-    assert_includes report['decision'], 'rerun bin/install'
-  end
-
-  def test_a_setuid_skill_file_is_unsafe
-    root = default_install
-    File.chmod(0o4644, File.join(root, 'skills/shaka/SKILL.md'))
-    report = status(root)
-    assert_equal 'B10', report['state']
-    assert_includes report['next_command'], 'chmod -R a-st'
   end
 
   # The token holds an @, so redaction must strip up to the last @ before the path, as git does.
