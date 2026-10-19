@@ -14,7 +14,8 @@ module Shaka
       def self.author(author)
         return unless author.is_a?(Hash) && author['login'].is_a?(String)
 
-        author['__typename'] == 'Bot' ? "#{author['login']}[bot]" : author['login']
+        login = author['login']
+        author['__typename'] == 'Bot' ? "#{login.delete_suffix('[bot]')}[bot]" : login
       end
     end
   end
