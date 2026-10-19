@@ -106,7 +106,7 @@ module SeamInitializerTestHelpers
       git = File.join(bin, 'git')
       real = Open3.capture2('sh', '-c', 'command -v git').first.strip
       File.write(git, "#!/bin/sh\ncase \"$*\" in *--show-toplevel*) exec #{real} \"$@\" ;; esac\n" \
-                      "printf 'main\\n'\nprintf 'warning\\n' >&2\n")
+                      "for name; do :; done\nprintf '%s\\n' \"$name\"\nprintf 'warning\\n' >&2\n")
       File.chmod(0o755, git)
       yield({ 'PATH' => [bin, ENV.fetch('PATH', '')].join(File::PATH_SEPARATOR) })
     end

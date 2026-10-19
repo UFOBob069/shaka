@@ -76,7 +76,7 @@ module Shaka
       end
 
       def validate_optional
-        BranchSchema.new(@data['branches']).validate if @data.key?('branches')
+        BranchSchema.new(@data['branches'], root: @root).validate if @data.key?('branches')
         WipSchema.new(@data['wip']).validate if @data.key?('wip')
         OpeningSchema.new(@data['opening_check']).validate if @data.key?('opening_check')
         validate_description
