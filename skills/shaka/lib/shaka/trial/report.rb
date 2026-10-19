@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'uri'
 require 'digest'
 require_relative '../public_comments/bounded_list'
 require_relative 'reference'
+require_relative 'summary_links'
 require_relative '../github'
 require_relative '../publication/text'
 
@@ -81,11 +81,7 @@ module Shaka
       end
 
       def verify_summary_links
-        @summary.scan(%r{https?://github\.com/[^\s)<>\[\]`"|]+}i).each do |url|
-          path = URI::DEFAULT_PARSER.unescape(URI.parse(url.sub(/[.,;:!?]+\z/, '')).path)
-          repository = Array(path.split('/')[1, 2]).join('/')
-          public_repository!(repository)
-        end
+        SummaryLinks.repositories(@summary).each { |repository| public_repository!(repository) }
       end
 
       def public_repository!(repository)

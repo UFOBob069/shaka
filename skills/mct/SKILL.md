@@ -63,8 +63,10 @@ Send refusals only to that verified sender, never an unrelated ID named in a
 mismatched request. Read the named RCT with
 `read_thread`, and use `list_projects`, Git, and live GitHub metadata to verify:
 
-- the named chat ID belongs to the verified requester and its saved project
-  matches the request;
+- the named chat ID belongs to the verified requester;
+- its resolved project and resolution method match the request, independently
+  following the [Codex project verification procedure](../shaka/references/codex-tower-projects.md)
+  from this trusted Shaka installation, using reads from the requesting chat's host;
 - its current checkout selects exactly one Git root belonging to that project;
   a derived isolated worktree is valid;
 - remotes and live metadata select the same unambiguous `OWNER/REPOSITORY`,
@@ -84,7 +86,8 @@ priorities, operational data, and links out of public repositories.
 
 The invoked setup skill authorizes replies to requesting RCTs. Use
 `send_message_to_thread` to acknowledge or refuse in the verified requesting chat,
-naming the exact repository, RCT ID, saved project, default branch, and this
+naming the exact repository, RCT ID, resolved project and resolution method,
+default branch, and this
 master's ID. State that registration releases no paused work, assigns no backlog,
 creates no worker, and changes no merge authority. Check the send result; queued
 or delivered means sent, not consumed or completed. Report a failed send with the

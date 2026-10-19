@@ -36,7 +36,7 @@ module Shaka
     def announce(target)
       puts "Package: #{File.basename(target)}"
       puts "Next: #{Shellwords.escape(File.join(@skills_dir, 'shaka/scripts/shaka'))} seam init --help"
-      puts 'Keep Shaka updated: this is a retained copy. Follow ' \
+      puts 'Keep Shaka updated: this is a managed copy. Follow ' \
            'https://github.com/shakacode/shaka/blob/main/skills/shaka/references/official-installation.md ' \
            'to migrate or refresh your chosen source. Keep active trial and rollback copies.'
     rescue SystemCallError, IOError

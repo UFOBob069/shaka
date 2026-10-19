@@ -61,7 +61,7 @@ module Shaka
       host = host_from(match&.[](1))
       return unless host
 
-      path = repository_path(match[2], origin)
+      path = repository_path(match[2].delete_prefix('/'), origin)
       { origin:, scheme: nil, host:, port: nil, identity: path, name: File.basename(path) }
     end
     private_class_method :scp_fields
@@ -76,7 +76,7 @@ module Shaka
     private_class_method :valid_host?
 
     def repository_path(raw, origin)
-      path = raw.split(/[?#]/, 2).first&.delete_suffix('.git')
+      path = raw.split(/[?#]/, 2).first&.delete_suffix('/')&.delete_suffix('.git')
       return path if path&.match?(%r{\A[A-Za-z0-9._~-]+/[A-Za-z0-9._~-]+\z})
 
       parse_error(origin)

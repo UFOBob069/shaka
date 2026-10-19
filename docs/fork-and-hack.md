@@ -43,7 +43,7 @@ git -C "$SHAKA_DIR" push -u origin mine
 
 Replace `YOUR-LOGIN` and `codex`. The installer checks that `--repository`
 matches the clone's `origin` exactly and stops with
-`Installation origin differs from the selected repository` when it doesn't.
+`Installation origin differs from the expected repository` when it doesn't.
 Using `FORK_URL` for both keeps them equal; for SSH, set it to your SSH URL.
 
 **Already installed Shaka?** Switch that checkout to your fork instead of
@@ -183,7 +183,7 @@ Then tell us about it in an issue with a link.
 
 | What you see | What to do |
 | --- | --- |
-| `Installation origin differs from the selected repository` | Pass `--repository` with the URL you cloned, exactly as `git config --get remote.origin.url` prints it. |
-| `Installation checkout is dirty; use a separate development checkout` | Move the edit to your working clone, push it to `mine`, and run `install --update`. |
-| `Not possible to fast-forward` | `mine` was rewritten. Merge the installed commit back in, as [Keep your fork current](#keep-your-fork-current) shows. |
-| `Unexpected installation branch` or `Unexpected installation upstream` | Check out the branch you installed, tracking `origin/<branch>`. |
+| `Installation origin differs from the expected repository` | Pass `--repository` with the URL you cloned, exactly as `git config --get remote.origin.url` prints it. |
+| `Installation checkout has uncommitted changes` | Move the edit to your working clone, push it to `mine`, and run `install --update`. |
+| `The registered branch (origin/mine of ...) was rewritten` | `mine` was rewritten. Merge the installed commit back in, as [Keep your fork current](#keep-your-fork-current) shows. |
+| `Installation checkout is not on the registered branch` or `Installation branch mine does not follow origin/mine` | Run the `git` command at the end of the message to return to the branch you installed. |

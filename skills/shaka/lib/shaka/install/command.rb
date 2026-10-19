@@ -7,7 +7,7 @@ require_relative 'status'
 
 module Shaka
   module Install
-    # One entry point for the official checkout and explicit retained-copy operations.
+    # One entry point for the official checkout and explicit managed-copy operations.
     class Command
       VALUES = { '--directory DIR' => :directory, '--repository URL' => :repository,
                  '--branch NAME' => :branch, '--skills-dir DIR' => :skills_dir,
@@ -48,7 +48,7 @@ module Shaka
         options.on('--with-mct') { @options[:names] << 'mct' }
         options.on('--with-rct') { @options[:names] << 'rct' }
         options.on('--with-claude-towers') { @options[:names].push('mct-claude', 'rct-claude') }
-        options.on('--managed', 'Explicit retained copy (normally use a PR trial)') { @options[:managed] = true }
+        options.on('--managed', 'Explicit managed copy (normally use a PR trial)') { @options[:managed] = true }
       end
 
       def actions(options)

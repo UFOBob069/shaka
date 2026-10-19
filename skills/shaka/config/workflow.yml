@@ -264,7 +264,11 @@ phases:
         complete. For an asynchronous check, wait for completion
         and inspect its final exit status and output before reporting a pass; a running session or
         partial green output is not a completed check. Recover missing completion evidence or report
-        it as unknown.
+        it as unknown. Keep the task open while local validation or local review runs: wait in the
+        foreground or through a host feature that resumes this session when the command exits.
+        When the turn ends first and no PR exists yet, end it with one line naming the running check,
+        saying the task is unfinished, and giving the host's Shaka invocation with the task link or
+        description as the resume prompt.
       - Never defer always-on required, security, or trust checks.
       - Record commands, results, and the tested revision. After committing, use `shaka evidence bind
         --root DIR --ref TRUSTED_SHA --repository OWNER/REPO --head SHA --result PATH` for each

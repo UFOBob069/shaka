@@ -1,0 +1,27 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "shaka",
+  "version": "0.1.0",
+  "description": "Deliver a task through verified GitHub PRs.",
+  "author": { "name": "ShakaCode", "url": "https://shakacode.com" },
+  "homepage": "https://shaka.shakacode.com",
+  "repository": "https://github.com/shakacode/shaka",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "onboardingSkill": "./skills/shaka/SKILL.md",
+      "interface": {
+        "displayName": "Shaka",
+        "shortDescription": "From task to verified PR",
+        "longDescription": "Guide a coding task through implementation, checks, independent review, and a clear PR handoff. This compatibility trial requires Ruby 3.4+, Git, and authenticated GitHub CLI. It is not a public marketplace release.",
+        "developerName": "ShakaCode",
+        "category": "Developer Tools",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": ["Check whether Shaka is ready in this project."],
+        "composerIcon": "./assets/icon.svg",
+        "logo": "./assets/icon.svg"
+      }
+    }
+  }
+}

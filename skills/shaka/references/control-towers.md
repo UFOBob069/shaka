@@ -19,7 +19,8 @@ Start a new chat to refresh discovery if needed, without establishing a second m
 
 ## Establish a repository tower
 
-Create a Codex task in the saved project for the intended repository, then send:
+Create a Codex task in the intended repository's saved project, checkout, or
+worktree, then send:
 
 ```text
 $rct

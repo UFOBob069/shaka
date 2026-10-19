@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative 'official_install_support'
+require_relative 'install_refusal_support'
 
 class OfficialRubyTest < Minitest::Test
-  include OfficialInstallSupport
+  include InstallRefusalSupport
 
   def setup
     super
@@ -39,5 +39,34 @@ class OfficialRubyTest < Minitest::Test
     output, status = Open3.capture2e(@helper, 'install', '--verify')
     refute_predicate status, :success?
     assert_includes output, 'installation Ruby is unavailable'
+  end
+
+  def test_launcher_names_the_missing_ruby_and_the_reinstall_command
+    File.write(File.join(@root, '.git/shaka-ruby'), "/missing/ruby\n")
+    output, status = Open3.capture2e({ 'HOME' => @home }, @helper, 'install', '--verify')
+    refute_predicate status, :success?
+    assert_includes output, "/missing/ruby, recorded in #{checkout}/.git/shaka-ruby"
+    run_next(output)
+    output, status = Open3.capture2e({ 'HOME' => @home }, @helper, 'install', '--verify')
+    assert_predicate status, :success?, output
+  end
+
+  def test_launcher_command_survives_an_apostrophe_in_the_path
+    installed = File.join(@directory, "o'connor")
+    output, status = invoke('--directory', installed, '--repository', @remote, '--skills-dir',
+                            File.join(@directory, 'other skills'))
+    assert_predicate status, :success?, output
+    File.write(File.join(installed, '.git/shaka-ruby'), "/missing/ruby\n")
+    helper = File.join(installed, 'skills/shaka/scripts/shaka')
+    run_next(helper_verify(helper, success: false))
+    helper_verify(helper)
+  end
+
+  private
+
+  def helper_verify(helper, success: true)
+    output, status = Open3.capture2e({ 'HOME' => @home }, helper, 'install', '--verify')
+    assert_equal success, status.success?, output
+    output
   end
 end

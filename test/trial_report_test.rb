@@ -10,6 +10,7 @@ class TrialReportFixture < Minitest::Test
 
   def setup
     @calls = []
+    @looked_up = []
     @candidate_commit = HEAD
     @private = false
     @body = "Workflow version: https://github.com/shakacode/shaka/commit/#{HEAD}"
@@ -31,6 +32,7 @@ class TrialReportFixture < Minitest::Test
   attr_reader :calls
 
   def api(path, **options)
+    @looked_up << path
     raise 'Reporting should not require label permissions' unless options.empty?
     return { 'sha' => HEAD } if path.include?('/commits/')
     return [{ 'sha' => @candidate_commit }] if path.include?('/commits?')
@@ -99,6 +101,63 @@ class TrialReportTest < TrialReportFixture
       report('private_result' => true, 'summary' => 'See HTTPS://GitHub.com/team/project/pull/7')
     end
     assert_empty calls
+  end
+
+  def test_refuses_private_links_in_other_github_url_forms
+    @private = true
+    ['See https://www.github.com/team/project/pull/7', 'See github.com/team/project/pull/7',
+     'See https://github.com:443/team/project/pull/7', 'See http://WWW.GitHub.com:80/team/project'].each do |summary|
+      assert_raises(Shaka::Error, summary) { report('private_result' => true, 'summary' => summary) }
+    end
+    assert_empty calls
+  end
+
+  def test_refuses_dot_segments_that_change_the_linked_repository
+    ['https://github.com/team/project/../../acme/secret/pull/1',
+     'https://github.com/team/project/%2e%2e/%2E%2E/acme/secret',
+     '[notes](https://github.com/team/project/\\.\\./\\.\\./acme/secret)',
+     '[notes](https://github.com/team/project|/../../acme/secret)',
+     'See https://github.com/team/project)/../../acme/secret', 'See [notes](https://github.com/team/project/..)',
+     '[notes](https://github.com/team/project"/../../acme/secret)'].each do |summary|
+      assert_raises(Shaka::Error, summary) { report('private_result' => true, 'summary' => summary) }
+    end
+    assert_empty(@looked_up.grep(%r{\Arepos/(team/project|acme/secret)\z}))
+    assert_empty calls
+  end
+
+  def test_refuses_github_mentions_outside_a_checked_link
+    ['Hosted on github.com.', 'See https://gist.github.com/team/project', 'See https://github.com\\acme\\secret',
+     'See https://github.com:8443/team/project', 'See https://user@github.com/team/project',
+     'See https://github%2Ecom/team/project', "See https://\uFF47ithub.com/team/project",
+     "See https://github\u3002com/acme/secret", "See https://git\u00ADhub.com/acme/secret",
+     'See https://github.com/team/project?next=https://github.com/acme/secret',
+     'See https://github.com/team/project#https://www.github.com/acme/secret',
+     'See [notes](https://github\\.com/acme/secret)'].each do |summary|
+      assert_raises(Shaka::Error, summary) { report('private_result' => true, 'summary' => summary) }
+    end
+    assert_empty calls
+  end
+
+  def test_checks_the_repository_a_markdown_destination_keeps
+    ['See [notes](https://github.com/team/project_)', 'See [notes](https://github.com/team/project.)'].each do |summary|
+      assert_raises(Shaka::Error, summary) { report('private_result' => true, 'summary' => summary) }
+    end
+    assert_equal 2, (@looked_up & %w[repos/team/project_ repos/team/project.]).size
+    assert_empty calls
+  end
+
+  def test_html_character_references_stay_inert_in_the_published_summary
+    result = report('private_result' => true, 'summary' => 'See [notes](https://github&#46;com/acme/secret)')
+    assert_includes result['body'], 'github&amp;#46;com'
+    refute_includes @looked_up, 'repos/acme/secret'
+  end
+
+  def test_publishes_public_links_in_other_github_url_forms
+    result = report('private_result' => true,
+                    'summary' => 'See www.github.com/team/project, http://WWW.GitHub.com:80/team/project, ' \
+                                 'https://github.com:443/team/project/pull/7, and https://github.com/team/project/.')
+    assert_includes result['body'], 'www.github.com/team/project'
+    assert_includes @looked_up, 'repos/team/project'
   end
 
   def test_rejects_a_revision_outside_the_candidate_pr

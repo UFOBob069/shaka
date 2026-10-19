@@ -34,7 +34,14 @@ if [ -z "$ruby" ] && [ -f "$package/.git/shaka-install.json" ]; then
     IFS= read -r ruby < "$package/.git/shaka-ruby" || true
   fi
   if [ ! -x "$ruby" ]; then
-    echo "Shaka's installation Ruby is unavailable. Rerun bin/install with Ruby 3.4." >&2
+    # Quote the command with builtins only, escaping any apostrophe in the path.
+    rest="$package/bin/install" command=
+    while case $rest in *\'*) true ;; *) false ;; esac; do
+      command="$command${rest%%\'*}'\\''"
+      rest=${rest#*\'}
+    done
+    printf "%s %s\n" "Shaka's installation Ruby is unavailable. Found: ${ruby:-no Ruby}, recorded in $package/.git/shaka-ruby." \
+      "Run the installer with Ruby 3.4 or newer; it keeps the registered skills. Next: '$command$rest'" >&2
     exit 1
   fi
 fi

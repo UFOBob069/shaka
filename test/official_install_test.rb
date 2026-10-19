@@ -61,7 +61,7 @@ class OfficialInstallTest < Minitest::Test
     diverge_origin
     output, status = invoke('--directory', installed, '--update')
     refute_predicate status, :success?
-    assert_includes output, 'refusing to merge'
+    assert_includes output, 'was rewritten'
     assert_equal before, git('-C', installed, 'rev-parse', 'HEAD')
     assert_no_pending_revision(installed)
   end
@@ -72,7 +72,7 @@ class OfficialInstallTest < Minitest::Test
     File.write(File.join(@root, 'personal.txt'), 'keep me')
     output, status = invoke('--update')
     refute_predicate status, :success?
-    assert_includes output, 'dirty'
+    assert_includes output, 'uncommitted changes'
     assert_equal previous, File.readlink(@destination)
     assert_equal 'keep me', File.read(File.join(@root, 'personal.txt'))
   end
@@ -97,7 +97,7 @@ class OfficialInstallTest < Minitest::Test
     File.unlink(@destination)
     output, status = invoke('--verify')
     refute_predicate status, :success?
-    assert_includes output, 'link differs'
+    assert_includes output, 'link is missing'
     assert_equal before, File.binread(record)
     refute_path_exists @destination
   end
