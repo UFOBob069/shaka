@@ -39,7 +39,8 @@ module Shaka
       def origin(root)
         output, process = Open3.capture2e(ENV.keys.grep(/\AGIT_/).to_h { |key| [key, nil] },
                                           'git', '-C', root, 'config', '--get', 'remote.origin.url')
-        output.strip if process.success? && !output.strip.empty?
+        url = output.strip
+        url if process.success? && !url.empty?
       end
 
       def replace(id, root, reason, selection)
@@ -61,7 +62,8 @@ module Shaka
 
       # One command can repeat one selection for every host, into a destination git clone accepts.
       def command?(selection)
-        !File.exist?(@inventory.default_directory) && (selection['targets'] || [[]]).uniq.size == 1
+        !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
+          !StatusStates.credentials?(selection['repository'])
       end
 
       def repository(selection) = selection['repository'] || Checkout::REPOSITORY

@@ -40,6 +40,10 @@ module Shaka
 
       module_function
 
+      # An origin URL can carry a token; status prints only its host and path.
+      def redact(url) = url&.sub(%r{\A([a-z][a-z0-9+.-]*://)[^/@]+@}i, '\\1')
+      def credentials?(url) = redact(url) != url
+
       def finding(id, location, detail, command: nil, decision: nil)
         { 'id' => id, 'location' => location, 'detail' => detail, 'next_command' => command,
           'decision' => decision }

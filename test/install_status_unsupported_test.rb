@@ -28,6 +28,15 @@ class InstallStatusUnsupportedTest < Minitest::Test
     assert_equal ['C3', nil], status(@root).values_at('state', 'next_command')
   end
 
+  def test_a_worktree_origin_token_is_never_printed
+    git('-C', @root, 'remote', 'set-url', 'origin', 'https://someone:secret-token@example.com/shaka.git')
+    worktree_links('.claude/skills' => %w[shaka])
+    output, process = run_status(@root, '--json')
+    assert_predicate process, :success?, output
+    assert_equal ['C3', nil], JSON.parse(output).values_at('state', 'next_command')
+    refute_includes output, 'secret-token'
+  end
+
   private
 
   def run_step(report, state)

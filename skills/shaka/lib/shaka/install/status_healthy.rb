@@ -23,9 +23,11 @@ module Shaka
       # A copy or download without bin/install cannot install itself, so it gets a decision.
       def nothing
         installer = File.join(@inventory.source, 'bin/install')
-        return state('none', @inventory.source, command: Shellwords.escape(installer)) if File.file?(installer)
+        owners = @inventory.links.filter_map { |link| @inventory.owner(link) }.uniq
+        detail = ("Shaka links point at #{owners.join(', ')}, which is not a registered checkout" if owners.any?)
+        return state('none', @inventory.source, detail, command: Shellwords.escape(installer)) if File.file?(installer)
 
-        state('none', @inventory.source, decision: 'Install Shaka from a clone; see official-installation.md.')
+        state('none', @inventory.source, detail, decision: 'Install Shaka from a clone; see official-installation.md.')
       end
 
       def unregistered_helper
@@ -54,7 +56,12 @@ module Shaka
       def chosen = StatusStates::HEALTHY.find { |candidate| variants.include?(candidate) }
       def targets = primary.record['targets']
       def custom_source? = primary.record['repository'] != Checkout::REPOSITORY || primary.record['branch'] != 'main'
-      def custom_directory? = primary.root != @inventory.real(@inventory.default_directory)
+
+      # The installer's current default and the location #680 moves it to both count as default.
+      def custom_directory?
+        [@inventory.default_directory, @inventory.old_directory].none? { |path| primary.root == @inventory.real(path) }
+      end
+
       def towers? = targets.flat_map { |target| target['names'] }.uniq != ['shaka']
 
       def custom_skills?
@@ -71,7 +78,7 @@ module Shaka
         end
       end
 
-      def state(id, location, **) = StatusStates.finding(id, location, nil, **)
+      def state(id, location, detail = nil, **) = StatusStates.finding(id, location, detail, **)
     end
   end
 end

@@ -4,7 +4,7 @@ require 'shellwords'
 require_relative 'official'
 require_relative 'status_git'
 require_relative 'status_revision'
-require_relative 'directory_safety'
+require_relative 'status_modes'
 require_relative 'status_states'
 
 module Shaka
@@ -14,10 +14,7 @@ module Shaka
       include StatusGit
       include StatusRevision
 
-      # DirectorySafety's reasons for a writable directory; the rest of its message is the path.
-      WRITABLE = [' is group or world writable without a sticky bit protecting your directory',
-                  ' is group or world writable'].freeze
-      include DirectorySafety
+      include StatusModes
 
       attr_reader :root, :record
 
@@ -35,28 +32,22 @@ module Shaka
         safety = unsafe
         return [safety] if safety
 
-        [origin, branch, dirty, revision, pending, ruby, development].compact
+        [unsafe_files, origin, branch, dirty, revision, pending, ruby, development].compact
       end
 
       private
-
-      def unsafe
-        [@root, File.join(@root, '.git')].each { |path| verify_safe_directory(path, 'Installation directory') }
-        nil
-      rescue ArgumentError => e
-        offending = e.message.sub(/\A[^:]*: /, '')
-        path = WRITABLE.map { |reason| offending.delete_suffix(reason) }.find { |trimmed| trimmed != offending }
-        return finding('B10', e.message, command: "chmod go-w #{command(path)}") if path
-
-        finding('B10', e.message, decision: 'Move the installation to a directory you own, then rerun bin/install.')
-      end
 
       def origin
         actual = value('config', '--get', 'remote.origin.url')
         return if actual == @record['repository']
 
-        finding('B5', "origin is #{actual || 'missing'}; the record expects #{@record['repository']}",
-                command: "#{git_command} remote set-url origin #{command(@record['repository'])}")
+        expected = @record['repository']
+        detail = "origin is #{actual ? StatusStates.redact(actual) : 'missing'}; " \
+                 "the record expects #{StatusStates.redact(expected)}"
+        return finding('B5', detail, decision: 'Restore the origin URL saved in .git/shaka-install.json.') if
+          StatusStates.credentials?(expected)
+
+        finding('B5', detail, command: "#{git_command} remote set-url origin #{command(expected)}")
       end
 
       def branch
