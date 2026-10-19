@@ -3,6 +3,8 @@
 The eval-only `HarborTrial` Ruby API runs a prepared single-step tier 2 task inside a
 `Runner` reservation. It supports the Codex and Claude Code subscriptions
 accepted in ADR 0001. It does not schedule evaluations or decide release readiness.
+For tier 1's existing ordered-action protocol, use
+[decision replay capture and scoring](decision-replays.md).
 
 The operator supplies the trusted controller, the prepared task directories, a
 skill checkout, a selected subscription credential file, and a record-building

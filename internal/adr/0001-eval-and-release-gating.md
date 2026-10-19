@@ -167,8 +167,9 @@ fingerprint. The record holds:
   replies, diff, and transcript. Public records carry digests only.
 
 Shipped: [the version 1 schema and offline Ruby check](../../eval/schemas/README.md)
-validate record structure and task-bank identity consistency. Native tier 2 fingerprint
-assembly is described in D2; grading remains proposed.
+validate record structure and task-bank identity consistency. Native fingerprint
+assembly is described in D2. The [tier 1 decision adapter](../../eval/decision-replays.md)
+captures and scores the existing ordered-action protocol; artifact grading remains proposed.
 
 Proposed: `eval/bin/shaka-eval run` writes the record; `eval/lib/shaka/evaluation/`
 holds the fingerprint reader and grader modules. The product
@@ -231,8 +232,11 @@ Native Harbor records bind a digest of retained agent, verifier and sidecar
 container readbacks; older Harbor records without it are provisional.
 The [tier 2 wrapper](../../eval/harbor-trials.md) assembles all D2 fields from native
 observations and explicit operator evidence. Missing observations remain `UNKNOWN`;
-requested version pins cannot substitute for observed versions. Other tiers'
-capture, the diff card, statistics and release verdict remain proposed.
+requested version pins cannot substitute for observed versions. The
+[decision adapter](../../eval/decision-replays.md) reuses that capture for tier 1,
+sets inapplicable fields to `N/A`, and binds the expected actions and checker code
+in its criteria digest. Tier 3 capture, the diff card, statistics and release
+verdict remain proposed.
 
 ### D3. Three task tiers by cost, and most of the budget on the cheap two
 

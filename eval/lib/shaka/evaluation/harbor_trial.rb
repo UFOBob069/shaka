@@ -39,7 +39,7 @@ module Shaka
         valid = builder && tasks.is_a?(Array) && !tasks.empty? && tasks.all? { |task| planned?(task) }
         return if valid && valid_fingerprints?
 
-        raise ArgumentError, 'Expected tier 2 tasks, operator fingerprints and a trusted record builder'
+        raise ArgumentError, 'Expected supported tasks, operator fingerprints and a trusted record builder'
       end
 
       def valid_fingerprints?
@@ -51,12 +51,15 @@ module Shaka
       def account(record, capture)
         record['usage'] = capture.fetch('usage')
         record['fingerprint'] = capture.fetch('fingerprint').merge('rate_card_hash' => @usage.rate_card_hash)
+        grade(record, capture)
         if capture.fetch('harness_error')
           record['outcome'] = { 'state' => 'HARNESS_ERROR', 'harness_error' => 'Harbor trial failed' }
           record['score'] = 'UNKNOWN'
         end
         record
       end
+
+      def grade(record, _capture) = record
 
       def planned?(task)
         task.is_a?(Hash) && task['tier'] == 2 && @tasks.key?(task['id']) && RunRecord.task_errors(task).empty?
@@ -69,7 +72,8 @@ module Shaka
         Dir.mkdir(directory, 0o700)
         success, resources, package = launch(task, name, directory)
         trial = File.join(directory, name)
-        result = captured(trial, name, success, resources).merge('package' => package, 'sessions' => sessions(trial))
+        result = captured(trial, name, success, resources).merge('package' => package, 'sessions' => sessions(trial),
+                                                                 'directory' => trial)
         result['fingerprint'] = HarborFingerprint.read(task: task, host: @runtime.host, capture: result,
                                                        evidence: @fingerprints.fetch(task.fetch('id'), {}))
         result

@@ -11,6 +11,8 @@ on the candidate PR instead of duplicating each trial here.
 
 This index links comparison reports and harness attempts. It prevents a harness failure from being mistaken for a
 successful skill evaluation or repeated without a changed hypothesis.
+Prepared tier 1 tasks can use the [native decision replay API](decision-replays.md)
+for accounting, fingerprint capture and exact ordered-action scoring.
 
 | Experiment | Evidence | Outcome |
 | --- | --- | --- |
