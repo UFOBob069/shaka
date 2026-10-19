@@ -31,6 +31,12 @@ module Shaka
         nil
       end
 
+      # The alias when it is safe to publish without asking, otherwise nil: set, a safe token,
+      # and verifiably not this machine's own name.
+      def self.publishable(environment, host_name: system_name)
+        new(environment, host_name:).call.fetch(:status) == 'healthy' ? environment[VARIABLE] : nil
+      end
+
       def call
         value = @environment[VARIABLE]
         return unset if value.nil? || value.empty?

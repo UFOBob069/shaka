@@ -45,11 +45,11 @@ class PublicationSettingsTest < Minitest::Test
 
   def test_older_results_do_not_gain_a_retroactive_settings_snapshot
     with_checkout do |root, ref|
-      validation = run_check(root, ref, command: 'validate').except('public_settings')
+      validation = run_check(root, ref, command: 'validate').except('public_settings', 'machine')
       review = review_check(root, ref).except('public_settings')
       with_results(validation, review) do |options|
         body = prepare(root, ref, options).detail.fetch('body')
-        assert_includes body, '| Before push: validation | UNKNOWN | UNKNOWN |'
+        assert_match(/\| Before push: validation \| UNKNOWN \| UNKNOWN: \d+s \|/, body)
         assert_includes body, "Current merge input (not evidence): trusted/team at [`#{ref[0, 7]}`]("
       end
     end

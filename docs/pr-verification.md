@@ -205,6 +205,12 @@ For example: “The menu stays reachable on narrow screens. The regression test
 failed before the fix and passes now; desktop and mobile screenshots show the
 result.” Details can hold commands, tested commits, and a recording of the menu.
 
+Local validation shows how long it ran and on what kind of machine, such as
+`validate: 27m on m5 (Apple M5 Max, 18 cores, 128 GB, 3 GB free, load 140→450)`
+under **Shaka settings used**. A high load beside a slow run means a busy
+machine rather than slow hardware. Only the CPU model, these counts, and your
+machine alias are published, never the machine's own name, your user name, or paths.
+
 Shaka uses your existing tests and validation commands, plus browser tools when
 needed. Required GitHub checks and approvals still apply.
 

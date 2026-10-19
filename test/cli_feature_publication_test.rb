@@ -79,7 +79,7 @@ class CliFeaturePublicationTest < Minitest::Test
     _output, error, status = publish(dir, root, *arguments)
     assert_predicate status, :success?, error
     linked = %r{\[`\h{7}`\]\(https://github\.com/[^)]+/commit/\h{40}\)}
-    assert_match(%r{\| Before push: validation \| trusted/team at #{linked} \| validate \|},
+    assert_match(%r{\| Before push: validation \| trusted/team at #{linked} \| validate: \d+s[^|]* \|},
                  File.read(File.join(dir, 'published.md')))
   end
 

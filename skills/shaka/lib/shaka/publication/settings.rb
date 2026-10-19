@@ -6,6 +6,7 @@ require_relative '../repository_config'
 require_relative 'feature_guard'
 require_relative '../opening_publication'
 require_relative 'settings_table'
+require_relative 'run_summary'
 
 module Shaka
   # Consumes existing results; never stores a second receipt or rewrites an earlier one.
@@ -107,8 +108,8 @@ module Shaka
     # One row per recorded result. Binding refuses a result whose settings differ from the
     # current ones, so a row needs only what can still vary: its revision and what it ran with.
     def operations_table
-      rows = operations.map do |title, settings|
-        [title, SettingsTable.source(settings, @repository), ran_with(settings)]
+      rows = operations.map do |title, settings, run|
+        [title, SettingsTable.source(settings, @repository), [ran_with(settings), run].compact.join(': ')]
       end
       return [] if rows.empty?
 
@@ -119,7 +120,8 @@ module Shaka
     def operations
       OPERATIONS.flat_map do |kind, title|
         Array(@verdict&.dig('checks', kind)).map do |entry|
-          [title, Evidence::PublicSettings.sanitize(entry.dig('original', 'public_settings'))]
+          [title, Evidence::PublicSettings.sanitize(entry.dig('original', 'public_settings')),
+           RunSummary.render(entry['original'])]
         end
       end
     end

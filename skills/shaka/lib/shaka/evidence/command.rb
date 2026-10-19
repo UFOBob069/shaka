@@ -7,6 +7,7 @@ require_relative '../error'
 require_relative '../local_review/path_guard'
 require_relative 'candidate_tree'
 require_relative 'inputs'
+require_relative 'machine_facts'
 require_relative 'options'
 require_relative 'result'
 require_relative 'verification'
@@ -93,8 +94,8 @@ module Shaka
       end
 
       def timed_check(root, path)
-        environment = { 'PATH' => @original_path }
-        CallLog.measure { Open3.capture3(environment, File.join(root, path), *@arguments, chdir: root) }
+        command = [{ 'PATH' => @original_path }, File.join(root, path), *@arguments]
+        MachineFacts.measure { CallLog.measure { Open3.capture3(*command, chdir: root) } }
       end
 
       def run_result(context, execution)
