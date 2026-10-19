@@ -6,7 +6,7 @@ module Shaka
     # rows a later step detects join this table with that step's scenario.
     module StatusStates
       STATES = {
-        'none' => ['No Shaka installation found', 'ok'],
+        'none' => ['No Shaka installation found', 'attention'],
         'A1' => ['Default install, one host', 'ok'],
         'A2' => ['Default install, several hosts', 'ok'],
         'A3' => ['Dedicated source checkout in a custom folder', 'ok'],

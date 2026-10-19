@@ -113,7 +113,12 @@ module BrokenInstallScenarios
     { from: @root, location: orphan, next: 'mv ' }
   end
 
-  def build_c3 = problem(default_install.tap { |root| git('-C', root, 'branch', 'experiment') }, nil)
+  # Development in the source checkout: it hosts a worktree for a feature branch.
+  def build_c3
+    root = default_install
+    git('-C', root, 'worktree', 'add', '-q', File.join(@directory, 'feature'))
+    problem(root, nil)
+  end
 
   # The old default location, which is also where a project keeps its Shaka settings.
   def build_e1

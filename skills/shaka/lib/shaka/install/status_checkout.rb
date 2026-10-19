@@ -122,9 +122,10 @@ module Shaka
         "#{count} linked worktree(s)" if count.positive?
       end
 
+      # Only a branch with commits no origin branch holds is development; a clone's leftover main is not.
       def extra_branches
         branches = value('for-each-ref', '--format=%(refname:short)', 'refs/heads').to_s.lines.map(&:strip)
-        extra = branches - [@record['branch']]
+        extra = (branches - [@record['branch']]).reject { |name| value('rev-list', name, '--not', '--remotes') == '' }
         "local branches #{listed(extra)}" if extra.any?
       end
 

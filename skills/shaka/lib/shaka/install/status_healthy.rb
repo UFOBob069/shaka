@@ -17,7 +17,15 @@ module Shaka
         return state(chosen, primary.root, command: "#{primary.helper} install --update") if primary
         return state('A8', @inventory.trial_directory, decision: TRIALS) if chosen == 'A8'
 
-        state('none', @inventory.source, command: installer)
+        nothing
+      end
+
+      # A copy or download without bin/install cannot install itself, so it gets a decision.
+      def nothing
+        installer = File.join(@inventory.source, 'bin/install')
+        return state('none', @inventory.source, command: Shellwords.escape(installer)) if File.file?(installer)
+
+        state('none', @inventory.source, decision: 'Install Shaka from a clone; see official-installation.md.')
       end
 
       def unregistered_helper
@@ -44,7 +52,6 @@ module Shaka
       end
 
       def chosen = StatusStates::HEALTHY.find { |candidate| variants.include?(candidate) }
-      def installer = Shellwords.escape(File.join(@inventory.source, 'bin/install'))
       def targets = primary.record['targets']
       def custom_source? = primary.record['repository'] != Checkout::REPOSITORY || primary.record['branch'] != 'main'
       def custom_directory? = primary.root != @inventory.real(@inventory.default_directory)

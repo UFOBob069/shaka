@@ -28,6 +28,24 @@ class InstallStatusUnsupportedTest < Minitest::Test
     assert_includes report['next_command'], '--agent claude'
   end
 
+  # One command would give every host the union of their towers, so differing hosts get a decision.
+  def test_hosts_with_different_towers_get_a_decision
+    old = clone_to(File.join(@home, '.agents/shaka'))
+    run_install(old, '--directory', old, '--repository', @remote, '--agent', 'claude')
+    run_install(old, '--agent', 'codex', '--with-rct')
+    report = status(old)
+    assert_equal 'E1', report['state']
+    assert_includes report['decision'], 'one bin/install run per host'
+  end
+
+  def test_an_existing_default_directory_gets_a_decision
+    old = clone_to(File.join(@home, '.agents/shaka'))
+    run_install(old, '--directory', old, '--repository', @remote)
+    FileUtils.mkdir_p(File.join(default_path, 'leftover'))
+    report = status(old)
+    assert_equal ['E1', nil], report.values_at('state', 'next_command')
+  end
+
   private
 
   def run_step(report, state)

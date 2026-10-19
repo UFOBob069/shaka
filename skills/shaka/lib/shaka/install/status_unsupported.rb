@@ -10,8 +10,8 @@ module Shaka
     class StatusUnsupported
       TOWERS = { 'rct' => '--with-rct', 'mct' => '--with-mct', 'mct-claude' => '--with-claude-towers',
                  'rct-claude' => '--with-claude-towers' }.freeze
-      DECIDE = 'Reinstall into ~/.local/share/shaka/source with the hosts and skills folders you use; ' \
-               'see official-installation.md.'
+      DECIDE = 'Reinstall into ~/.local/share/shaka/source with the hosts, skills folders, and towers you use ' \
+               '(one bin/install run per host whose towers differ); see official-installation.md.'
 
       def initialize(inventory)
         @inventory = inventory
@@ -37,6 +37,7 @@ module Shaka
       def recorded(record)
         { 'directories' => record['targets'].map { |target| target['directory'] },
           'names' => record['targets'].flat_map { |target| target['names'] },
+          'targets' => record['targets'].map { |target| target['names'].sort },
           'repository' => record['repository'], 'branch' => record['branch'] }
       end
 
@@ -48,7 +49,7 @@ module Shaka
       def replace(id, root, reason, selection)
         detail = "#{reason}; reinstall into #{@inventory.default_directory}"
         hosts = hosts(selection['directories'].uniq)
-        return StatusStates.finding(id, root, detail, decision: DECIDE) unless hosts
+        return StatusStates.finding(id, root, detail, decision: DECIDE) unless hosts && command?(selection)
 
         StatusStates.finding(id, root, detail, command: command(selection, @inventory.links_to(root), hosts))
       end
@@ -60,6 +61,11 @@ module Shaka
         steps << escape(File.join(target, 'bin/install'), '--directory', target, *source(selection), *hosts,
                         *towers(selection))
         steps.join(' && ')
+      end
+
+      # One command can repeat one selection for every host, into a destination git clone accepts.
+      def command?(selection)
+        !File.exist?(@inventory.default_directory) && (selection['targets'] || [[]]).uniq.size == 1
       end
 
       def repository(selection) = selection['repository'] || Checkout::REPOSITORY
