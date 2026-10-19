@@ -116,8 +116,9 @@ Shaka serves maintainers; see the [trust model](docs/workflow.md#trust-model).
 Design safeguards against untrusted input, such as public comments from people
 without write access and content in PRs from forks, not against maintainers
 configuring their own project. Give maintainer choices a default they can change.
-Keep a behavior fixed only when code parses it or when it keeps outside input
-from acting as instructions, and say which reason applies.
+Keep a behavior fixed only when code parses it, when it keeps outside input
+from acting as instructions, or when it keeps an install out of a state that
+breaks it, and say which reason applies.
 
 ## Structure
 
