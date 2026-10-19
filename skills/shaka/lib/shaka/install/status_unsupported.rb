@@ -32,14 +32,17 @@ module Shaka
         hosts = links.group_by { |link| File.dirname(link['path']) }
         { 'directories' => hosts.keys, 'names' => links.map { |link| link['name'] },
           'targets' => hosts.values.map { |group| group.map { |link| link['name'] }.sort },
-          'repository' => origin(root), 'main' => main?(root) }
+          'repository' => origin(root), 'branch' => tracked(root) }
       end
 
       # Reading one config value or ref runs no program the checkout's config names.
       def origin(root) = read(root, 'config', '--get', 'remote.origin.url')
 
-      # The reinstall clones main; a worktree whose origin has no main gets a decision instead.
-      def main?(root) = !read(root, 'rev-parse', '--verify', '--quiet', 'refs/remotes/origin/main').nil?
+      # The origin branch the worktree tracks, which the reinstall keeps; nil when it tracks none.
+      def tracked(root)
+        branch = read(root, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
+        branch.delete_prefix('origin/') if branch&.start_with?('origin/')
+      end
 
       def read(root, *)
         environment = ENV.keys.grep(/\AGIT_/).to_h { |key| [key, nil] }
@@ -58,7 +61,7 @@ module Shaka
 
       def command(selection, links, hosts)
         target = @inventory.default_directory
-        steps = ["git clone #{escape(repository(selection), target)}"]
+        steps = ["git clone #{escape(*branch(selection), repository(selection), target)}"]
         steps << "rm -- #{escape(*links.map { |link| link['path'] })}" if links.any?
         steps << escape(File.join(target, 'bin/install'), '--directory', target, *source(selection), *hosts,
                         *towers(selection))
@@ -67,14 +70,17 @@ module Shaka
 
       # One command can repeat one selection for every host, into a destination git clone accepts.
       def command?(selection)
-        selection['main'] && !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
+        selection['branch'] && !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
           !StatusStates.credentials?(selection['repository'])
       end
 
       def repository(selection) = selection['repository'] || Checkout::REPOSITORY
 
+      def branch(selection) = selection['branch'] == 'main' ? [] : ['--branch', selection['branch']]
+
       def source(selection)
-        repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
+        named = repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
+        named + branch(selection)
       end
 
       # Hosts take --agent; one custom folder takes --skills-dir; the installer accepts no mix of the two.

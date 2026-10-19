@@ -46,10 +46,18 @@ class InstallStatusUnsupportedTest < Minitest::Test
     refute_equal 'C3', status(@root)['state']
   end
 
-  # The reinstall clones main, so a worktree whose origin has no main gets a decision, not a wrong branch.
-  def test_a_worktree_without_origin_main_gets_a_decision
-    git('-C', @root, 'update-ref', '-d', 'refs/remotes/origin/main')
-    worktree_links('.claude/skills' => %w[shaka])
+  # The reinstall keeps the branch the worktree tracks, so a stable install stays on stable.
+  def test_the_reinstall_step_keeps_a_non_main_branch
+    git('-C', @root, 'push', '-q', 'origin', 'main:stable')
+    git('-C', @root, 'fetch', '-q', 'origin')
+    worktree_links({ '.claude/skills' => %w[shaka] }, 'origin/stable')
+    run_step(status(@root), 'C3')
+    assert_equal 'stable', git('-C', default_path, 'branch', '--show-current').strip
+    assert_equal 'A5', status(default_path)['state']
+  end
+
+  def test_a_worktree_that_tracks_nothing_gets_a_decision
+    worktree_links({ '.claude/skills' => %w[shaka] }, nil)
     assert_equal ['C3', nil], status(@root).values_at('state', 'next_command')
   end
 
@@ -64,9 +72,10 @@ class InstallStatusUnsupportedTest < Minitest::Test
   def tower_in(root) = File.join(File.realpath(root), 'skills/rct')
 
   # Host links into a linked worktree of the fixture checkout, as a manual link or old installer left them.
-  def worktree_links(hosts)
+  # The worktree tracks start when given; with start nil its new branch tracks nothing.
+  def worktree_links(hosts, start = 'origin/main')
     tree = File.join(@directory, 'feature-tree')
-    git('-C', @root, 'worktree', 'add', '-q', tree)
+    git('-C', @root, 'worktree', 'add', '-q', '-b', 'feature-tree', tree, *start)
     hosts.each do |directory, names|
       FileUtils.mkdir_p(File.join(@home, directory))
       names.each { |name| File.symlink(File.join(tree, 'skills', name), File.join(@home, directory, name)) }
