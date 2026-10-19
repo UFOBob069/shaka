@@ -42,8 +42,8 @@ or drop. Review the summary for private details before publishing.
 ```
 
 For private work, authorize a public-safe summary with no project link or private
-context. The reporting command checks explicit http(s)://github.com/OWNER/REPO
-URLs and rejects private or unverifiable repositories; you and your agent still review prose and other links for confidentiality.
+context. The reporting command checks each github.com/OWNER/REPO link, rejects
+private or unverifiable repositories, and refuses any other mention of github.com; you and your agent still review prose and other links for confidentiality.
 Ask the agent that prepared the trial to publish your verified, public-safe report.
 
 Maintainers apply the existing `eval-required` label before asking for volunteers.

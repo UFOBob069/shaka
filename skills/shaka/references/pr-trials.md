@@ -69,8 +69,8 @@ shaka trial report https://github.com/shakacode/shaka/pull/359 \
 digit. Verdicts are `keep`, `revise`, or `drop`. Use a nonempty public-safe summary.
 The helper checks that the tested revision is still in the candidate PR's commit
 list and that a public result PR records its exact Shaka commit URL. It checks
-explicit http(s)://github.com/OWNER/REPO URLs for repository visibility, then
-publishes a tester-attributed comment. Maintainers apply `eval-required` before
+each github.com/OWNER/REPO link in the summary for repository visibility and refuses
+any other mention of github.com, then publishes a tester-attributed comment. Maintainers apply `eval-required` before
 collecting trials; reporting needs comment permission, not label permission.
 If a force-push removes the tested revision, retain the local preparation record
 and publish explicitly self-reported feedback manually after maintainer review.
@@ -78,7 +78,7 @@ It does not independently prove which instructions an agent followed.
 
 For private results, omit `result_url` and set `"private_result": true`. Keep
 private links and context in the private result PR; publish only an authorized
-public-safe summary. These checks do not cover shorthand references, www.github.com, gists, raw-file
+public-safe summary. These checks do not cover shorthand references, raw-file
 URLs, confidential prose, or other services; review those before publication. A failed check publishes no feedback comment.
 
 Reuse the same id and revision to update a report. A new id or revision retains a
