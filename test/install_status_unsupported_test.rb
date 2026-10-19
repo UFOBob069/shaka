@@ -46,14 +46,21 @@ class InstallStatusUnsupportedTest < Minitest::Test
     refute_equal 'C3', status(@root)['state']
   end
 
-  # The reinstall keeps the branch the worktree tracks, so a stable install stays on stable.
-  def test_the_reinstall_step_keeps_a_non_main_branch
+  # A worktree on another branch may be a feature branch that goes away, so it gets a decision.
+  def test_a_worktree_on_another_branch_gets_a_decision
     git('-C', @root, 'push', '-q', 'origin', 'main:stable')
     git('-C', @root, 'fetch', '-q', 'origin')
     worktree_links({ '.claude/skills' => %w[shaka] }, 'origin/stable')
+    assert_equal ['C3', nil], status(@root).values_at('state', 'next_command')
+  end
+
+  # The clone names main, so a remote whose default branch is another still gives a main checkout.
+  def test_the_reinstall_clones_main_when_the_remote_default_differs
+    git('-C', @root, 'push', '-q', 'origin', 'main:stable')
+    git('-C', @remote, 'symbolic-ref', 'HEAD', 'refs/heads/stable')
+    worktree_links('.claude/skills' => %w[shaka])
     run_step(status(@root), 'C3')
-    assert_equal 'stable', git('-C', default_path, 'branch', '--show-current').strip
-    assert_equal 'A5', status(default_path)['state']
+    assert_equal 'main', git('-C', default_path, 'branch', '--show-current').strip
   end
 
   def test_a_worktree_that_tracks_nothing_gets_a_decision

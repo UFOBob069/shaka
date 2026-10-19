@@ -34,7 +34,7 @@ module Shaka
       def unsafe_files
         skills = File.join(@root, 'skills')
         paths = skill_paths(skills)
-        symlink(paths) || foreign(paths) || writable(paths, skills)
+        symlink(paths) || foreign(paths) || special(paths, skills) || writable(paths, skills)
       rescue SystemCallError
         nil
       end
@@ -49,6 +49,15 @@ module Shaka
       def foreign(paths)
         path = paths.find { |entry| !owned?(entry) }
         finding('B10', "#{path} is owned by another account", decision: OWNERSHIP) if path
+      end
+
+      # The installer refuses setuid, setgid, or sticky bits on files, and setuid or sticky on directories.
+      def special(paths, skills)
+        path = paths.find { |entry| File.lstat(entry).mode.anybits?(File.directory?(entry) ? 0o5000 : 0o7000) }
+        return unless path
+
+        finding('B10', "#{path} has a setuid, setgid, or sticky bit",
+                command: "chmod -R a-st #{Shellwords.escape(skills)}")
       end
 
       def writable(paths, skills)

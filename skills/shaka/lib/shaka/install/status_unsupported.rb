@@ -38,7 +38,7 @@ module Shaka
       # Reading one config value or ref runs no program the checkout's config names.
       def origin(root) = read(root, 'config', '--get', 'remote.origin.url')
 
-      # The origin branch the worktree tracks, which the reinstall keeps; nil when it tracks none.
+      # The origin branch the worktree tracks; nil when it tracks none.
       def tracked(root)
         branch = read(root, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
         branch.delete_prefix('origin/') if branch&.start_with?('origin/')
@@ -61,26 +61,24 @@ module Shaka
 
       def command(selection, links, hosts)
         target = @inventory.default_directory
-        steps = ["git clone #{escape(*branch(selection), repository(selection), target)}"]
+        steps = ["git clone #{escape('--branch', 'main', repository(selection), target)}"]
         steps << "rm -- #{escape(*links.map { |link| link['path'] })}" if links.any?
         steps << escape(File.join(target, 'bin/install'), '--directory', target, *source(selection), *hosts,
                         *towers(selection))
         steps.join(' && ')
       end
 
-      # One command can repeat one selection for every host, into a destination git clone accepts.
+      # One command can repeat one selection for every host, into a destination git clone accepts. It
+      # reinstalls main: another tracked branch may be a feature branch that goes away, so it gets a decision.
       def command?(selection)
-        selection['branch'] && !File.exist?(@inventory.default_directory) && selection['targets'].uniq.size == 1 &&
-          !StatusStates.credentials?(selection['repository'])
+        selection['branch'] == 'main' && !File.exist?(@inventory.default_directory) &&
+          selection['targets'].uniq.size == 1 && !StatusStates.credentials?(selection['repository'])
       end
 
       def repository(selection) = selection['repository'] || Checkout::REPOSITORY
 
-      def branch(selection) = selection['branch'] == 'main' ? [] : ['--branch', selection['branch']]
-
       def source(selection)
-        named = repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
-        named + branch(selection)
+        repository(selection) == Checkout::REPOSITORY ? [] : ['--repository', repository(selection)]
       end
 
       # Hosts take --agent; one custom folder takes --skills-dir; the installer accepts no mix of the two.

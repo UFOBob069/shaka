@@ -50,6 +50,14 @@ class InstallStatusEntryTest < Minitest::Test
     assert_includes report['decision'], 'alias.md'
   end
 
+  def test_a_setuid_skill_file_is_unsafe
+    root = default_install
+    File.chmod(0o4644, File.join(root, 'skills/shaka/SKILL.md'))
+    report = status(root)
+    assert_equal 'B10', report['state']
+    assert_includes report['next_command'], 'chmod -R a-st'
+  end
+
   # The token holds an @, so redaction must strip up to the last @ before the path, as git does.
   def test_an_origin_token_is_never_printed
     root = default_install
