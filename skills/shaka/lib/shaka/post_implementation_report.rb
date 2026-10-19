@@ -20,7 +20,12 @@ module Shaka
       validate(report, head:)
       report.slice('head', 'conclusion', 'reasons', 'concerns', 'alternative', 'summary', 'next_action')
     rescue JSON::ParserError => e
-      raise Error, "Malformed checkpoint report: #{e.message}"
+      raise Error, "Malformed checkpoint report: not valid JSON#{position(e)}"
+    end
+
+    # The parser's message quotes the reviewer's text, which can hold escapes publication refuses.
+    def position(error)
+      " at line #{error.line} column #{error.column}" if error.respond_to?(:line) && error.line
     end
 
     def validate(report, head:)

@@ -247,4 +247,32 @@ class PostImplementationFailureReasonTest < Minitest::Test
       end
     end
   end
+
+  def test_parse_error_quoting_an_escape_publishes_as_a_failure_reason
+    with_result do |result, path|
+      reason = parse_failure(result.fetch('report'), %({"head":"#{'a' * 40}" "reasons":["Adds-X.\\nKeeps-Y."]}))
+      refute_includes reason, 'Adds-X'
+      github, status = publish(result.merge('status' => 'not_completed', 'reason' => reason), path)
+
+      assert_equal 0, status
+      assert_includes github.bodies.first.first, 'Malformed checkpoint report'
+      assert github.snapshot['isDraft']
+    end
+  end
+
+  def test_hand_written_reason_with_a_literal_escape_is_still_refused
+    with_result do |result, path|
+      github, status = publish(result.merge('status' => 'opted_out', 'reason' => 'Docs only.\\nNo review.'), path)
+
+      assert_equal 1, status
+      assert_empty github.bodies
+    end
+  end
+
+  private
+
+  def parse_failure(report, text)
+    File.write(report, text)
+    assert_raises(Shaka::Error) { Shaka::PostImplementationReport.read(report, head: 'a' * 40) }.message
+  end
 end
