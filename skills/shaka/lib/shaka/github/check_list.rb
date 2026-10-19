@@ -9,8 +9,11 @@ module Shaka
       NO_REQUIRED_CHECKS = /\Ano required checks reported on the '[^\r\n]+' branch(?:\r?\n)?\z/
 
       def checks(required: false)
-        stdout, stderr = fetch_check_streams(required)
-        return [] if stdout.strip.empty? && empty_check_list?(stderr, required)
+        stdout, stderr, exitstatus = fetch_check_streams(required)
+        if stdout.strip.empty?
+          return [] if empty_check_list?(stderr, required)
+          raise check_failure(exitstatus, stderr) unless exitstatus.zero?
+        end
 
         result = parse_json(stdout)
         raise Error, 'GitHub checks response must be an array.' unless result.is_a?(Array)
@@ -20,8 +23,9 @@ module Shaka
 
       def required_checks
         checks(required: true)
-      rescue Error
-        raise Error, 'Required-check evidence is unavailable; confirm native required checks and GitHub access.'
+      rescue Error => e
+        raise Error.new('Required-check evidence is unavailable; confirm native required checks and GitHub access.',
+                        http_status: e.http_status)
       end
 
       private
@@ -31,13 +35,15 @@ module Shaka
         argv << '--required' if required
         argv.push('--json', 'name,state,bucket,link')
         stdout, stderr, status = @runner.call(argv, stdin_data: '')
-        unless CHECK_EXITS.include?(status.exitstatus)
-          raise Error.from_gh("gh pr #{@number} failed (exit #{status.exitstatus}).", stderr)
-        end
+        raise check_failure(status.exitstatus, stderr) unless CHECK_EXITS.include?(status.exitstatus)
 
-        [utf8(stdout), utf8(stderr)]
+        [utf8(stdout), utf8(stderr), status.exitstatus]
       rescue Errno::ENOENT
         raise Error, 'GitHub CLI is unavailable; install gh and authenticate.'
+      end
+
+      def check_failure(exitstatus, stderr)
+        Error.from_gh("gh pr #{@number} failed (exit #{exitstatus}).", stderr)
       end
 
       def empty_check_list?(stderr, required)
