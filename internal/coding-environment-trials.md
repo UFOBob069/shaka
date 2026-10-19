@@ -22,3 +22,38 @@ The Codex write test establishes that particular local boundary. It does not
 establish equivalent behavior in the desktop app, other versions, or other hosts.
 Repeated consumer use, including failed checks, changed PR heads, and Ask/Auto
 stopping behavior, is still required before claiming broader adoption.
+
+## October 2026 feedback-resumption trial
+
+These observations were made on October 4, 2026 for
+[#419](https://github.com/shakacode/shaka/issues/419). They cover one Claude Code
+desktop session and one Codex desktop session. They do not establish the same
+behavior in other versions, hosts, or sessions. Times are UTC.
+
+| Fact | Claude Code desktop 2.1.283 | Codex desktop, version UNKNOWN |
+| --- | --- | --- |
+| Shaka revision | `78fd6ebd336aec38751cce9bfb804cf869155225` | `0ea84cb3698dbcb06ddb72392c85be02f1c2c149` |
+| Resumption mechanism tested | A command started with the `Bash` tool's `run_in_background` option. When it exits, the host starts a new turn in the owning chat. | A command session left running when the turn ended. |
+| Probe result | Observed: a 45-second command started at 08:47:57, finished at 08:48:42, and a new turn began at 08:48:49 with no user message between. | Observed: the command finished at 07:00:34 and no turn followed until the user's next message. |
+| Merge preference | Ask | Ask |
+
+The probe isolates host resumption from GitHub detection. It does not show that
+`pr watch --comments-only` resumes a chat after an Ask handoff.
+
+### Live feedback cases
+
+Each case is recorded as observed, simulated, or not yet run. A simulation is an
+action the agent's own GitHub account performed in place of a maintainer.
+
+| Case | Result |
+| --- | --- |
+| Ordinary comment resumes the chat | Not yet run |
+| Review summary resumes the chat | Not yet run |
+| Inline comment resumes the chat | Not yet run |
+| Actionable feedback withdraws merge readiness | Not yet run |
+| No duplicate reply after a monitor restart | Not yet run |
+| Monitor expiry and renewal | Not yet run |
+| Changed Owner value | Not yet run |
+| Confirmed ownership transfer | Not yet run |
+| PR closure | Not yet run |
+| Unavailable resumption names a person and resume prompt | Not yet run |
