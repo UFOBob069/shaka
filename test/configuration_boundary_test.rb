@@ -25,6 +25,7 @@ module ConfigurationBoundaryFileIO
     seam/private_recovery/seed.rb seam/private_seed.rb ui_check.rb install/refusal.rb install/ruby_record.rb
     install/checkout_record.rb install/take_over.rb
     update_check/cache.rb install/session_hook.rb
+    evidence/machine_facts.rb
   ].freeze
 end
 
