@@ -9,14 +9,18 @@ module Shaka
       module_function
 
       def valid?(body, plan, files)
-        lines = body.lines.map(&:strip).reject(&:empty?)
-        lines.last == marker(plan) && structure?(lines) && code_link?(body, plan, files)
+        visible = body.gsub(/^```.*?^```/m, '')
+        lines = visible.lines.map(&:strip).reject(&:empty?)
+        markers(plan).include?(lines.last) && structure?(lines) && code_link?(visible, plan, files)
       end
 
-      def marker(plan)
+      # Adapt the pinned producer's short linked and bare full-SHA forms without importing product code.
+      def markers(plan)
         head, repository = plan.values_at('head', 'repository')
-        "_Walkthrough for commit [`#{head}`](https://github.com/#{repository}/commit/#{head}). " \
-          'This is a COMMENT, not an approval._'
+        references = [head[0, 7], head].map { |label| "[`#{label}`](https://github.com/#{repository}/commit/#{head})" }
+        [*references, "`#{head}`"].map do |reference|
+          "_Walkthrough for commit #{reference}. This is a COMMENT, not an approval._"
+        end
       end
 
       def structure?(lines)

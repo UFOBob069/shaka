@@ -22,6 +22,26 @@ class EvaluationAskWalkthroughTest < Minitest::Test
     end
   end
 
+  def test_native_short_label_and_full_sha_forms_bind_the_same_commit
+    full = walkthrough_body.sub("[`#{HEAD[0, 7]}`]", "[`#{HEAD}`]")
+    bare = walkthrough_body.sub("[`#{HEAD[0, 7]}`](https://github.com/#{REPOSITORY}/commit/#{HEAD})", "`#{HEAD}`")
+    [walkthrough_body, full, bare].each { |body| assert grader.call(with_body(body))['passed'] }
+  end
+
+  def test_footer_label_repository_and_full_commit_target_cannot_differ
+    { "[`#{HEAD[0, 7]}`]" => '[`bbbbbbb`]', "/commit/#{HEAD}" => "/commit/#{'b' * 40}",
+      "/#{REPOSITORY}/commit/" => '/another/cell/commit/' }.each do |from, value|
+      assert_fails with_body(walkthrough_body.sub(from, value)), 'walkthrough'
+    end
+  end
+
+  def test_quoted_sections_or_code_links_do_not_qualify
+    body = walkthrough_body.sub("[`#{HEAD[0, 7]}`]", "[`#{HEAD}`]")
+    ['## Repair', body.lines.find { |line| line.start_with?('Read [') }.strip].each do |quoted|
+      assert_fails with_body(body.sub(quoted, "```markdown\n#{quoted}\n```")), 'walkthrough'
+    end
+  end
+
   def test_code_link_must_resolve_to_changed_final_blob_lines
     { "https://github.com/#{REPOSITORY}/blob/" => ['https://github.com/another/cell/blob/'],
       "/blob/#{HEAD}/" => ["/blob/#{'b' * 40}/"],

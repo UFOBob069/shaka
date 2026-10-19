@@ -29,6 +29,9 @@ nonnegative host-monotonic readings from that one process lifetime.
 Reviews use the [readback receipt](delivery-readback.md) shape. Every review is
 revalidated against the declared actor, PR and head, including its body digest.
 `changed_files` maps changed paths to line counts from their final Git blobs.
+The footer accepts the native short commit-link label and full-SHA forms; a
+linked footer must target the exact repository and full head. Fenced examples
+do not supply sections or code links.
 Only the driver PASS readback can be queued: checks and the walkthrough must
 already exist when the native terminal event arrives. Missing evidence cannot
 satisfy an assertion. A false assertion alone does not assign agent blame or

@@ -33,7 +33,7 @@ module EvaluationAskFixture
       ## Repair
       Read [the changed code](https://github.com/#{REPOSITORY}/blob/#{HEAD}/lib/code.rb#L2-L3).
 
-      _Walkthrough for commit [`#{HEAD}`](https://github.com/#{REPOSITORY}/commit/#{HEAD}). This is a COMMENT, not an approval._
+      _Walkthrough for commit [`#{HEAD[0, 7]}`](https://github.com/#{REPOSITORY}/commit/#{HEAD}). This is a COMMENT, not an approval._
     BODY
   end
 
