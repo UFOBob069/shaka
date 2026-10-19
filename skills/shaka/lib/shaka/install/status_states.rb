@@ -34,8 +34,9 @@ module Shaka
       # The first problem in this order is the one to fix first: later checks read state an
       # earlier problem can make misleading, such as a revision on a switched branch. Steps that
       # update use bin/install, not the helper, so they still run when the recorded Ruby is gone.
-      # C3 comes early: a worktree's fix is a fresh install, which makes its other problems moot.
-      PROBLEMS = %w[B10 C1 C3 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 A9].freeze
+      # A worktree checkout's C3 comes early: its fix is a fresh install, which makes its other problems
+      # moot. A checkout that only hosts development ranks as C3-development, after the B states.
+      PROBLEMS = %w[B10 C1 C3 B9 C5 B5 B4 B3 B6 B2 B11 B1 B7 B8 C3-development A9].freeze
       HEALTHY = %w[A5 A4 A3 A6 A2 A1 A8].freeze
 
       module_function

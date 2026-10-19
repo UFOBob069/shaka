@@ -32,7 +32,7 @@ module Shaka
         safety = unsafe
         return [safety] if safety
 
-        [unsafe_files, origin, branch, dirty, revision, pending, ruby, development].compact
+        [unsafe_files, origin, branch, dirty, changed_contents, revision, pending, ruby, development].compact
       end
 
       private
@@ -104,8 +104,10 @@ module Shaka
         uses = [linked_worktrees, extra_branches].compact
         return if uses.empty?
 
+        # Moving development out fixes nothing broken, so it ranks after the install's own problems.
         finding('C3', "source checkout is also used for development: #{uses.join('; ')}",
                 decision: "Move development to a separate clone; the source checkout keeps only #{@record['branch']}.")
+          .merge('rank' => 'C3-development')
       end
 
       def linked_worktrees

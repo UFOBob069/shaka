@@ -18,17 +18,22 @@ module Shaka
 
       def call
         findings = problems
-        chosen = StatusStates::PROBLEMS.lazy.filter_map { |id| findings.find { |item| item['id'] == id } }.first
-        chosen ||= @healthy.finding
+        chosen = first_problem(findings) || @healthy.finding
         title, severity = StatusStates::STATES.fetch(chosen['id'])
         { 'schema_version' => 1, 'state' => chosen['id'], 'title' => title, 'severity' => severity,
           **chosen.slice('location', 'detail', 'next_command', 'decision'),
-          'variants' => @healthy.variants, 'findings' => findings, 'inventory' => inventory }
+          'variants' => @healthy.variants, 'findings' => findings.map { |item| item.except('rank') },
+          'inventory' => inventory }
       end
 
       def render(report = call) = StatusText.render(report)
 
       private
+
+      def first_problem(findings)
+        ranked = findings.group_by { |item| item['rank'] || item['id'] }
+        StatusStates::PROBLEMS.lazy.filter_map { |id| ranked[id]&.first }.first
+      end
 
       def problems
         findings = @inventory.checkouts.values.flat_map(&:findings) + StatusLinks.new(@inventory).findings +

@@ -42,6 +42,16 @@ class InstallScenariosTest < Minitest::Test
     refute_path_exists File.join(@directory, 'ran')
   end
 
+  # Development in the checkout breaks nothing, so a missing link is still the first thing to fix.
+  def test_development_ranks_after_a_missing_link
+    root = default_install
+    git('-C', root, 'worktree', 'add', '-q', File.join(@directory, 'feature'))
+    File.unlink(File.join(@home, '.agents/skills/shaka'))
+    report = status(root)
+    assert_equal 'B9', report['state']
+    assert_includes report['findings'].map { |item| item['id'] }, 'C3'
+  end
+
   def test_status_changes_nothing
     root = default_install
     pull(root)

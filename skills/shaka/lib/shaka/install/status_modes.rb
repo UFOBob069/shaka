@@ -67,6 +67,21 @@ module Shaka
         finding('B10', "#{path} is group or world writable", command: "chmod -R go-w #{Shellwords.escape(skills)}")
       end
 
+      # Git ignores mode changes such as 0644 to 0600, but the recorded identity hashes every mode, so
+      # verification refuses them; compare that hash when the checkout sits at its recorded revision.
+      def changed_contents
+        return unless value('rev-parse', 'HEAD') == @record['revision']
+
+        recorded = @record.dig('identity', 'source', 'content_sha256')
+        names = @record['targets'].flat_map { |target| target['names'] }.uniq
+        return if recorded.nil? || Tree.new(names, source_root: @root).hash(@root) == recorded
+
+        finding('B3', 'skill files or their modes changed since installation, though Git shows no change',
+                decision: 'Restore the files you changed, or rerun bin/install to accept the current files.')
+      rescue ArgumentError, SystemCallError
+        nil
+      end
+
       def owned?(path) = trusted_owner?(File.lstat(path))
 
       # The installer's own file list, which leaves out ignored files.

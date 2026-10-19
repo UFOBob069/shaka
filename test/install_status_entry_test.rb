@@ -50,6 +50,15 @@ class InstallStatusEntryTest < Minitest::Test
     assert_includes report['decision'], 'alias.md'
   end
 
+  # Git ignores a 0644 to 0600 change, but verification refuses it, so status must not call it healthy.
+  def test_a_mode_change_git_ignores_is_named
+    root = default_install
+    File.chmod(0o600, File.join(root, 'skills/shaka/SKILL.md'))
+    report = status(root)
+    assert_equal ['B3', nil], report.values_at('state', 'next_command')
+    assert_includes report['decision'], 'rerun bin/install'
+  end
+
   def test_a_setuid_skill_file_is_unsafe
     root = default_install
     File.chmod(0o4644, File.join(root, 'skills/shaka/SKILL.md'))
