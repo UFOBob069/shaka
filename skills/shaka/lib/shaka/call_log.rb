@@ -57,6 +57,8 @@ module Shaka
         tags[key.to_s] = key.to_s == 'number' ? text.to_i : text if text
       end
       nil
+    rescue StandardError
+      nil
     end
 
     # Keeps values already tagged, so a command's own pull request outlasts any other it reads.

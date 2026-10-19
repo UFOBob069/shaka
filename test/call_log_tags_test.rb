@@ -19,16 +19,20 @@ class CallLogTagsTest < Minitest::Test
     end
   end
 
-  def test_commands_that_open_a_pull_request_record_its_repository_and_number
+  # `review publish` names its pull request only through the GitHub client it opens.
+  def test_review_publish_and_record_tag_what_they_name
     with_log do |log, env|
-      call(env, 'review', 'publish', 'acme/widgets', '9', '--content-file', File.join(Dir.tmpdir, 'missing.json'))
+      missing = File.join(Dir.tmpdir, 'missing.json')
+      call(env, 'review', 'publish', 'acme/widgets', '9', '--content-file', missing)
+      call(env, 'review', 'record', '--ledger', missing, '--content-file', missing, '--head', HEAD)
 
-      assert_equal ['acme/widgets', 9, nil], tags(records(log).fetch(0))
+      assert_equal([['acme/widgets', 9, nil], [nil, nil, HEAD]], records(log).map { |record| tags(record) })
     end
   end
 
   def test_a_second_pull_request_read_keeps_the_first_one
     before = Shaka::CallLog.tags.dup
+    Shaka::CallLog.tags.clear
     Shaka::CallLog.first_tag(repository: 'acme/widgets', number: 1)
     Shaka::CallLog.first_tag(repository: 'acme/other', number: 2)
     assert_equal ['acme/widgets', 1], Shaka::CallLog.tags.values_at('repository', 'number')
@@ -98,6 +102,7 @@ class CallLogTagsTest < Minitest::Test
   def test_tag_drops_unknown_keys_long_values_and_invalid_text
     before = Shaka::CallLog.tags.dup
     Shaka::CallLog.tag(task: 'private', model: "m#{'x' * 100}", effort: "hi\xFFgh", provider: :openai, number: nil)
+    assert_nil Shaka::CallLog.tag(nil)
     assert_equal before, Shaka::CallLog.tags
   end
 
