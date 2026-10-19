@@ -23,32 +23,33 @@ module Shaka
 
       def switch_all(target)
         ensure_safe_directory(@skills_dir, 'Host skills directory')
-        with_lock(@skills_dir) do
-          preflight(target)
-          previous = @names.to_h { |name| [name, old_target(name)] }
-          switch_links(target, previous)
-        end
+        with_lock(@skills_dir) { switch_locked(target) }
+      end
+
+      # The caller holds this directory's lock, so it can restore the links before anyone else changes them.
+      def switch_locked(target)
+        preflight(target)
+        switch_links(target, @names.to_h { |name| [name, old_target(name)] })
       end
 
       private
 
       def switch_links(target, previous)
         changed = []
-        begin
-          @names.each do |name|
-            switch_and_record(name, target, changed)
-          end
-        rescue SystemCallError, IOError => e
-          restore_links(changed, previous)
-          raise e
-        end
+        @names.each { |name| switch_and_record(name, target, changed) }
+      rescue SystemCallError, IOError
+        restore_links(changed, previous)
+        raise
       end
 
+      # Returns the names it could not restore, after warning about each one.
       def restore_links(changed, previous)
-        changed.reverse_each do |name|
+        changed.reverse.select do |name|
           restore(name, previous[name])
+          false
         rescue SystemCallError, IOError => e
           warn "Could not restore #{destination(name)}: #{e.message}"
+          true
         end
       end
 

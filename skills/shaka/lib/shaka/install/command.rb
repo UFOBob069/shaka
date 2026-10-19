@@ -53,6 +53,9 @@ module Shaka
       def actions(options)
         options.on('--update') { @actions << :update }
         options.on('--verify') { @actions << :verify }
+        options.on('--take-over', 'Move every host link from the checkout that owns them to this one') do
+          @options[:take_over] = true
+        end
         options.on('-h', '--help') do
           puts options
           exit
@@ -68,6 +71,7 @@ module Shaka
         end
         validate_agents
         validate_action
+        validate_take_over
         validate_managed if managed?
       end
 
@@ -92,6 +96,13 @@ module Shaka
         raise ArgumentError, 'Use bin/install to change installation selections before maintenance'
       end
 
+      def validate_take_over
+        return if !@options[:take_over] ||
+                  (@actions.empty? && @options[:agents].empty? && @options[:names] == ['shaka'] && !managed?)
+
+        raise ArgumentError, 'Use --take-over alone or with --directory, --repository, --branch, or --skills-dir'
+      end
+
       def validate_managed
         raise ArgumentError, 'Managed installation requires --skills-dir' unless @options[:skills_dir]
         return if @actions.empty? && @options[:agents].empty? &&
@@ -103,7 +114,8 @@ module Shaka
       def managed? = @options.values_at(:managed, :managed_dir, :rollback).any? || legacy_target?
 
       def legacy_target?
-        @options[:skills_dir] && !@options[:directory] && @options[:agents].empty? && @actions.empty?
+        @options[:skills_dir] && !@options[:directory] && @options[:agents].empty? && @actions.empty? &&
+          !@options[:take_over]
       end
 
       def install
