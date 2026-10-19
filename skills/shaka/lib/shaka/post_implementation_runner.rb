@@ -101,7 +101,14 @@ module Shaka
         'Return raw JSON without Markdown fences or surrounding prose.'
     end
 
-    def packet = PostImplementationPacket.read(packet_path)
+    def packet
+      path = packet_path
+      raise Error, 'Checkpoint content exceeds 100 KB' if File.size(path) > 100_000
+
+      PostImplementationPacket.build(JSON.parse(File.read(path, encoding: 'UTF-8')))
+    rescue JSON::ParserError => e
+      raise Error, "Malformed checkpoint content: #{e.message}"
+    end
 
     def packet_path
       @options[:content_file] || raise(Error, '--content-file is required unless the checkpoint is opted out')

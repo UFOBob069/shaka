@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'json'
 require_relative '../error'
 require_relative '../post_implementation_report'
 require_relative '../publication/intent_verification'
@@ -14,26 +13,20 @@ module Shaka
 
     module_function
 
-    def read(path)
-      raise Error, 'Checkpoint content exceeds 100 KB' if File.size(path) > 100_000
-
-      content = JSON.parse(File.read(path, encoding: 'UTF-8'))
+    def build(content)
       raise Error, 'Checkpoint content must be the description content object' unless content.is_a?(Hash)
 
-      build(content)
-    rescue JSON::ParserError => e
-      raise Error, "Malformed checkpoint content: #{e.message}"
-    end
-
-    def build(content)
-      stale = content.keys & WRITTEN_TWICE
-      raise Error, "Checkpoint content states #{stale.join(', ')} in intent and verification instead" if stale.any?
-
+      written_twice!(content)
       IntentVerification.render(content.except('wip'))
       raise Error, 'Checkpoint content needs a non-empty summary' unless text?(content['summary'])
 
       own = own(content['checkpoint'])
       content.slice('summary', 'intent', 'verification').merge(own.slice(*OWN, 'evidence'))
+    end
+
+    def written_twice!(content)
+      stale = content.keys & WRITTEN_TWICE
+      raise Error, "Checkpoint content states #{stale.join(', ')} in intent and verification instead" if stale.any?
     end
 
     # An optional evidence list carries what the description has no place for, such as instruction growth.
