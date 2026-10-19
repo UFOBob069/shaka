@@ -4,6 +4,7 @@ require 'pathname'
 require 'shellwords'
 require_relative '../branch_name'
 require_relative '../error'
+require_relative '../executable_file'
 
 module Shaka
   class Seam
@@ -44,14 +45,14 @@ module Shaka
         return validate_path_executable(executable, name) unless executable.include?('/')
 
         path = repository_file(executable, "#{name} command")
-        raise Error, "#{name} command is not executable: #{executable}" unless File.executable?(path)
+        raise Error, "#{name} command is not executable: #{executable}" unless ExecutableFile.executable?(path)
       end
 
       def validate_path_executable(executable, name)
         found = ENV.fetch('PATH', '').split(File::PATH_SEPARATOR).any? do |directory|
           directory = @root if directory.empty?
           path = File.expand_path(File.join(directory, executable), @root)
-          File.file?(path) && File.executable?(path)
+          File.file?(path) && ExecutableFile.executable?(path)
         end
         raise Error, "#{name} command is not available on PATH: #{executable}" unless found
       end

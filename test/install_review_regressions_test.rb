@@ -53,6 +53,8 @@ class InstallReviewRegressionsTest < Minitest::Test
   end
 
   def test_nonexecutable_helper_refuses_installation
+    skip 'this platform does not store an executable bit' if Shaka::ExecutableFile.windows?
+
     File.chmod(0o644, File.join(@source, 'scripts/shaka'))
 
     output, status = install
