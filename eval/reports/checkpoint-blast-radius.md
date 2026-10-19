@@ -7,12 +7,13 @@ and [#549](https://github.com/shakacode/shaka/pull/549) changes what the reviewe
 reports. The reviewer is asked whether verification is proportionate to what a failure
 would reach and whether a revert undoes it, and to name paths nobody exercised.
 
-The sentence changed behavior in a consistent direction. With it, every run said whether
-a revert undoes the damage; without it, none did. With it, every run on the two code PRs
-named a consuming command or live GitHub path that went unexercised; without it, none did,
-though four of five shared-caller runs repeated the packet's own note that no live rate
-limit was triggered. On the merge-path PR, all three runs with this repository's prompt
-moved from Proceed to Simplify/reframe because nobody had tested the agent's new
+The sentence changed behavior in a consistent direction. On both code PRs, every run
+with it said what a revert undoes; none without it did. On the merge-path PR, every run
+with it said no live GitHub merge had run; none without it did. On the shared-caller PR,
+every run with it said no consuming command had been exercised end to end; none without
+it did, although four of the five runs without it repeated the packet's note that no live rate limit was
+triggered. On the merge-path PR, all three runs with this repository's prompt and the
+sentence moved from Proceed to Simplify/reframe because nobody had tested the agent's new
 consent decision. On the docs edit every run still said Proceed with no concerns, and
 reports grew by 14 to 16 percent. The sentence has a cost. On the shared-caller PR, two
 of five runs with it said Proceed and missed a real outcome gap that every run without
