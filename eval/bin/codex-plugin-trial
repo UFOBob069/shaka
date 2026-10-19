@@ -1,0 +1,131 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'fileutils'
+require 'json'
+require 'rbconfig'
+require 'tmpdir'
+require_relative '../lib/codex_plugin_trial_support'
+
+# Opt-in host compatibility experiment. No model calls or production profile writes.
+class CodexPluginTrial
+  include CodexPluginTrialSupport
+
+  def run
+    Dir.mktmpdir('shaka-codex-plugin-') do |directory|
+      prepare(directory)
+      install
+      update
+      @report
+    end
+  rescue StandardError => e
+    (@report || {}).merge('trial_error' => { 'class' => e.class.name, 'message' => e.message })
+  end
+
+  private
+
+  def install
+    json('codex', 'plugin', 'marketplace', 'add', SOURCE, '--ref', 'main', '--json')
+    result = json('codex', 'plugin', 'add', 'shaka@shaka-trial', '--json')
+    @old_root = result.fetch('installedPath')
+    @old_helper = File.join(@old_root, 'skills/shaka/scripts/shaka')
+    @report['fresh_install'] = result.slice('pluginId', 'version', 'authPolicy')
+    inspect_install
+    @report['workflow_identity'] = workflow_identity
+    readonly_probe
+    ruby_probe
+  end
+
+  def inspect_install
+    @report['skill_catalog'] = catalog
+    @report['unchanged_skill'] = skill_digest(ROOT) == skill_digest(@old_root)
+    @report['workflow_renders'] = capture(@old_helper, 'workflow').include?('## 7. Finish')
+    @report['installation_identity'] = json(@old_helper, 'doctor', '--installation-json').fetch('source').fetch('kind')
+    @report['update_check'] = json(@old_helper, 'update-check')
+  end
+
+  def workflow_identity
+    capture(RbConfig.ruby, '-I', File.join(@old_root, 'skills/shaka/lib'),
+            '-rshaka/workflow_version', '-e', 'puts Shaka::WorkflowVersion.current.markdown').strip
+  end
+
+  def readonly_probe
+    modes = package_modes
+    modes.each { |path, mode| File.chmod(mode & ~0o222, path) }
+    @report['readonly_workflow_renders'] = capture(@old_helper, 'workflow').include?('## 7. Finish')
+  ensure
+    modes&.each { |path, mode| File.chmod(mode, path) }
+  end
+
+  def package_modes
+    files = Dir.glob('**/*', base: @old_root).map { |path| File.join(@old_root, path) }
+    files.to_h { |path| [path, File.stat(path).mode & 0o777] }
+  end
+
+  def ruby_probe
+    # Simulate a project-selected interpreter: observe dispatch, not an actual old Ruby runtime.
+    shim = project_ruby
+    output, error, status = execute(@old_helper, 'workflow',
+                                    extra: { 'PATH' => "#{shim}:#{ENV.fetch('PATH')}" })
+    @report['project_ruby_dispatch'] = { 'succeeded' => status,
+                                         'selected_project_ruby' => (output + error).include?('PROJECT_RUBY_SELECTED') }
+    @report['explicit_ruby_override'] = capture(@old_helper, 'workflow',
+                                                extra: { 'PATH' => "#{shim}:#{ENV.fetch('PATH')}",
+                                                         'SHAKA_RUBY' => RbConfig.ruby }).include?('## 7. Finish')
+  end
+
+  def project_ruby
+    shim = File.join(@profile, 'project-bin')
+    FileUtils.mkdir_p(shim)
+    File.write(File.join(shim, 'ruby'), "#!/bin/sh\necho PROJECT_RUBY_SELECTED >&2\nexit 42\n")
+    File.chmod(0o755, File.join(shim, 'ruby'))
+    shim
+  end
+
+  def update
+    path = File.join(@plugin, 'plugin.json')
+    manifest = JSON.parse(File.read(path)).merge('version' => '0.1.1')
+    File.write(path, JSON.pretty_generate(manifest))
+    File.write(File.join(@plugin, 'assets/update-marker.txt'), "second package\n")
+    commit('Second trial package')
+    result = json('codex', 'plugin', 'marketplace', 'upgrade', 'shaka-trial', '--json')
+    @report['marketplace_upgrade_errors'] = result.fetch('errors')
+    inspect_update
+  end
+
+  def inspect_update
+    installed = json('codex', 'plugin', 'list', '--json').fetch('installed')
+    @report['updated_version'] = installed.find { |row| row.fetch('pluginId') == 'shaka@shaka-trial' }.fetch('version')
+    new_root = File.join(@profile, 'plugins/cache/shaka-trial/shaka/0.1.1')
+    @report['new_payload_present'] = File.read(File.join(new_root, 'assets/update-marker.txt')) == "second package\n"
+    @report['updated_skill_unchanged'] = skill_digest(ROOT) == skill_digest(new_root)
+    updated_helper_probe(new_root)
+  end
+
+  def updated_helper_probe(root)
+    helper = File.join(root, 'skills/shaka/scripts/shaka')
+    @report['updated_skill_catalog'] = catalog
+    @report['old_helper_retained'] = File.executable?(@old_helper)
+    @report['updated_workflow_renders'] = capture(helper, 'workflow').include?('## 7. Finish')
+    @report['updated_update_check'] = json(helper, 'update-check')
+  end
+
+  def catalog
+    # Reads the actual prompt catalog without launching a model. Paths can use skill-root aliases.
+    prompt = JSON.parse(capture('codex', 'debug', 'prompt-input', 'Check installed skills'))
+    text = prompt.to_json
+    { 'namespaced_skill_visible' => text.include?('shaka:shaka:'),
+      'existing_bare_skill_visible' => text.include?('- shaka: Deliver a task') }
+  end
+
+  def skill_digest(root)
+    tree = Shaka::Install::Tree.new(['shaka'])
+    tree.hash(root, normalized: true)
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  result = CodexPluginTrial.new.run
+  puts JSON.pretty_generate(result)
+  exit(result.key?('trial_error') ? 1 : 0)
+end

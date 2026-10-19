@@ -1,0 +1,43 @@
+{
+  "codex": "codex-cli 0.162.1",
+  "ruby": "3.4.6",
+  "source_revision": "3c670de809d9da6f1900266726672ac512214853",
+  "transport": "Git marketplace; HTTPS URL rewritten to disposable local Git repository",
+  "fresh_install": {
+    "pluginId": "shaka@shaka-trial",
+    "version": "0.1.0",
+    "authPolicy": "ON_USE"
+  },
+  "skill_catalog": {
+    "namespaced_skill_visible": true,
+    "existing_bare_skill_visible": true
+  },
+  "unchanged_skill": true,
+  "workflow_renders": true,
+  "installation_identity": "uninstalled",
+  "update_check": {
+    "status": "uninstalled",
+    "guidance": "Use the official installer to receive update guidance."
+  },
+  "workflow_identity": "`0.1.0.pre.1` (commit unknown)",
+  "readonly_workflow_renders": true,
+  "project_ruby_dispatch": {
+    "succeeded": false,
+    "selected_project_ruby": true
+  },
+  "explicit_ruby_override": true,
+  "marketplace_upgrade_errors": [],
+  "updated_version": "0.1.1",
+  "new_payload_present": true,
+  "updated_skill_unchanged": true,
+  "updated_skill_catalog": {
+    "namespaced_skill_visible": true,
+    "existing_bare_skill_visible": true
+  },
+  "old_helper_retained": false,
+  "updated_workflow_renders": true,
+  "updated_update_check": {
+    "status": "uninstalled",
+    "guidance": "Use the official installer to receive update guidance."
+  }
+}
