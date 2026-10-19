@@ -75,7 +75,8 @@ class PrivateCheckpointSettingsTest < Minitest::Test
                                            COMMAND, 'post-implementation', 'publish', 'owner/repo', '1',
                                            '--content-file', state_file('checkpoint.json', result))
     assert_equal 1, status.exitstatus, error
-    { 'id' => 1, 'user' => { 'login' => 'shaka-agent' }, 'body' => JSON.parse(output).fetch('body') }
+    { 'id' => 1, 'created_at' => '2026-10-01T00:00:00Z', 'user' => { 'login' => 'shaka-agent' },
+      'body' => JSON.parse(output).fetch('body') }
   end
 
   def message_file = state_file('message.json', 'title' => 'Fix', 'body' => 'Private delivery works.')
