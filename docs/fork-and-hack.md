@@ -89,7 +89,7 @@ Start with these files:
 | `skills/shaka/config/workflow.yml` | The ordered steps the agent follows |
 | `skills/shaka/references/*.md` | Procedures loaded when a step needs them |
 | `skills/shaka/config/review-prompt.md` | The built-in reviewer prompt |
-| `skills/shaka/config/opening-prompt.md`, `post-implementation-prompt.md` | The opening check and the finished-result checkpoint |
+| `skills/shaka/config/opening-prompt.md`, `post-implementation-prompt.md`, `post-implementation-adequacy.md` | The opening check, the finished-result checkpoint, and its verification verdict |
 | `skills/shaka/config/defaults.yml` | Built-in defaults for every setting |
 | `skills/shaka/config/model-rates.yml` | Prices used for cost reports |
 

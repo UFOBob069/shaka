@@ -1002,6 +1002,14 @@ class PublicationCheckpointTest < Minitest::Test
     assert_raises(Shaka::Error) { Shaka::Publication.description(data, nil, PULL) }
   end
 
+  def test_facts_only_the_checkpoint_reads_stay_out_of_the_description
+    data = content
+    data['checkpoint'].merge!('audience' => 'Maintainers', 'repair_history' => 'Two repairs to the parser',
+                              'evidence' => ['Instruction growth: +51 words'])
+    body = Shaka::Publication.description(data, nil, PULL)
+    ['Maintainers', 'Two repairs', 'Instruction growth'].each { |text| refute_includes body, text }
+  end
+
   def test_recommendation_must_be_a_known_disposition
     data = content
     data['checkpoint']['recommendation'] = 'Ship it'

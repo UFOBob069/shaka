@@ -54,6 +54,18 @@ class PostImplementationPacketTest < Minitest::Test
     end
   end
 
+  def test_a_repository_prompt_keeps_the_packaged_verdict_definitions
+    settings = { 'post_implementation' => { 'prompt_file' => '.agents/codex-prompt.md' } }
+    with_repository(settings) do |root, base, head, bin|
+      fake_checkpoint(bin, head)
+      _, status = run_checkpoint(root, base, head, bin)
+      prompt = checkpoint_trace(root).fetch('prompt')
+      assert_predicate status, :success?
+      assert prompt.start_with?('Codex-only instructions')
+      assert_includes prompt, '- `inadequate`: no check reaches the fact the safety claim rests on.'
+    end
+  end
+
   def test_checkpoint_evidence_reaches_the_reviewer
     @packet = own('evidence' => ['Growth: +40 words'])
     with_repository do |root, base, head, bin|

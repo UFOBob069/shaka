@@ -103,7 +103,9 @@ complete. Successful execution returns `completed`; that status does not mean Pr
 The report contains the head, conclusion, reasons, unresolved concerns, simpler
 alternative, a short `summary`, the task owner's `next_action`, and a required
 `verification_adequacy` object: a `verdict` of `adequate`, `adequate with accepted gaps`,
-`inadequate`, or `cannot judge`, the `weakest_claim`, and the `next_check`. The checkpoint
+`inadequate`, or `cannot judge`, the `weakest_claim`, and the `next_check`, judged by the
+packaged [verdict definitions](../config/post-implementation-adequacy.md) whatever prompt
+is configured. The checkpoint
 comment shows all three, and the description lead shows the verdict for the current head.
 The verdict leaves `ready` unchanged; `inadequate` only makes `merge` refuse the head
 until the user approves it with `--adequacy-confirmed-head SHA`. A report without `summary` or `next_action`
