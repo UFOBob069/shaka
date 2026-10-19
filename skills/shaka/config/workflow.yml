@@ -483,9 +483,10 @@ phases:
         The legacy `opening_check.external_enabled: false` keeps the check in the current model.
         A `host_check` or `not_checked` result carries the prompt for that fallback. Preserve a
         configured model when its CLI fails; report the reason and apply the returned prompt.
-        A `flagged` result means the first sentence has an internal subject. Rewrite it so what
-        the reader sees leads, then publish again. Successful verdicts are cached by the
-        opening, prompt, reviewer, model, and effort; failed calls are retried on publication.
+        A `flagged` result means the first sentence has an internal subject or gives a thing a
+        person's action. Rewrite it as its `reason` says, then publish again. Successful verdicts
+        are cached by the opening, prompt, reviewer, model, and effort; failed calls are retried
+        on publication.
       - Supply meaning as content JSON and let the helper render it. Self-edit those summaries before
         calling `description`, `walkthrough`, or `reply`. Do not rewrite the rendered GitHub body, and
         do not invoke a separate rewrite skill. The helper owns identity, headings,

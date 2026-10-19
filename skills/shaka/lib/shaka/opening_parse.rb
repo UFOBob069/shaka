@@ -8,7 +8,7 @@ module Shaka
   # Checks the model answer's JSON shape before the verdict rule reads it.
   module OpeningParse
     MAX_REPORT_BYTES = 20_000
-    FIELDS = %w[character reader_facing action object hidden_actions internal_terms].freeze
+    FIELDS = %w[character reader_facing character_can_act action object hidden_actions internal_terms].freeze
 
     private
 
@@ -36,7 +36,7 @@ module Shaka
 
     def valid_sentence?(sentence)
       return false unless sentence.is_a?(Hash) && (FIELDS - sentence.keys).empty?
-      return false unless sentence['reader_facing'] in true | false
+      return false unless %w[reader_facing character_can_act].all? { |key| sentence[key] in true | false }
 
       text_fields?(sentence) && array_fields?(sentence)
     end

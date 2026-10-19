@@ -11,6 +11,9 @@ class OpeningCheckTest < Minitest::Test
   COMMAND_FIRST = '`shaka merge` now stops before submitting a PR that has no local-review attestation ' \
                   'covering its head.'
   OUTCOME_FIRST = 'Pull requests for Linear and other tracker issues now link to their issue.'
+  PERSON_VERB = 'A repository can now name the providers whose reviewers read every commit, and see on the PR ' \
+                'when one could not.'
+  READER_GETS = 'Reviewers now get inline notes on the walkthrough of any change to three or more files.'
 
   def test_flags_a_first_sentence_led_by_a_command
     with_claude(parse('shaka merge', false)) do |root, trace|
@@ -25,6 +28,29 @@ class OpeningCheckTest < Minitest::Test
   def test_passes_a_first_sentence_led_by_what_the_reader_sees
     with_claude(parse('Pull requests', true)) do |root, _trace|
       assert_equal 'passed', check(OUTCOME_FIRST, root:).fetch('status')
+    end
+  end
+
+  def test_flags_a_thing_given_a_persons_verb
+    with_claude(parse('A repository', true, character_can_act: false, action: 'can name and see')) do |root, _trace|
+      result = check(PERSON_VERB, root:)
+      assert_equal 'flagged', result.fetch('status'), result.inspect
+      assert_includes result.fetch('reason'), '"A repository"'
+      assert_includes result.fetch('reason'), '"can name and see"'
+    end
+  end
+
+  def test_passes_a_person_who_receives_the_change
+    with_claude(parse('Reviewers', true, action: 'get')) do |root, _trace|
+      assert_equal 'passed', check(READER_GETS, root:).fetch('status')
+    end
+  end
+
+  def test_a_parse_without_character_can_act_is_not_checked
+    output = parse('A repository', true)
+    output[:sentences].first.delete(:character_can_act)
+    with_claude(output) do |root, _trace|
+      assert_equal 'not_checked', check(PERSON_VERB, root:).fetch('status')
     end
   end
 

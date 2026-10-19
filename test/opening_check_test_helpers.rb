@@ -19,8 +19,8 @@ module OpeningCheckTestHelpers
                             cache_dir: File.join(File.dirname(root), 'cache'), **).call
   end
 
-  def parse(character, reader_facing)
-    { sentences: [{ character:, reader_facing:, action: 'acts', object: 'something',
+  def parse(character, reader_facing, character_can_act: true, action: 'acts')
+    { sentences: [{ character:, reader_facing:, character_can_act:, action:, object: 'something',
                     hidden_actions: [], internal_terms: [] }] }
   end
 

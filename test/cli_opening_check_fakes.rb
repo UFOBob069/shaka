@@ -95,7 +95,8 @@ module CliOpeningCheckFakes
       File.write(File.join(ENV.fetch('HOME'), 'claude-args.json'), JSON.generate(ARGV))
       abort 'description was not published' unless File.file?(File.join(ENV.fetch('HOME'), 'published.md'))
       File.write(File.join(ENV.fetch('HOME'), 'claude-called'), '')
-      sentence = { 'character' => 'shaka merge', 'reader_facing' => false, 'action' => 'checks',
+      sentence = { 'character' => 'shaka merge', 'reader_facing' => false, 'character_can_act' => true,
+                   'action' => 'checks',
                    'object' => 'head', 'hidden_actions' => [], 'internal_terms' => [] }
       puts JSON.generate('is_error' => false, 'result' => JSON.generate('sentences' => [sentence]))
     RUBY
