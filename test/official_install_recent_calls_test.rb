@@ -37,8 +37,15 @@ class OfficialInstallRecentCallsTest < Minitest::Test
     log_call('workflow', at: Time.now.utc - 3600, duration_ms: 1000)
     log_call('install', at: Time.now.utc - 30)
     log_call('update-check', at: Time.now.utc - 20)
-    File.write(@log, "not json\n", mode: 'a')
+    File.write(@log, "not json\n{\"at\":1,\"command\":\"pr\"}\n", mode: 'a')
     assert_updated(*update)
+  end
+
+  def test_a_call_with_a_malformed_duration_still_stops_the_update
+    log_call('pr', at: Time.now.utc - 60, duration_ms: {})
+    output, status = update
+    refute_predicate status, :success?
+    assert_includes output, 'Shaka was used in the last 15 minutes'
   end
 
   def test_force_requires_update

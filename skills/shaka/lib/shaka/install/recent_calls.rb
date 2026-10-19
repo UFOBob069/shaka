@@ -56,7 +56,8 @@ module Shaka
         record = JSON.parse(line)
         return unless record.is_a?(Hash) && !IGNORED.include?(record['command'])
 
-        ended = Time.iso8601(record.fetch('at')) + (record['duration_ms'].to_i / 1000.0)
+        duration = record['duration_ms']
+        ended = Time.iso8601(record.fetch('at')) + (duration.is_a?(Integer) ? duration / 1000.0 : 0)
         { command: record['command'].to_s, ended: }
       rescue JSON::ParserError, KeyError, ArgumentError, TypeError
         nil
