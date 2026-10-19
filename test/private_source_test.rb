@@ -661,3 +661,33 @@ class PrivateSourceTrustedTreeTest < Minitest::Test
     File.delete(File.join(root, '.git/objects', tree[0, 2], tree[2..]))
   end
 end
+
+# Without shared settings, resolution reports why individual settings were rejected.
+class PrivateSourceResolutionTest < Minitest::Test
+  include PrivateSourceFixture
+
+  def test_conflicting_individual_settings_report_their_blocker
+    with_private_repository do |root, ref|
+      system('git', '-C', root, 'add', '.agents/shaka/config.yml', exception: true)
+      error = assert_raises(Shaka::Error) { Shaka::Configuration.resolve_source(root:, ref:) }
+      assert_includes error.message, 'tracked private files: .agents/shaka/config.yml'
+    end
+  end
+
+  def test_unsafe_individual_settings_report_their_blocker
+    with_private_repository do |root, ref|
+      path = File.join(root, '.agents/shaka/config.yml')
+      File.rename(path, File.join(root, '.agents/shaka/copy.yml'))
+      File.symlink('copy.yml', path)
+      error = assert_raises(Shaka::Error) { Shaka::Configuration.resolve_source(root:, ref:) }
+      assert_includes error.message, 'must be a regular file, not a symlink'
+    end
+  end
+
+  def test_shared_settings_still_win_over_conflicting_individual_settings
+    with_private_repository do |root, _ref|
+      commit_file(root, '.agents/shaka', 'team settings')
+      assert_equal 'trusted/team', Shaka::Configuration.resolve_source(root:, ref: head(root)).last
+    end
+  end
+end

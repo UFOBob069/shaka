@@ -48,8 +48,8 @@ module Shaka
 
     def standard_source(root:, ref:, candidate_commands:)
       source = private_source(root:, ref:)
-      if source.status == 'partial' && source.trusted_source == 'absent'
-        raise Error, "Individual settings are incomplete: #{source.blockers.join('; ')}"
+      if source.trusted_source == 'absent' && !%w[complete absent].include?(source.status)
+        raise Error, "Individual settings are not usable (#{source.status}): #{source.blockers.join('; ')}"
       end
 
       if source.status == 'complete'
