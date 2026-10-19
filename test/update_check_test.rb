@@ -12,7 +12,7 @@ class UpdateCheckTest < Minitest::Test
     @calls = []
     runner = lambda do |argv, directory|
       @calls << [argv, directory]
-      [JSON.generate({ 'status' => status, 'ahead_by' => ahead_by }), '', true]
+      [JSON.generate({ 'status' => status, 'ahead_by' => ahead_by, 'oldest' => '2020-01-01T00:00:00Z' }), '', true]
     end
     Shaka::UpdateCheck.new(source:, branch:, registered:, helper: '/installed path/scripts/shaka',
                            runner:).result
@@ -24,7 +24,8 @@ class UpdateCheckTest < Minitest::Test
     assert_includes result.fetch('guidance'), 'install --update'
     assert_includes result.fetch('guidance'), 'Finish active Shaka chats'
     assert_equal [['gh', 'api', '--hostname', 'github.com', "repos/shakacode/shaka/compare/#{SHA}...main", '--jq',
-                   '{status: .status, ahead_by: .ahead_by}'], Dir.tmpdir], @calls.fetch(0)
+                   '{status: .status, ahead_by: .ahead_by, oldest: .commits[0].commit.committer.date}'],
+                  Dir.tmpdir], @calls.fetch(0)
   end
 
   def test_available_update_says_how_many_commits_behind_the_installation_is

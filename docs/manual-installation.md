@@ -84,8 +84,10 @@ This command changes nothing in the checkout or your skill links:
 It confirms that the checkout comes from the recorded origin, has no local
 changes, and is the target of each skill link, and that the recorded Ruby still exists.
 
-Shaka tells you when an update is available. Finish active Shaka chats, fetch
-and apply it, then start a new chat:
+Shaka tells you when an update is available once your installation is three
+commits behind, or when the oldest change you lack is a day old, so a busy
+day on `main` does not interrupt every new chat. Finish active Shaka chats,
+fetch and apply it, then start a new chat:
 
 ```bash
 "$HOME/.agents/shaka/skills/shaka/scripts/shaka" install --update

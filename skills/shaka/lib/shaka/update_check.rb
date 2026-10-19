@@ -5,6 +5,7 @@ require 'shellwords'
 require 'tmpdir'
 require_relative 'doctor/installation_identity'
 require_relative 'update_check/launch'
+require_relative 'update_check/notice'
 require_relative 'workflow_version'
 
 module Shaka
@@ -69,22 +70,27 @@ module Shaka
     def compare
       endpoint = "repos/shakacode/shaka/compare/#{@source.fetch('revision')}...main"
       output, _error, ok = @runner.call(['gh', 'api', '--hostname', 'github.com', endpoint, '--jq',
-                                         '{status: .status, ahead_by: .ahead_by}'], Dir.tmpdir)
+                                         '{status: .status, ahead_by: .ahead_by, ' \
+                                         'oldest: .commits[0].commit.committer.date}'], Dir.tmpdir)
       return unknown unless ok
 
       response = JSON.parse(output)
       return unknown unless response.is_a?(Hash)
 
-      comparison(response['status'], response['ahead_by'])
+      comparison(response['status'], response['ahead_by'], response['oldest'])
     end
 
-    def comparison(status, ahead_by)
+    def comparison(status, ahead_by, oldest)
       case status
       when 'identical' then answer('current', 'This installed revision matches official main.')
-      when 'ahead' then available(ahead_by)
+      when 'ahead' then Notice.wait?(ahead_by, oldest) ? recent(ahead_by) : available(ahead_by)
       when 'behind', 'diverged' then custom
       else unknown
       end
+    end
+
+    def recent(count)
+      answer('recent', "#{lag(count)} #{Notice::GUIDANCE}").merge('commits_behind' => count)
     end
 
     # GitHub reports the comparison from the installed revision, so its ahead count is how far behind this is.
